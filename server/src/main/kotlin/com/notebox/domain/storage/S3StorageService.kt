@@ -30,6 +30,7 @@ class S3StorageService(
             .region(Region.of(s3Config.region))
             .credentialsProvider(credentialsProvider)
             .endpointOverride(URI.create(s3Config.endpoint))
+            .forcePathStyle(true)
             .build()
 
         s3Presigner = S3Presigner.builder()
