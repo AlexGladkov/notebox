@@ -9,9 +9,43 @@
 - 🔍 Поиск по названиям заметок
 - 💾 Автосохранение
 - 🎨 Split-view редактор с превью
-- 💡 Данные хранятся локально в браузере
+- 🗄️ Backend на Kotlin + Spring Boot с PostgreSQL
+- 📊 API для кастомных баз данных (Notion-подобные таблицы)
+- ☁️ S3-совместимое хранилище файлов (MinIO/AWS S3)
 
 ## Установка и запуск
+
+### Быстрый старт с Docker Compose (рекомендуется)
+
+```bash
+# Запустить все сервисы (PostgreSQL, MinIO, Backend)
+docker-compose up --build
+
+# В отдельном терминале запустить frontend
+npm install
+npm run dev
+```
+
+Backend будет доступен на http://localhost:8080
+Frontend будет доступен на http://localhost:5173
+MinIO Console будет доступна на http://localhost:9001
+
+### Локальная разработка
+
+#### Backend
+
+```bash
+cd server
+./gradlew bootRun
+```
+
+Или используйте Docker только для БД:
+
+```bash
+docker-compose up postgres minio
+```
+
+#### Frontend
 
 ```bash
 # Установка зависимостей
@@ -29,11 +63,19 @@ npm run preview
 
 ## Технологии
 
+### Frontend
 - Vue 3 + TypeScript
 - Vite
 - Tailwind CSS
 - marked.js для рендеринга Markdown
-- LocalStorage для хранения данных
+
+### Backend
+- Kotlin 1.9.22
+- Spring Boot 3.2.2
+- Exposed ORM 0.47.0
+- PostgreSQL 15+
+- AWS SDK for S3
+- MinIO (для локальной разработки)
 
 ## Использование
 
@@ -47,17 +89,37 @@ npm run preview
 
 ```
 notebox/
-├── src/
-│   ├── components/       # Vue компоненты
-│   ├── composables/      # Композируемые функции
-│   ├── types/            # TypeScript типы
-│   ├── utils/            # Утилиты
-│   ├── App.vue           # Основной компонент
-│   ├── main.ts           # Точка входа
-│   └── style.css         # Глобальные стили
-├── public/               # Статические файлы
-└── index.html            # HTML шаблон
+├── src/                  # Frontend (Vue 3)
+│   ├── api/             # API клиенты
+│   ├── components/      # Vue компоненты
+│   ├── composables/     # Композируемые функции
+│   ├── types/           # TypeScript типы
+│   ├── utils/           # Утилиты
+│   ├── App.vue          # Основной компонент
+│   └── main.ts          # Точка входа
+├── server/              # Backend (Kotlin + Spring Boot)
+│   ├── src/main/kotlin/com/notebox/
+│   │   ├── config/      # Конфигурация
+│   │   ├── domain/      # Доменная логика
+│   │   │   ├── folder/
+│   │   │   ├── note/
+│   │   │   ├── database/
+│   │   │   └── storage/
+│   │   └── dto/         # Data Transfer Objects
+│   └── build.gradle.kts
+├── docker-compose.yml   # Docker конфигурация
+└── .env.example         # Пример переменных окружения
 ```
+
+## API Endpoints
+
+Подробная документация по API доступна в [server/README.md](server/README.md)
+
+Основные endpoints:
+- `/api/folders` - управление папками
+- `/api/notes` - управление заметками
+- `/api/databases` - кастомные базы данных (как в Notion)
+- `/api/files` - загрузка и получение файлов
 
 ## Лицензия
 

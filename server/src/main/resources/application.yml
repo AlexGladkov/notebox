@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: notebox-server
+
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:notebox}
+    username: ${POSTGRES_USER:notebox}
+    password: ${POSTGRES_PASSWORD:notebox}
+    driver-class-name: org.postgresql.Driver
+
+  exposed:
+    generate-ddl: true
+
+server:
+  port: ${SERVER_PORT:8080}
+
+s3:
+  endpoint: ${S3_ENDPOINT:http://localhost:9000}
+  access-key: ${S3_ACCESS_KEY:minioadmin}
+  secret-key: ${S3_SECRET_KEY:minioadmin}
+  bucket: ${S3_BUCKET:notebox-files}
+  region: ${S3_REGION:us-east-1}

@@ -1,0 +1,22 @@
+package com.notebox.domain.note
+
+import com.notebox.dto.NoteDto
+import java.time.Instant
+
+data class Note(
+    val id: String,
+    val title: String,
+    val content: String,
+    val folderId: String,
+    val createdAt: Instant,
+    val updatedAt: Instant
+) {
+    fun toDto() = NoteDto(
+        id = id,
+        title = title,
+        content = content,
+        folderId = folderId,
+        createdAt = createdAt.toEpochMilli(),
+        updatedAt = updatedAt.toEpochMilli()
+    )
+}

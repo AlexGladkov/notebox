@@ -22,3 +22,21 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment files
+.env
+.env.local
+
+# Backend
+server/build/
+server/.gradle/
+server/gradle/
+server/gradlew
+server/gradlew.bat
+server/out/
+*.class
+*.jar
+*.war
+
+# Docker
+docker-compose.override.yml

@@ -1,35 +1,59 @@
 import { computed, type Ref } from 'vue';
-import { v4 as uuidv4 } from 'uuid';
 import type { Note } from '../types';
+import { notesApi, ApiError } from '../api';
 
 export function useNotes(notes: Ref<Note[]>) {
-  const createNote = (title: string, folderId: string) => {
-    const now = Date.now();
-    const newNote: Note = {
-      id: uuidv4(),
-      title,
-      content: '',
-      folderId,
-      createdAt: now,
-      updatedAt: now,
-    };
-    notes.value.push(newNote);
-    return newNote;
-  };
-
-  const updateNote = (id: string, updates: Partial<Omit<Note, 'id' | 'folderId' | 'createdAt'>>) => {
-    const note = notes.value.find(n => n.id === id);
-    if (note) {
-      Object.assign(note, updates);
-      note.updatedAt = Date.now();
+  const createNote = async (title: string, folderId: string) => {
+    try {
+      const newNote = await notesApi.create({
+        title,
+        content: '',
+        folderId,
+      });
+      notes.value.push(newNote);
+      return newNote;
+    } catch (err) {
+      console.error('Failed to create note:', err);
+      throw err;
     }
   };
 
-  const deleteNote = (id: string) => {
-    notes.value = notes.value.filter(n => n.id !== id);
+  const updateNote = async (id: string, updates: Partial<Omit<Note, 'id' | 'createdAt'>>) => {
+    const note = notes.value.find(n => n.id === id);
+    if (!note) {
+      throw new Error('Note not found');
+    }
+
+    try {
+      const updatedNote = await notesApi.update(id, {
+        title: updates.title ?? note.title,
+        content: updates.content ?? note.content,
+        folderId: updates.folderId ?? note.folderId,
+      });
+
+      const index = notes.value.findIndex(n => n.id === id);
+      if (index !== -1) {
+        notes.value[index] = updatedNote;
+      }
+    } catch (err) {
+      console.error('Failed to update note:', err);
+      throw err;
+    }
+  };
+
+  const deleteNote = async (id: string) => {
+    try {
+      await notesApi.delete(id);
+      notes.value = notes.value.filter(n => n.id !== id);
+    } catch (err) {
+      console.error('Failed to delete note:', err);
+      throw err;
+    }
   };
 
   const deleteNotesByFolderIds = (folderIds: string[]) => {
+    // Notes are deleted on the server via cascade delete when folders are deleted
+    // Just clean up local state
     notes.value = notes.value.filter(n => !folderIds.includes(n.folderId));
   };
 
