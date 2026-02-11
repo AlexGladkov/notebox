@@ -10,7 +10,20 @@
   "dependencies": {
     "vue": "^3.4.0",
     "marked": "^12.0.0",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "@tiptap/vue-3": "^2.1.0",
+    "@tiptap/starter-kit": "^2.1.0",
+    "@tiptap/extension-highlight": "^2.1.0",
+    "@tiptap/extension-underline": "^2.1.0",
+    "@tiptap/extension-link": "^2.1.0",
+    "@tiptap/extension-task-list": "^2.1.0",
+    "@tiptap/extension-task-item": "^2.1.0",
+    "@tiptap/extension-placeholder": "^2.1.0",
+    "@tiptap/extension-bubble-menu": "^2.1.0",
+    "@tiptap/extension-floating-menu": "^2.1.0",
+    "@tiptap/extension-text-style": "^2.1.0",
+    "@tiptap/extension-color": "^2.1.0",
+    "@tiptap/pm": "^2.1.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.0",
