@@ -2,6 +2,7 @@ package com.notebox.domain.folder
 
 import com.notebox.domain.note.NoteRepository
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class FolderService(
@@ -25,8 +26,9 @@ class FolderService(
         return folderRepository.update(id, name, parentId)
     }
 
+    @Transactional
     fun deleteFolder(id: String): Boolean {
-        // Cascade delete: delete all child folders and notes
+        // Cascade delete: delete all child folders and notes in one transaction
         deleteFolderRecursive(id)
         return true
     }

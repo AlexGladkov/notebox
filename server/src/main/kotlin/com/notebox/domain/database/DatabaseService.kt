@@ -15,6 +15,10 @@ class DatabaseService(
         return databaseRepository.findAllDatabases()
     }
 
+    fun getAllDatabasesWithColumns(): List<Pair<CustomDatabase, List<Column>>> {
+        return databaseRepository.findAllDatabasesWithColumns()
+    }
+
     fun getDatabaseById(id: String): Pair<CustomDatabase, List<Column>>? {
         val database = databaseRepository.findDatabaseById(id) ?: return null
         val columns = databaseRepository.findColumnsByDatabaseId(id)

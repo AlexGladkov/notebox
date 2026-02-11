@@ -1,6 +1,7 @@
 package com.notebox.domain.folder
 
 import com.notebox.dto.*
+import com.notebox.util.ValidationUtils
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -20,6 +21,7 @@ class FolderController(
 
     @GetMapping("/{id}")
     fun getFolderById(@PathVariable id: String): ResponseEntity<ApiResponse<FolderDto>> {
+        ValidationUtils.validateUUID(id, "id")
         val folder = folderService.getFolderById(id)
             ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(errorResponse("NOT_FOUND", "Folder not found"))
@@ -29,6 +31,9 @@ class FolderController(
 
     @PostMapping
     fun createFolder(@Valid @RequestBody request: CreateFolderRequest): ResponseEntity<ApiResponse<FolderDto>> {
+        if (request.parentId != null) {
+            ValidationUtils.validateUUID(request.parentId, "parentId")
+        }
         val folder = folderService.createFolder(request.name, request.parentId)
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(successResponse(folder.toDto()))
@@ -39,6 +44,10 @@ class FolderController(
         @PathVariable id: String,
         @Valid @RequestBody request: UpdateFolderRequest
     ): ResponseEntity<ApiResponse<FolderDto>> {
+        ValidationUtils.validateUUID(id, "id")
+        if (request.parentId != null) {
+            ValidationUtils.validateUUID(request.parentId, "parentId")
+        }
         val folder = folderService.updateFolder(id, request.name, request.parentId)
             ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(errorResponse("NOT_FOUND", "Folder not found"))
@@ -48,6 +57,7 @@ class FolderController(
 
     @DeleteMapping("/{id}")
     fun deleteFolder(@PathVariable id: String): ResponseEntity<Void> {
+        ValidationUtils.validateUUID(id, "id")
         folderService.deleteFolder(id)
         return ResponseEntity.noContent().build()
     }

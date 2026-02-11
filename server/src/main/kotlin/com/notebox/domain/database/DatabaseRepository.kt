@@ -17,6 +17,20 @@ class DatabaseRepository {
         CustomDatabasesTable.selectAll().map { toDatabase(it) }
     }
 
+    fun findAllDatabasesWithColumns(): List<Pair<CustomDatabase, List<Column>>> = transaction {
+        val databases = CustomDatabasesTable.selectAll().map { toDatabase(it) }
+        val databaseIds = databases.map { it.id }
+
+        // Fetch all columns in one query
+        val allColumns = ColumnsTable
+            .select { ColumnsTable.databaseId inList databaseIds }
+            .orderBy(ColumnsTable.position)
+            .map { toColumn(it) }
+            .groupBy { it.databaseId }
+
+        databases.map { db -> db to (allColumns[db.id] ?: emptyList()) }
+    }
+
     fun findDatabaseById(id: String): CustomDatabase? = transaction {
         CustomDatabasesTable.select { CustomDatabasesTable.id eq id }
             .mapNotNull { toDatabase(it) }
