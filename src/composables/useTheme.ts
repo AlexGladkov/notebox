@@ -84,7 +84,7 @@ export function useTheme() {
 
   onMounted(() => {
     loadTheme();
-    const cleanup = initSystemThemeListener();
+    initSystemThemeListener();
     applyTheme();
 
     // Следим за изменениями темы и применяем их
@@ -96,8 +96,6 @@ export function useTheme() {
     watch(themeMode, () => {
       saveTheme();
     });
-
-    return cleanup;
   });
 
   return {

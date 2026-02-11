@@ -73,7 +73,6 @@ const {
   updateFolder,
   deleteFolder,
   getFolderById,
-  getRootFolders,
 } = useFolders(folders);
 
 const {
