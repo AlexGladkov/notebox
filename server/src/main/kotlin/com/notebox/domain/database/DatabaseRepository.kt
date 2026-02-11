@@ -3,6 +3,7 @@ package com.notebox.domain.database
 import com.notebox.dto.ColumnType
 import com.notebox.dto.SelectOptionDto
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.springframework.stereotype.Repository
 import java.time.Instant

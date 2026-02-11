@@ -12,7 +12,7 @@ data class ErrorDto(
 
 fun <T> successResponse(data: T) = ApiResponse(data = data, error = null)
 
-fun errorResponse(code: String, message: String) = ApiResponse<Any>(
+fun <T> errorResponse(code: String, message: String) = ApiResponse<T>(
     data = null,
     error = ErrorDto(code, message)
 )
