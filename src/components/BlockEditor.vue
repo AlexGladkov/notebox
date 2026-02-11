@@ -1,6 +1,24 @@
 <template>
   <div class="block-editor-wrapper">
-    <editor-content :editor="editor" class="block-editor-content" />
+    <div class="block-editor-content-wrapper" @mousemove="handleMouseMove">
+      <editor-content :editor="editor" class="block-editor-content" />
+
+      <!-- Block Handle -->
+      <div
+        v-if="blockHandleVisible && blockHandlePosition"
+        class="block-handle"
+        :style="{
+          top: blockHandlePosition.top + 'px',
+          left: blockHandlePosition.left + 'px',
+        }"
+        @click="openBlockMenu"
+        @mousedown="startDrag"
+        draggable="true"
+        title="Перетащите для перемещения или нажмите для меню"
+      >
+        ⋮⋮
+      </div>
+    </div>
 
     <EditorBubbleMenu v-if="editor" :editor="editor" />
 
@@ -59,6 +77,9 @@ const slashQuery = ref('');
 const blockMenuVisible = ref(false);
 const blockMenuPosition = ref({ top: 0, left: 0 });
 const blockMenuActions = ref<BlockMenuAction[]>([]);
+const blockHandleVisible = ref(false);
+const blockHandlePosition = ref<{ top: number; left: number } | null>(null);
+const currentBlockPos = ref<number | null>(null);
 
 const slashCommands = computed<SlashCommandType[]>(() => [
   {
@@ -241,6 +262,258 @@ const handleSlashCommand = () => {
   slashQuery.value = '';
 };
 
+// Block handle and menu functionality
+const handleMouseMove = (event: MouseEvent) => {
+  if (!editor.value) return;
+
+  const target = event.target as HTMLElement;
+  const editorElement = target.closest('.ProseMirror');
+
+  if (!editorElement) {
+    blockHandleVisible.value = false;
+    return;
+  }
+
+  // Find the block node under the cursor
+  const pos = editor.value.view.posAtCoords({ left: event.clientX, top: event.clientY });
+  if (!pos) {
+    blockHandleVisible.value = false;
+    return;
+  }
+
+  const $pos = editor.value.state.doc.resolve(pos.pos);
+  const blockNode = $pos.node($pos.depth);
+
+  if (!blockNode || blockNode.type.name === 'doc') {
+    blockHandleVisible.value = false;
+    return;
+  }
+
+  // Get block position and coordinates
+  const blockPos = $pos.before($pos.depth);
+  const coords = editor.value.view.coordsAtPos(blockPos);
+
+  blockHandleVisible.value = true;
+  blockHandlePosition.value = {
+    top: coords.top,
+    left: coords.left - 40, // Position handle to the left of the block
+  };
+  currentBlockPos.value = blockPos;
+};
+
+const openBlockMenu = (event: MouseEvent) => {
+  if (!editor.value || currentBlockPos.value === null) return;
+
+  event.preventDefault();
+  event.stopPropagation();
+
+  const $pos = editor.value.state.doc.resolve(currentBlockPos.value);
+  const blockNode = $pos.node($pos.depth);
+
+  // Build menu actions
+  const actions: BlockMenuAction[] = [
+    {
+      id: 'delete',
+      label: 'Удалить блок',
+      icon: '🗑️',
+      action: () => deleteBlock(),
+    },
+    {
+      id: 'duplicate',
+      label: 'Дублировать блок',
+      icon: '📋',
+      action: () => duplicateBlock(),
+    },
+    {
+      id: 'move-up',
+      label: 'Переместить вверх',
+      icon: '⬆️',
+      action: () => moveBlockUp(),
+    },
+    {
+      id: 'move-down',
+      label: 'Переместить вниз',
+      icon: '⬇️',
+      action: () => moveBlockDown(),
+    },
+    {
+      id: 'copy-text',
+      label: 'Скопировать как текст',
+      icon: '📄',
+      action: () => copyBlockAsText(),
+    },
+    {
+      id: 'text-color',
+      label: 'Цвет текста',
+      icon: '🎨',
+      action: () => changeTextColor(),
+    },
+    {
+      id: 'bg-color',
+      label: 'Цвет фона',
+      icon: '🖌️',
+      action: () => changeBackgroundColor(),
+    },
+    {
+      id: 'comment',
+      label: 'Добавить комментарий',
+      icon: '💬',
+      action: () => addBlockComment(),
+    },
+  ];
+
+  blockMenuActions.value = actions;
+  blockMenuPosition.value = {
+    top: event.clientY,
+    left: event.clientX,
+  };
+  blockMenuVisible.value = true;
+};
+
+const deleteBlock = () => {
+  if (!editor.value || currentBlockPos.value === null) return;
+
+  const $pos = editor.value.state.doc.resolve(currentBlockPos.value);
+  const from = $pos.before($pos.depth);
+  const to = $pos.after($pos.depth);
+
+  editor.value.chain().focus().deleteRange({ from, to }).run();
+  blockMenuVisible.value = false;
+};
+
+const duplicateBlock = () => {
+  if (!editor.value || currentBlockPos.value === null) return;
+
+  const $pos = editor.value.state.doc.resolve(currentBlockPos.value);
+  const blockNode = $pos.node($pos.depth);
+  const to = $pos.after($pos.depth);
+
+  editor.value.chain().focus().insertContentAt(to, blockNode.toJSON()).run();
+  blockMenuVisible.value = false;
+};
+
+const moveBlockUp = () => {
+  if (!editor.value || currentBlockPos.value === null) return;
+
+  const { state, view } = editor.value;
+  const $pos = state.doc.resolve(currentBlockPos.value);
+  const blockNode = $pos.node($pos.depth);
+
+  // Find previous block
+  if ($pos.depth === 0 || $pos.index($pos.depth - 1) === 0) {
+    // Already at top
+    blockMenuVisible.value = false;
+    return;
+  }
+
+  const from = $pos.before($pos.depth);
+  const to = $pos.after($pos.depth);
+
+  // Get previous sibling position
+  const prevPos = state.doc.resolve(from - 1);
+  const prevFrom = prevPos.before(prevPos.depth);
+
+  // Delete current block and insert before previous
+  const tr = state.tr;
+  tr.delete(from, to);
+  tr.insert(prevFrom, blockNode);
+  view.dispatch(tr);
+
+  blockMenuVisible.value = false;
+};
+
+const moveBlockDown = () => {
+  if (!editor.value || currentBlockPos.value === null) return;
+
+  const { state, view } = editor.value;
+  const $pos = state.doc.resolve(currentBlockPos.value);
+  const blockNode = $pos.node($pos.depth);
+  const parent = $pos.node($pos.depth - 1);
+
+  // Check if not last block
+  if ($pos.index($pos.depth - 1) >= parent.childCount - 1) {
+    // Already at bottom
+    blockMenuVisible.value = false;
+    return;
+  }
+
+  const from = $pos.before($pos.depth);
+  const to = $pos.after($pos.depth);
+
+  // Get next sibling position
+  const nextPos = state.doc.resolve(to + 1);
+  const nextTo = nextPos.after(nextPos.depth);
+
+  // Delete current block and insert after next
+  const tr = state.tr;
+  tr.delete(from, to);
+  tr.insert(nextTo - (to - from), blockNode);
+  view.dispatch(tr);
+
+  blockMenuVisible.value = false;
+};
+
+const copyBlockAsText = () => {
+  if (!editor.value || currentBlockPos.value === null) return;
+
+  const $pos = editor.value.state.doc.resolve(currentBlockPos.value);
+  const blockNode = $pos.node($pos.depth);
+  const text = blockNode.textContent;
+
+  navigator.clipboard.writeText(text).then(() => {
+    console.log('Block text copied to clipboard');
+  });
+
+  blockMenuVisible.value = false;
+};
+
+const changeTextColor = () => {
+  if (!editor.value || currentBlockPos.value === null) return;
+
+  const color = window.prompt('Введите цвет текста (например, #ff0000):');
+  if (color) {
+    const $pos = editor.value.state.doc.resolve(currentBlockPos.value);
+    const from = $pos.start($pos.depth);
+    const to = $pos.end($pos.depth);
+
+    editor.value.chain().focus().setTextSelection({ from, to }).setColor(color).run();
+  }
+
+  blockMenuVisible.value = false;
+};
+
+const changeBackgroundColor = () => {
+  if (!editor.value || currentBlockPos.value === null) return;
+
+  const color = window.prompt('Введите цвет фона (например, #ffff00):');
+  if (color) {
+    const $pos = editor.value.state.doc.resolve(currentBlockPos.value);
+    const from = $pos.start($pos.depth);
+    const to = $pos.end($pos.depth);
+
+    editor.value.chain().focus().setTextSelection({ from, to }).setHighlight({ color }).run();
+  }
+
+  blockMenuVisible.value = false;
+};
+
+const addBlockComment = () => {
+  if (!editor.value) return;
+
+  const comment = window.prompt('Введите комментарий к блоку:');
+  if (comment) {
+    editor.value.chain().focus().setBlockComment(comment).run();
+  }
+
+  blockMenuVisible.value = false;
+};
+
+const startDrag = (event: MouseEvent) => {
+  // Basic drag functionality - can be enhanced with more sophisticated drag & drop
+  event.preventDefault();
+  // Drag & drop will be handled by native draggable attribute
+};
+
 watch(
   () => props.modelValue,
   (newValue) => {
@@ -401,5 +674,39 @@ onBeforeUnmount(() => {
   background-color: #f3f4f6;
   border-radius: 0.25em;
   padding: 0 0.2em;
+}
+
+.block-editor-content-wrapper {
+  position: relative;
+  height: 100%;
+}
+
+.block-handle {
+  position: fixed;
+  width: 32px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  font-size: 14px;
+  color: #9ca3af;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  opacity: 0.8;
+  transition: all 0.2s ease;
+  user-select: none;
+  z-index: 50;
+}
+
+.block-handle:hover {
+  opacity: 1;
+  color: #374151;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.block-handle:active {
+  cursor: grabbing;
 }
 </style>
