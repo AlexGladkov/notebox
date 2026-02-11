@@ -1,7 +1,6 @@
 <template>
   <div
     v-if="visible && filteredCommands.length > 0"
-    ref="menuRef"
     class="slash-command-menu"
     :style="{ top: position.top + 'px', left: position.left + 'px' }"
   >
@@ -37,7 +36,6 @@ const emit = defineEmits<{
   commandSelected: [];
 }>();
 
-const menuRef = ref<HTMLElement | null>(null);
 const selectedIndex = ref(0);
 const position = ref({ top: 0, left: 0 });
 

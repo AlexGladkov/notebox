@@ -76,7 +76,7 @@ export const BlockComment = Extension.create<BlockCommentOptions, BlockCommentSt
             // Clean up comments for deleted blocks
             if (tr.docChanged) {
               const validPositions = new Set<string>();
-              tr.doc.descendants((node, pos) => {
+              tr.doc.descendants((_node, pos) => {
                 validPositions.add(pos.toString());
               });
 

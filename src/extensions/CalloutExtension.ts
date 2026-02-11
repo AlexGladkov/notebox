@@ -67,7 +67,7 @@ export const Callout = Node.create<CalloutOptions>({
   },
 
   addNodeView() {
-    return VueNodeViewRenderer(CalloutBlock);
+    return VueNodeViewRenderer(CalloutBlock as any);
   },
 
   addCommands() {

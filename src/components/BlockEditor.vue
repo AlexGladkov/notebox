@@ -55,7 +55,7 @@ import TextStyle from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
 
 import { Callout } from '../extensions/CalloutExtension';
-import { SlashCommand, SlashCommandPluginKey } from '../extensions/SlashCommand';
+import { SlashCommand } from '../extensions/SlashCommand';
 import { BlockComment } from '../extensions/BlockComment';
 
 import EditorBubbleMenu from './BlockEditor/BubbleMenu.vue';
@@ -293,10 +293,14 @@ const handleMouseMove = (event: MouseEvent) => {
   const blockPos = $pos.before($pos.depth);
   const coords = editor.value.view.coordsAtPos(blockPos);
 
+  // Get container offset for absolute positioning
+  const containerRect = (editorElement as HTMLElement).getBoundingClientRect();
+  const scrollTop = (editorElement as HTMLElement).scrollTop || 0;
+
   blockHandleVisible.value = true;
   blockHandlePosition.value = {
-    top: coords.top,
-    left: coords.left - 40, // Position handle to the left of the block
+    top: coords.top - containerRect.top + scrollTop,
+    left: coords.left - containerRect.left - 40, // Position handle to the left of the block
   };
   currentBlockPos.value = blockPos;
 };
@@ -306,9 +310,6 @@ const openBlockMenu = (event: MouseEvent) => {
 
   event.preventDefault();
   event.stopPropagation();
-
-  const $pos = editor.value.state.doc.resolve(currentBlockPos.value);
-  const blockNode = $pos.node($pos.depth);
 
   // Build menu actions
   const actions: BlockMenuAction[] = [
@@ -682,7 +683,7 @@ onBeforeUnmount(() => {
 }
 
 .block-handle {
-  position: fixed;
+  position: absolute;
   width: 32px;
   height: 24px;
   display: flex;
