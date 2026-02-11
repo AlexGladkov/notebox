@@ -293,10 +293,14 @@ const handleMouseMove = (event: MouseEvent) => {
   const blockPos = $pos.before($pos.depth);
   const coords = editor.value.view.coordsAtPos(blockPos);
 
+  // Get container offset for absolute positioning
+  const containerRect = (editorElement as HTMLElement).getBoundingClientRect();
+  const scrollTop = (editorElement as HTMLElement).scrollTop || 0;
+
   blockHandleVisible.value = true;
   blockHandlePosition.value = {
-    top: coords.top,
-    left: coords.left - 40, // Position handle to the left of the block
+    top: coords.top - containerRect.top + scrollTop,
+    left: coords.left - containerRect.left - 40, // Position handle to the left of the block
   };
   currentBlockPos.value = blockPos;
 };
@@ -682,7 +686,7 @@ onBeforeUnmount(() => {
 }
 
 .block-handle {
-  position: fixed;
+  position: absolute;
   width: 32px;
   height: 24px;
   display: flex;
