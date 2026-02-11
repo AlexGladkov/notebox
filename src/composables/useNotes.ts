@@ -8,10 +8,14 @@ export function useNotes(notes: Ref<Note[]>) {
     const newNote: Note = {
       id: uuidv4(),
       title,
-      content: '',
+      content: JSON.stringify({
+        type: 'doc',
+        content: [{ type: 'paragraph' }],
+      }),
       folderId,
       createdAt: now,
       updatedAt: now,
+      isBlockFormat: true,
     };
     notes.value.push(newNote);
     return newNote;

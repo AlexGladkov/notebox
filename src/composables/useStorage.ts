@@ -1,5 +1,6 @@
 import { ref, watch } from 'vue';
 import type { Folder, Note } from '../types';
+import { markdownToBlocks } from '../utils/markdownToBlocks';
 
 const FOLDERS_KEY = 'notebox_folders';
 const NOTES_KEY = 'notebox_notes';
@@ -7,6 +8,24 @@ const NOTES_KEY = 'notebox_notes';
 export function useStorage() {
   const folders = ref<Folder[]>([]);
   const notes = ref<Note[]>([]);
+
+  const migrateNoteToBlockFormat = (note: Note): Note => {
+    if (note.isBlockFormat) {
+      return note;
+    }
+
+    try {
+      const blocksJson = markdownToBlocks(note.content);
+      return {
+        ...note,
+        content: blocksJson,
+        isBlockFormat: true,
+      };
+    } catch (error) {
+      console.error('Failed to migrate note to block format:', error);
+      return note;
+    }
+  };
 
   const loadFromStorage = () => {
     try {
@@ -17,7 +36,8 @@ export function useStorage() {
         folders.value = JSON.parse(storedFolders);
       }
       if (storedNotes) {
-        notes.value = JSON.parse(storedNotes);
+        const parsedNotes = JSON.parse(storedNotes) as Note[];
+        notes.value = parsedNotes.map(migrateNoteToBlockFormat);
       }
     } catch (error) {
       console.error('Failed to load data from localStorage:', error);

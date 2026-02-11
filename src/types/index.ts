@@ -13,6 +13,7 @@ export interface Note {
   folderId: string;
   createdAt: number;
   updatedAt: number;
+  isBlockFormat?: boolean;
 }
 
 export interface AppState {
