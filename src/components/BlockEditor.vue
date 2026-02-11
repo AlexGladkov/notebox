@@ -55,7 +55,7 @@ import TextStyle from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
 
 import { Callout } from '../extensions/CalloutExtension';
-import { SlashCommand, SlashCommandPluginKey } from '../extensions/SlashCommand';
+import { SlashCommand } from '../extensions/SlashCommand';
 import { BlockComment } from '../extensions/BlockComment';
 
 import EditorBubbleMenu from './BlockEditor/BubbleMenu.vue';
@@ -310,9 +310,6 @@ const openBlockMenu = (event: MouseEvent) => {
 
   event.preventDefault();
   event.stopPropagation();
-
-  const $pos = editor.value.state.doc.resolve(currentBlockPos.value);
-  const blockNode = $pos.node($pos.depth);
 
   // Build menu actions
   const actions: BlockMenuAction[] = [

@@ -84,7 +84,7 @@ const props = defineProps<{
   editor: Editor;
 }>();
 
-const shouldShow = ({ editor, view, state, from, to }: any) => {
+const shouldShow = ({ state, from, to }: any) => {
   const { doc, selection } = state;
   const { empty } = selection;
 
