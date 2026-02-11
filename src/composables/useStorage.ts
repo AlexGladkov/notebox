@@ -1,72 +1,56 @@
-import { ref, watch } from 'vue';
+import { ref, onMounted } from 'vue';
 import type { Folder, Note } from '../types';
-import { markdownToBlocks } from '../utils/markdownToBlocks';
-
-const FOLDERS_KEY = 'notebox_folders';
-const NOTES_KEY = 'notebox_notes';
+import { foldersApi, notesApi, ApiError } from '../api';
 
 export function useStorage() {
   const folders = ref<Folder[]>([]);
   const notes = ref<Note[]>([]);
+  const loading = ref(false);
+  const error = ref<string | null>(null);
 
-  const migrateNoteToBlockFormat = (note: Note): Note => {
-    if (note.isBlockFormat) {
-      return note;
-    }
-
+  const loadFolders = async () => {
     try {
-      const blocksJson = markdownToBlocks(note.content);
-      return {
-        ...note,
-        content: blocksJson,
-        isBlockFormat: true,
-      };
-    } catch (error) {
-      console.error('Failed to migrate note to block format:', error);
-      return note;
+      loading.value = true;
+      error.value = null;
+      folders.value = await foldersApi.getAll();
+    } catch (err) {
+      console.error('Failed to load folders:', err);
+      error.value = err instanceof ApiError ? err.message : 'Failed to load folders';
+      folders.value = [];
+    } finally {
+      loading.value = false;
     }
   };
 
-  const loadFromStorage = () => {
+  const loadNotes = async () => {
     try {
-      const storedFolders = localStorage.getItem(FOLDERS_KEY);
-      const storedNotes = localStorage.getItem(NOTES_KEY);
-
-      if (storedFolders) {
-        folders.value = JSON.parse(storedFolders);
-      }
-      if (storedNotes) {
-        const parsedNotes = JSON.parse(storedNotes) as Note[];
-        notes.value = parsedNotes.map(migrateNoteToBlockFormat);
-      }
-    } catch (error) {
-      console.error('Failed to load data from localStorage:', error);
+      loading.value = true;
+      error.value = null;
+      notes.value = await notesApi.getAll();
+    } catch (err) {
+      console.error('Failed to load notes:', err);
+      error.value = err instanceof ApiError ? err.message : 'Failed to load notes';
+      notes.value = [];
+    } finally {
+      loading.value = false;
     }
   };
 
-  const saveFolders = () => {
-    try {
-      localStorage.setItem(FOLDERS_KEY, JSON.stringify(folders.value));
-    } catch (error) {
-      console.error('Failed to save folders to localStorage:', error);
-    }
+  const loadFromStorage = async () => {
+    await Promise.all([loadFolders(), loadNotes()]);
   };
 
-  const saveNotes = () => {
-    try {
-      localStorage.setItem(NOTES_KEY, JSON.stringify(notes.value));
-    } catch (error) {
-      console.error('Failed to save notes to localStorage:', error);
-    }
-  };
-
-  watch(folders, saveFolders, { deep: true });
-  watch(notes, saveNotes, { deep: true });
-
-  loadFromStorage();
+  onMounted(() => {
+    loadFromStorage();
+  });
 
   return {
     folders,
     notes,
+    loading,
+    error,
+    loadFolders,
+    loadNotes,
+    loadFromStorage,
   };
 }
