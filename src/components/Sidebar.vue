@@ -1,7 +1,6 @@
 <template>
-  <div class="w-64 bg-gray-50 border-r border-gray-200 flex flex-col h-screen">
-    <div class="p-4 border-b border-gray-200">
-      <h1 class="text-xl font-bold text-gray-800 mb-4">NoteBox</h1>
+  <div class="w-64 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col h-full">
+    <div class="p-4 border-b border-gray-200 dark:border-gray-700">
       <SearchBar v-model="searchQuery" />
     </div>
 
@@ -12,26 +11,26 @@
           :key="note.id"
           @click="$emit('selectNote', note.id)"
           :class="[
-            'px-3 py-2 hover:bg-gray-100 cursor-pointer rounded-md',
-            { 'bg-blue-50': selectedNoteId === note.id }
+            'px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-md',
+            { 'bg-blue-50 dark:bg-blue-900': selectedNoteId === note.id }
           ]"
         >
-          <div class="text-sm font-medium truncate">{{ note.title }}</div>
-          <div class="text-xs text-gray-500">
+          <div class="text-sm font-medium truncate text-gray-800 dark:text-gray-100">{{ note.title }}</div>
+          <div class="text-xs text-gray-500 dark:text-gray-400">
             {{ getFolderPath(note.folderId) }}
           </div>
         </div>
-        <div v-if="searchResults.length === 0" class="px-3 py-2 text-sm text-gray-500">
+        <div v-if="searchResults.length === 0" class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
           Ничего не найдено
         </div>
       </div>
 
       <div v-else>
         <div class="flex items-center justify-between px-3 py-2">
-          <span class="text-sm font-semibold text-gray-700">Папки</span>
+          <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Папки</span>
           <button
             @click="$emit('createRootFolder')"
-            class="p-1 hover:bg-gray-200 rounded"
+            class="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-700 dark:text-gray-300"
             title="Создать папку"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -51,7 +50,7 @@
           @toggle-expand="toggleFolder"
         />
 
-        <div v-if="rootFolders.length === 0" class="px-3 py-4 text-sm text-gray-500 text-center">
+        <div v-if="rootFolders.length === 0" class="px-3 py-4 text-sm text-gray-500 dark:text-gray-400 text-center">
           Создайте первую папку
         </div>
       </div>

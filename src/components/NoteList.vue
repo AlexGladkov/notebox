@@ -1,7 +1,7 @@
 <template>
-  <div class="h-full flex flex-col bg-white">
-    <div class="border-b border-gray-200 p-4 flex items-center justify-between">
-      <h2 class="text-lg font-semibold text-gray-800">
+  <div class="h-full flex flex-col bg-white dark:bg-gray-900">
+    <div class="border-b border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between">
+      <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">
         {{ folderName || 'Папка' }}
       </h2>
       <button
@@ -16,33 +16,33 @@
     </div>
 
     <div class="flex-1 overflow-y-auto">
-      <div v-if="notes.length === 0" class="p-8 text-center text-gray-500">
+      <div v-if="notes.length === 0" class="p-8 text-center text-gray-500 dark:text-gray-400">
         <EmptyState message="Нет заметок в этой папке" />
       </div>
 
-      <div v-else class="divide-y divide-gray-200">
+      <div v-else class="divide-y divide-gray-200 dark:divide-gray-700">
         <div
           v-for="note in notes"
           :key="note.id"
           @click="$emit('selectNote', note.id)"
           :class="[
-            'p-4 cursor-pointer hover:bg-gray-50 transition-colors',
-            { 'bg-blue-50': selectedNoteId === note.id }
+            'p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors',
+            { 'bg-blue-50 dark:bg-blue-900': selectedNoteId === note.id }
           ]"
         >
           <div class="flex items-start justify-between gap-4">
             <div class="flex-1 min-w-0">
-              <h3 class="font-medium text-gray-900 truncate">{{ note.title }}</h3>
-              <p class="text-sm text-gray-500 mt-1 line-clamp-2">
+              <h3 class="font-medium text-gray-900 dark:text-gray-100 truncate">{{ note.title }}</h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
                 {{ getPreview(note.content) }}
               </p>
-              <p class="text-xs text-gray-400 mt-2">
+              <p class="text-xs text-gray-400 dark:text-gray-500 mt-2">
                 {{ formatDate(note.updatedAt) }}
               </p>
             </div>
             <button
               @click.stop="$emit('deleteNote', note.id)"
-              class="flex-shrink-0 p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+              class="flex-shrink-0 p-1.5 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900 rounded transition-colors"
               title="Удалить заметку"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

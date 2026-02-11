@@ -1,6 +1,9 @@
 <template>
-  <div class="flex h-screen overflow-hidden">
-    <Sidebar
+  <div class="flex flex-col h-screen bg-white dark:bg-gray-900">
+    <Header />
+
+    <div class="flex flex-1 overflow-hidden">
+      <Sidebar
       :folders="folders"
       :search-query="searchQuery"
       :selected-folder-id="selectedFolderId"
@@ -17,23 +20,24 @@
       @toggle-expand="toggleExpandFolder"
     />
 
-    <div class="flex-1 flex overflow-hidden">
-      <div v-if="selectedFolderId && !selectedNoteId" class="w-80 border-r border-gray-200">
-        <NoteList
-          :notes="currentFolderNotes"
-          :folder-name="currentFolder?.name"
-          :selected-note-id="selectedNoteId"
-          @create-note="handleCreateNote"
-          @select-note="handleSelectNote"
-          @delete-note="handleDeleteNote"
-        />
-      </div>
+      <div class="flex-1 flex overflow-hidden">
+        <div v-if="selectedFolderId && !selectedNoteId" class="w-80 border-r border-gray-200 dark:border-gray-700">
+          <NoteList
+            :notes="currentFolderNotes"
+            :folder-name="currentFolder?.name"
+            :selected-note-id="selectedNoteId"
+            @create-note="handleCreateNote"
+            @select-note="handleSelectNote"
+            @delete-note="handleDeleteNote"
+          />
+        </div>
 
-      <div class="flex-1">
-        <NoteEditor
-          :note="currentNote"
-          @update-note="handleUpdateNote"
-        />
+        <div class="flex-1">
+          <NoteEditor
+            :note="currentNote"
+            @update-note="handleUpdateNote"
+          />
+        </div>
       </div>
     </div>
 
@@ -53,10 +57,15 @@ import { useStorage } from './composables/useStorage';
 import { useFolders } from './composables/useFolders';
 import { useNotes } from './composables/useNotes';
 import { useSearch } from './composables/useSearch';
+import { useTheme } from './composables/useTheme';
+import Header from './components/Header.vue';
 import Sidebar from './components/Sidebar.vue';
 import NoteList from './components/NoteList.vue';
 import NoteEditor from './components/NoteEditor.vue';
 import ConfirmDialog from './components/ConfirmDialog.vue';
+
+// Инициализация темы
+useTheme();
 
 const { folders, notes } = useStorage();
 const {

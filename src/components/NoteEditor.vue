@@ -1,43 +1,43 @@
 <template>
-  <div v-if="note" class="h-full flex flex-col bg-white">
-    <div class="border-b border-gray-200 p-4">
+  <div v-if="note" class="h-full flex flex-col bg-white dark:bg-gray-900">
+    <div class="border-b border-gray-200 dark:border-gray-700 p-4">
       <input
         v-model="localTitle"
         @input="handleTitleChange"
         placeholder="Название заметки..."
-        class="w-full text-2xl font-semibold outline-none border-none focus:ring-0"
+        class="w-full text-2xl font-semibold outline-none border-none focus:ring-0 bg-transparent text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
       />
-      <div class="text-sm text-gray-500 mt-2">
+      <div class="text-sm text-gray-500 dark:text-gray-400 mt-2">
         Изменено: {{ formatDate(note.updatedAt) }}
       </div>
     </div>
 
     <div class="flex-1 flex overflow-hidden">
-      <div class="flex-1 flex flex-col border-r border-gray-200">
-        <div class="px-4 py-2 bg-gray-50 border-b border-gray-200 text-sm font-medium text-gray-700">
+      <div class="flex-1 flex flex-col border-r border-gray-200 dark:border-gray-700">
+        <div class="px-4 py-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300">
           Редактор
         </div>
         <textarea
           v-model="localContent"
           @input="handleContentChange"
           placeholder="Начните писать... (поддерживается Markdown)"
-          class="flex-1 p-4 outline-none resize-none font-mono text-sm"
+          class="flex-1 p-4 outline-none resize-none font-mono text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
         />
       </div>
 
       <div class="flex-1 flex flex-col overflow-hidden">
-        <div class="px-4 py-2 bg-gray-50 border-b border-gray-200 text-sm font-medium text-gray-700">
+        <div class="px-4 py-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300">
           Превью
         </div>
         <div
-          class="flex-1 p-4 overflow-y-auto prose prose-sm max-w-none"
+          class="flex-1 p-4 overflow-y-auto prose prose-sm max-w-none dark:prose-invert"
           v-html="renderedContent"
         />
       </div>
     </div>
   </div>
 
-  <div v-else class="h-full flex items-center justify-center">
+  <div v-else class="h-full flex items-center justify-center bg-white dark:bg-gray-900">
     <EmptyState message="Выберите заметку для редактирования" />
   </div>
 </template>
@@ -113,6 +113,10 @@ const formatDate = (timestamp: number): string => {
   color: #374151;
 }
 
+.dark .prose {
+  color: #d1d5db;
+}
+
 .prose h1 {
   font-size: 2em;
   font-weight: 700;
@@ -153,11 +157,20 @@ const formatDate = (timestamp: number): string => {
   font-size: 0.9em;
 }
 
+.dark .prose code {
+  background-color: #374151;
+  color: #e5e7eb;
+}
+
 .prose pre {
   background-color: #f3f4f6;
   padding: 1em;
   border-radius: 0.5em;
   overflow-x: auto;
+}
+
+.dark .prose pre {
+  background-color: #1f2937;
 }
 
 .prose pre code {
@@ -172,9 +185,18 @@ const formatDate = (timestamp: number): string => {
   margin: 0.5em 0;
 }
 
+.dark .prose blockquote {
+  border-left-color: #4b5563;
+  color: #9ca3af;
+}
+
 .prose a {
   color: #2563eb;
   text-decoration: underline;
+}
+
+.dark .prose a {
+  color: #60a5fa;
 }
 
 .prose img {
@@ -195,8 +217,17 @@ const formatDate = (timestamp: number): string => {
   padding: 0.5em;
 }
 
+.dark .prose th,
+.dark .prose td {
+  border-color: #4b5563;
+}
+
 .prose th {
   background-color: #f3f4f6;
   font-weight: 600;
+}
+
+.dark .prose th {
+  background-color: #374151;
 }
 </style>

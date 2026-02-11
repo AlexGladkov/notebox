@@ -5,10 +5,10 @@
       :value="modelValue"
       @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
       placeholder="Поиск заметок..."
-      class="w-full px-4 py-2 pl-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+      class="w-full px-4 py-2 pl-10 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
     />
     <svg
-      class="absolute left-3 top-2.5 w-5 h-5 text-gray-400"
+      class="absolute left-3 top-2.5 w-5 h-5 text-gray-400 dark:text-gray-500"
       fill="none"
       stroke="currentColor"
       viewBox="0 0 24 24"

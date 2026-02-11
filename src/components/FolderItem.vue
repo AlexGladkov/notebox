@@ -2,8 +2,8 @@
   <div class="folder-item">
     <div
       :class="[
-        'flex items-center gap-2 px-3 py-2 hover:bg-gray-100 cursor-pointer group rounded-md',
-        { 'bg-blue-50': isSelected }
+        'flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer group rounded-md text-gray-800 dark:text-gray-100',
+        { 'bg-blue-50 dark:bg-blue-900': isSelected }
       ]"
       @click="handleSelect"
     >
@@ -22,7 +22,7 @@
       </button>
       <div v-else class="w-4"></div>
 
-      <svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg class="w-4 h-4 text-gray-500 dark:text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
       </svg>
 
@@ -34,14 +34,14 @@
         @blur="handleRename"
         @keydown.enter="handleRename"
         @keydown.esc="cancelEdit"
-        class="flex-1 px-1 border border-blue-500 rounded outline-none"
+        class="flex-1 px-1 border border-blue-500 rounded outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
       />
       <span v-else class="flex-1 truncate text-sm">{{ folder.name }}</span>
 
       <div class="hidden group-hover:flex items-center gap-1">
         <button
           @click.stop="startEdit"
-          class="p-1 hover:bg-gray-200 rounded"
+          class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
           title="Переименовать"
         >
           <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -50,7 +50,7 @@
         </button>
         <button
           @click.stop="$emit('createSubfolder')"
-          class="p-1 hover:bg-gray-200 rounded"
+          class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
           title="Создать подпапку"
         >
           <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -59,7 +59,7 @@
         </button>
         <button
           @click.stop="$emit('delete')"
-          class="p-1 hover:bg-red-100 rounded text-red-600"
+          class="p-1 hover:bg-red-100 dark:hover:bg-red-900 rounded text-red-600 dark:text-red-400"
           title="Удалить"
         >
           <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
