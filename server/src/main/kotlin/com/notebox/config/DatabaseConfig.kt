@@ -15,7 +15,7 @@ import org.springframework.context.event.EventListener
 import javax.sql.DataSource
 
 @Configuration
-class DatabaseConfig(
+class DatabaseInitializer(
     private val dataSource: DataSource
 ) {
     @EventListener(ApplicationReadyEvent::class)
