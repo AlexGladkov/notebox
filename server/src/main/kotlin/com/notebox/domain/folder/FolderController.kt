@@ -1,6 +1,7 @@
 package com.notebox.domain.folder
 
 import com.notebox.dto.*
+import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -27,7 +28,7 @@ class FolderController(
     }
 
     @PostMapping
-    fun createFolder(@RequestBody request: CreateFolderRequest): ResponseEntity<ApiResponse<FolderDto>> {
+    fun createFolder(@Valid @RequestBody request: CreateFolderRequest): ResponseEntity<ApiResponse<FolderDto>> {
         val folder = folderService.createFolder(request.name, request.parentId)
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(successResponse(folder.toDto()))
@@ -36,7 +37,7 @@ class FolderController(
     @PutMapping("/{id}")
     fun updateFolder(
         @PathVariable id: String,
-        @RequestBody request: UpdateFolderRequest
+        @Valid @RequestBody request: UpdateFolderRequest
     ): ResponseEntity<ApiResponse<FolderDto>> {
         val folder = folderService.updateFolder(id, request.name, request.parentId)
             ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)

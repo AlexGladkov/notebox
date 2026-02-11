@@ -6,7 +6,7 @@ import java.time.Instant
 
 object ColumnsTable : Table("columns") {
     val id = varchar("id", 36)
-    val databaseId = varchar("database_id", 36)
+    val databaseId = varchar("database_id", 36).index()
     val name = varchar("name", 255)
     val type = varchar("type", 50)
     val options = text("options").nullable() // JSON string

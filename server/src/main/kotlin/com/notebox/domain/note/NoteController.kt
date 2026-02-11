@@ -1,6 +1,7 @@
 package com.notebox.domain.note
 
 import com.notebox.dto.*
+import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -27,7 +28,7 @@ class NoteController(
     }
 
     @PostMapping
-    fun createNote(@RequestBody request: CreateNoteRequest): ResponseEntity<ApiResponse<NoteDto>> {
+    fun createNote(@Valid @RequestBody request: CreateNoteRequest): ResponseEntity<ApiResponse<NoteDto>> {
         val note = noteService.createNote(request.title, request.content, request.folderId)
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(successResponse(note.toDto()))
@@ -36,7 +37,7 @@ class NoteController(
     @PutMapping("/{id}")
     fun updateNote(
         @PathVariable id: String,
-        @RequestBody request: UpdateNoteRequest
+        @Valid @RequestBody request: UpdateNoteRequest
     ): ResponseEntity<ApiResponse<NoteDto>> {
         val note = noteService.updateNote(id, request.title, request.content, request.folderId)
             ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)

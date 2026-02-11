@@ -1,6 +1,7 @@
 package com.notebox.domain.database
 
 import com.notebox.dto.*
+import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -30,7 +31,7 @@ class DatabaseController(
     }
 
     @PostMapping
-    fun createDatabase(@RequestBody request: CreateDatabaseRequest): ResponseEntity<ApiResponse<CustomDatabaseDto>> {
+    fun createDatabase(@Valid @RequestBody request: CreateDatabaseRequest): ResponseEntity<ApiResponse<CustomDatabaseDto>> {
         val (database, columns) = databaseService.createDatabase(request.name, request.folderId)
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(successResponse(database.toDto(columns)))
@@ -39,7 +40,7 @@ class DatabaseController(
     @PutMapping("/{id}")
     fun updateDatabase(
         @PathVariable id: String,
-        @RequestBody request: UpdateDatabaseRequest
+        @Valid @RequestBody request: UpdateDatabaseRequest
     ): ResponseEntity<ApiResponse<CustomDatabaseDto>> {
         val (database, columns) = databaseService.updateDatabase(id, request.name, request.folderId)
             ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -58,7 +59,7 @@ class DatabaseController(
     @PostMapping("/{id}/columns")
     fun addColumn(
         @PathVariable id: String,
-        @RequestBody request: CreateColumnRequest
+        @Valid @RequestBody request: CreateColumnRequest
     ): ResponseEntity<ApiResponse<ColumnDto>> {
         val column = databaseService.addColumn(
             id,
@@ -75,7 +76,7 @@ class DatabaseController(
     fun updateColumn(
         @PathVariable id: String,
         @PathVariable columnId: String,
-        @RequestBody request: UpdateColumnRequest
+        @Valid @RequestBody request: UpdateColumnRequest
     ): ResponseEntity<ApiResponse<ColumnDto>> {
         val column = databaseService.updateColumn(
             columnId,
@@ -108,7 +109,7 @@ class DatabaseController(
     @PostMapping("/{id}/records")
     fun createRecord(
         @PathVariable id: String,
-        @RequestBody request: CreateRecordRequest
+        @Valid @RequestBody request: CreateRecordRequest
     ): ResponseEntity<ApiResponse<RecordDto>> {
         val record = databaseService.createRecord(id, request.data)
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -119,7 +120,7 @@ class DatabaseController(
     fun updateRecord(
         @PathVariable id: String,
         @PathVariable recordId: String,
-        @RequestBody request: UpdateRecordRequest
+        @Valid @RequestBody request: UpdateRecordRequest
     ): ResponseEntity<ApiResponse<RecordDto>> {
         val record = databaseService.updateRecord(recordId, request.data)
             ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
