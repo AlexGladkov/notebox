@@ -63,9 +63,33 @@ export const BlockComment = Extension.create<BlockCommentOptions, BlockCommentSt
   },
 
   addProseMirrorPlugins() {
+    const extension = this;
+
     return [
       new Plugin({
         key: new PluginKey('blockComment'),
+        state: {
+          init() {
+            return null;
+          },
+          apply(tr) {
+            // Clean up comments for deleted blocks
+            if (tr.docChanged) {
+              const validPositions = new Set<string>();
+              tr.doc.descendants((node, pos) => {
+                validPositions.add(pos.toString());
+              });
+
+              // Remove comments for positions that no longer exist
+              for (const key of extension.storage.comments.keys()) {
+                if (!validPositions.has(key)) {
+                  extension.storage.comments.delete(key);
+                }
+              }
+            }
+            return null;
+          },
+        },
         props: {
           decorations: () => {
             return null;

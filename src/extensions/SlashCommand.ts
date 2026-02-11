@@ -83,9 +83,11 @@ export const SlashCommand = Extension.create<SlashCommandOptions, SlashCommandSt
               return { active: false, query: '', range: null };
             }
 
-            const isAtStart = $pos.parentOffset - match[0].length === 0;
+            // Check if slash is at the start of the line or after a space
+            const charBeforeSlash = textBefore.charAt(textBefore.length - match[0].length - 1);
+            const isValidPosition = $pos.parentOffset - match[0].length === 0 || charBeforeSlash === ' ' || charBeforeSlash === '';
 
-            if (!isAtStart) {
+            if (!isValidPosition) {
               if (prev.active) {
                 extension.options.onHide?.();
               }

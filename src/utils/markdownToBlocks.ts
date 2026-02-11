@@ -75,9 +75,9 @@ function htmlToTiptapJSON(element: HTMLElement): any {
     const el = node as HTMLElement;
     const tagName = el.tagName.toLowerCase();
 
-    const processChildren = () => {
+    const processChildren = (element: HTMLElement = el) => {
       const children: any[] = [];
-      el.childNodes.forEach((child) => {
+      element.childNodes.forEach((child) => {
         const processed = processNode(child);
         if (processed) {
           if (Array.isArray(processed)) {
@@ -129,7 +129,7 @@ function htmlToTiptapJSON(element: HTMLElement): any {
               return {
                 type: 'taskItem',
                 attrs: { checked },
-                content: processChildren.call(li),
+                content: processChildren(li as HTMLElement),
               };
             }),
           };
@@ -138,7 +138,7 @@ function htmlToTiptapJSON(element: HTMLElement): any {
           type: 'bulletList',
           content: Array.from(el.children).map((li) => ({
             type: 'listItem',
-            content: processChildren.call(li),
+            content: processChildren(li as HTMLElement),
           })),
         };
 
@@ -147,7 +147,7 @@ function htmlToTiptapJSON(element: HTMLElement): any {
           type: 'orderedList',
           content: Array.from(el.children).map((li) => ({
             type: 'listItem',
-            content: processChildren.call(li),
+            content: processChildren(li as HTMLElement),
           })),
         };
 
