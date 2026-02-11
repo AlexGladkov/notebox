@@ -105,7 +105,7 @@ class FileController(
                      buffer[2] == 0x46.toByte()
             "pdf" -> buffer[0] == 0x25.toByte() && buffer[1] == 0x50.toByte() &&
                      buffer[2] == 0x44.toByte() && buffer[3] == 0x46.toByte()
-            "webp" -> buffer[8..11].toString(Charsets.US_ASCII) == "WEBP"
+            "webp" -> String(buffer.sliceArray(8..11), Charsets.US_ASCII) == "WEBP"
             else -> true // For text and office files, trust content-type validation
         }
     }
