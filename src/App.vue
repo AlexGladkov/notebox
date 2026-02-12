@@ -126,21 +126,21 @@ const handleSelectNote = (noteId: string) => {
   }
 };
 
-const handleCreateRootFolder = () => {
-  const folder = createFolder('Новая папка', null);
+const handleCreateRootFolder = async () => {
+  const folder = await createFolder('Новая папка', null);
   selectedFolderId.value = folder.id;
   selectedNoteId.value = null;
   expandedFolders.value.add(folder.id);
 };
 
-const handleCreateSubfolder = (parentId: string) => {
-  const folder = createFolder('Новая папка', parentId);
+const handleCreateSubfolder = async (parentId: string) => {
+  const folder = await createFolder('Новая папка', parentId);
   expandedFolders.value.add(parentId);
   expandedFolders.value.add(folder.id);
 };
 
-const handleRenameFolder = (folderId: string, name: string) => {
-  updateFolder(folderId, name);
+const handleRenameFolder = async (folderId: string, name: string) => {
+  await updateFolder(folderId, name);
 };
 
 const handleDeleteFolder = (folderId: string) => {
@@ -163,8 +163,8 @@ const handleDeleteFolder = (folderId: string) => {
       ? `Это также удалит ${childFolders.length} подпапок и ${totalNotes} заметок.`
       : ''
   }`;
-  confirmDialog.action = () => {
-    const deletedFolderIds = deleteFolder(folderId);
+  confirmDialog.action = async () => {
+    const deletedFolderIds = await deleteFolder(folderId);
     deleteNotesByFolderIds(deletedFolderIds);
 
     if (selectedFolderId.value === folderId || deletedFolderIds.includes(selectedFolderId.value || '')) {
@@ -176,16 +176,16 @@ const handleDeleteFolder = (folderId: string) => {
   };
 };
 
-const handleCreateNote = () => {
+const handleCreateNote = async () => {
   if (!selectedFolderId.value) return;
 
-  const note = createNote('Новая заметка', selectedFolderId.value);
+  const note = await createNote('Новая заметка', selectedFolderId.value);
   selectedNoteId.value = note.id;
 };
 
-const handleUpdateNote = (updates: { title?: string; content?: string }) => {
+const handleUpdateNote = async (updates: { title?: string; content?: string }) => {
   if (!selectedNoteId.value) return;
-  updateNote(selectedNoteId.value, updates);
+  await updateNote(selectedNoteId.value, updates);
 };
 
 const handleDeleteNote = (noteId: string) => {
@@ -195,17 +195,17 @@ const handleDeleteNote = (noteId: string) => {
   confirmDialog.show = true;
   confirmDialog.title = 'Удалить заметку?';
   confirmDialog.message = `Вы уверены, что хотите удалить заметку "${note.title}"?`;
-  confirmDialog.action = () => {
-    deleteNote(noteId);
+  confirmDialog.action = async () => {
+    await deleteNote(noteId);
     if (selectedNoteId.value === noteId) {
       selectedNoteId.value = null;
     }
   };
 };
 
-const handleConfirmAction = () => {
+const handleConfirmAction = async () => {
   if (confirmDialog.action) {
-    confirmDialog.action();
+    await confirmDialog.action();
   }
   cancelConfirm();
 };
