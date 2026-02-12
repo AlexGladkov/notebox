@@ -95,7 +95,7 @@ const confirmDialog = reactive({
   show: false,
   title: '',
   message: '',
-  action: null as (() => void) | null,
+  action: null as (() => void | Promise<void>) | null,
 });
 
 const currentFolder = computed(() => {
