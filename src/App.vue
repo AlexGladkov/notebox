@@ -127,20 +127,32 @@ const handleSelectNote = (noteId: string) => {
 };
 
 const handleCreateRootFolder = async () => {
-  const folder = await createFolder('Новая папка', null);
-  selectedFolderId.value = folder.id;
-  selectedNoteId.value = null;
-  expandedFolders.value.add(folder.id);
+  try {
+    const folder = await createFolder('Новая папка', null);
+    selectedFolderId.value = folder.id;
+    selectedNoteId.value = null;
+    expandedFolders.value.add(folder.id);
+  } catch (error) {
+    console.error('Не удалось создать папку:', error);
+  }
 };
 
 const handleCreateSubfolder = async (parentId: string) => {
-  const folder = await createFolder('Новая папка', parentId);
-  expandedFolders.value.add(parentId);
-  expandedFolders.value.add(folder.id);
+  try {
+    const folder = await createFolder('Новая папка', parentId);
+    expandedFolders.value.add(parentId);
+    expandedFolders.value.add(folder.id);
+  } catch (error) {
+    console.error('Не удалось создать подпапку:', error);
+  }
 };
 
 const handleRenameFolder = async (folderId: string, name: string) => {
-  await updateFolder(folderId, name);
+  try {
+    await updateFolder(folderId, name);
+  } catch (error) {
+    console.error('Не удалось переименовать папку:', error);
+  }
 };
 
 const handleDeleteFolder = (folderId: string) => {
@@ -164,28 +176,40 @@ const handleDeleteFolder = (folderId: string) => {
       : ''
   }`;
   confirmDialog.action = async () => {
-    const deletedFolderIds = await deleteFolder(folderId);
-    deleteNotesByFolderIds(deletedFolderIds);
+    try {
+      const deletedFolderIds = await deleteFolder(folderId);
+      deleteNotesByFolderIds(deletedFolderIds);
 
-    if (selectedFolderId.value === folderId || deletedFolderIds.includes(selectedFolderId.value || '')) {
-      selectedFolderId.value = null;
-      selectedNoteId.value = null;
+      if (selectedFolderId.value === folderId || deletedFolderIds.includes(selectedFolderId.value || '')) {
+        selectedFolderId.value = null;
+        selectedNoteId.value = null;
+      }
+
+      deletedFolderIds.forEach(id => expandedFolders.value.delete(id));
+    } catch (error) {
+      console.error('Не удалось удалить папку:', error);
     }
-
-    deletedFolderIds.forEach(id => expandedFolders.value.delete(id));
   };
 };
 
 const handleCreateNote = async () => {
   if (!selectedFolderId.value) return;
 
-  const note = await createNote('Новая заметка', selectedFolderId.value);
-  selectedNoteId.value = note.id;
+  try {
+    const note = await createNote('Новая заметка', selectedFolderId.value);
+    selectedNoteId.value = note.id;
+  } catch (error) {
+    console.error('Не удалось создать заметку:', error);
+  }
 };
 
 const handleUpdateNote = async (updates: { title?: string; content?: string }) => {
   if (!selectedNoteId.value) return;
-  await updateNote(selectedNoteId.value, updates);
+  try {
+    await updateNote(selectedNoteId.value, updates);
+  } catch (error) {
+    console.error('Не удалось обновить заметку:', error);
+  }
 };
 
 const handleDeleteNote = (noteId: string) => {
@@ -196,16 +220,24 @@ const handleDeleteNote = (noteId: string) => {
   confirmDialog.title = 'Удалить заметку?';
   confirmDialog.message = `Вы уверены, что хотите удалить заметку "${note.title}"?`;
   confirmDialog.action = async () => {
-    await deleteNote(noteId);
-    if (selectedNoteId.value === noteId) {
-      selectedNoteId.value = null;
+    try {
+      await deleteNote(noteId);
+      if (selectedNoteId.value === noteId) {
+        selectedNoteId.value = null;
+      }
+    } catch (error) {
+      console.error('Не удалось удалить заметку:', error);
     }
   };
 };
 
 const handleConfirmAction = async () => {
   if (confirmDialog.action) {
-    await confirmDialog.action();
+    try {
+      await confirmDialog.action();
+    } catch (error) {
+      console.error('Не удалось выполнить действие:', error);
+    }
   }
   cancelConfirm();
 };
