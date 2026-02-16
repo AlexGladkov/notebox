@@ -30,6 +30,11 @@
             { 'bg-blue-50 dark:bg-blue-900': selectedNoteId === note.id }
           ]"
         >
+          <div
+            v-if="note.backdropType"
+            class="note-cover-preview"
+            :style="getCoverStyle(note)"
+          />
           <div class="flex items-start justify-between gap-4">
             <div class="flex-1 min-w-0 flex items-start gap-2">
               <span v-if="note.icon" class="text-2xl flex-shrink-0">{{ note.icon }}</span>
@@ -105,4 +110,33 @@ const formatDate = (timestamp: number): string => {
     year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
   });
 };
+
+const getCoverStyle = (note: Note): Record<string, string> => {
+  const style: Record<string, string> = {
+    height: '48px',
+    borderRadius: '8px 8px 0 0',
+    marginBottom: '8px',
+  };
+
+  if (note.backdropType === 'gradient' && note.backdropValue) {
+    style.background = note.backdropValue;
+  } else if (note.backdropType === 'image' && note.backdropValue) {
+    style.backgroundImage = `url("${note.backdropValue}")`;
+    style.backgroundSize = 'cover';
+    style.backgroundPosition = `center ${note.backdropPositionY || 50}%`;
+  }
+
+  return style;
+};
 </script>
+
+<style scoped>
+.note-cover-preview {
+  width: 100%;
+  height: 48px;
+  border-radius: 8px 8px 0 0;
+  overflow: hidden;
+  background-position: center;
+  background-size: cover;
+}
+</style>
