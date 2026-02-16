@@ -192,9 +192,3 @@ const getFolderPath = (folderId: string): string => {
   return path.join(' / ');
 };
 </script>
-
-<script lang="ts">
-export default {
-  name: 'Sidebar',
-};
-</script>

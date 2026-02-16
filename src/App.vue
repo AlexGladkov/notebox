@@ -65,7 +65,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, watch } from 'vue';
+import { ref, computed, reactive } from 'vue';
 import { useStorage } from './composables/useStorage';
 import { useFolders } from './composables/useFolders';
 import { useNotes } from './composables/useNotes';

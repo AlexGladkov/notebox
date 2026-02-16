@@ -42,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue';
+import { ref, reactive, watch, onMounted, onUnmounted } from 'vue';
 import type { Tab } from '../composables/useTabs';
 import TabItem from './TabItem.vue';
 import TabContextMenu from './TabContextMenu.vue';
@@ -72,6 +72,7 @@ const contextMenu = reactive({
 });
 
 // Проверяем, нужен ли overflow menu
+let resizeTimeout: number | null = null;
 const checkOverflow = () => {
   if (!tabsContainerRef.value) return;
 
@@ -80,6 +81,14 @@ const checkOverflow = () => {
 
   // Показываем overflow menu, если вкладок много (примерно больше 8-10 на экране)
   showOverflow.value = hasOverflow || props.tabs.length > 8;
+};
+
+// Debounced версия checkOverflow для resize события
+const debouncedCheckOverflow = () => {
+  if (resizeTimeout !== null) {
+    clearTimeout(resizeTimeout);
+  }
+  resizeTimeout = window.setTimeout(checkOverflow, 150);
 };
 
 // Обработка клика по вкладке
@@ -124,7 +133,19 @@ const handleDragStart = (tabId: string, event: DragEvent) => {
 const handleDrop = (targetTabId: string, event: DragEvent) => {
   event.preventDefault();
 
-  if (!draggedTabId.value || draggedTabId.value === targetTabId) {
+  // Валидация: проверяем что это действительно наша вкладка
+  if (!event.dataTransfer || !draggedTabId.value) {
+    draggedTabId.value = null;
+    return;
+  }
+
+  const draggedData = event.dataTransfer.getData('text/plain');
+  if (!draggedData || draggedData !== draggedTabId.value) {
+    draggedTabId.value = null;
+    return;
+  }
+
+  if (draggedTabId.value === targetTabId) {
     draggedTabId.value = null;
     return;
   }
@@ -146,11 +167,14 @@ watch(() => props.tabs.length, () => {
 
 onMounted(() => {
   checkOverflow();
-  window.addEventListener('resize', checkOverflow);
+  window.addEventListener('resize', debouncedCheckOverflow);
 });
 
 onUnmounted(() => {
-  window.removeEventListener('resize', checkOverflow);
+  window.removeEventListener('resize', debouncedCheckOverflow);
+  if (resizeTimeout !== null) {
+    clearTimeout(resizeTimeout);
+  }
 });
 </script>
 

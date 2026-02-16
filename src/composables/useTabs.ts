@@ -43,6 +43,7 @@ export function useTabs(getNoteById: (id: string) => Note | undefined) {
     // Проверяем лимит вкладок
     if (tabs.value.length >= MAX_TABS) {
       console.warn(`Достигнут максимум вкладок (${MAX_TABS})`);
+      alert(`Достигнуто максимальное количество вкладок (${MAX_TABS}). Закройте некоторые вкладки, чтобы открыть новые.`);
       return;
     }
 
@@ -147,7 +148,17 @@ export function useTabs(getNoteById: (id: string) => Note | undefined) {
   const getActiveNote = (): Note | undefined => {
     if (!activeTabId.value) return undefined;
     const activeTab = tabs.value.find(t => t.id === activeTabId.value);
-    return activeTab ? getNoteById(activeTab.noteId) : undefined;
+    if (!activeTab) return undefined;
+
+    const note = getNoteById(activeTab.noteId);
+
+    // Если заметка была удалена, закрываем вкладку
+    if (!note) {
+      closeTab(activeTab.id);
+      return undefined;
+    }
+
+    return note;
   };
 
   /**
