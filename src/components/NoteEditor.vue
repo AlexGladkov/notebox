@@ -1,13 +1,13 @@
 <template>
-  <div v-if="note" class="h-full flex flex-col bg-white">
-    <div class="border-b border-gray-200 p-4">
+  <div v-if="note" class="h-full flex flex-col bg-white dark:bg-gray-900">
+    <div class="border-b border-gray-200 dark:border-gray-700 p-4">
       <input
         v-model="localTitle"
         @input="handleTitleChange"
         placeholder="Название заметки..."
-        class="w-full text-2xl font-semibold outline-none border-none focus:ring-0"
+        class="w-full text-2xl font-semibold outline-none border-none focus:ring-0 bg-transparent text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
       />
-      <div class="text-sm text-gray-500 mt-2">
+      <div class="text-sm text-gray-500 dark:text-gray-400 mt-2">
         Изменено: {{ formatDate(note.updatedAt) }}
       </div>
     </div>
