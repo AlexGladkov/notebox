@@ -8,6 +8,10 @@ data class Note(
     val title: String,
     val content: String,
     val folderId: String,
+    val icon: String?,
+    val backdropType: String?,
+    val backdropValue: String?,
+    val backdropPositionY: Int?,
     val createdAt: Instant,
     val updatedAt: Instant
 ) {
@@ -16,6 +20,10 @@ data class Note(
         title = title,
         content = content,
         folderId = folderId,
+        icon = icon,
+        backdropType = backdropType,
+        backdropValue = backdropValue,
+        backdropPositionY = backdropPositionY ?: 50,
         createdAt = createdAt.toEpochMilli(),
         updatedAt = updatedAt.toEpochMilli()
     )

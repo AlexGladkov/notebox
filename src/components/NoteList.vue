@@ -31,14 +31,17 @@
           ]"
         >
           <div class="flex items-start justify-between gap-4">
-            <div class="flex-1 min-w-0">
-              <h3 class="font-medium text-gray-900 dark:text-gray-100 truncate">{{ note.title }}</h3>
-              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
-                {{ getPreview(note.content) }}
-              </p>
-              <p class="text-xs text-gray-400 dark:text-gray-500 mt-2">
-                {{ formatDate(note.updatedAt) }}
-              </p>
+            <div class="flex-1 min-w-0 flex items-start gap-2">
+              <span v-if="note.icon" class="text-2xl flex-shrink-0">{{ note.icon }}</span>
+              <div class="flex-1 min-w-0">
+                <h3 class="font-medium text-gray-900 dark:text-gray-100 truncate">{{ note.title }}</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
+                  {{ getPreview(note.content) }}
+                </p>
+                <p class="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                  {{ formatDate(note.updatedAt) }}
+                </p>
+              </div>
             </div>
             <button
               @click.stop="$emit('deleteNote', note.id)"

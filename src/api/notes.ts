@@ -5,12 +5,20 @@ export interface CreateNoteRequest {
   title: string;
   content: string;
   folderId: string;
+  icon?: string | null;
+  backdropType?: string | null;
+  backdropValue?: string | null;
+  backdropPositionY?: number;
 }
 
 export interface UpdateNoteRequest {
   title: string;
   content: string;
   folderId: string;
+  icon?: string | null;
+  backdropType?: string | null;
+  backdropValue?: string | null;
+  backdropPositionY?: number;
 }
 
 export const notesApi = {

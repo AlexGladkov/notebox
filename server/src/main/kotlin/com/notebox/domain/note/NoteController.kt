@@ -35,7 +35,15 @@ class NoteController(
     @PostMapping
     fun createNote(@Valid @RequestBody request: CreateNoteRequest): ResponseEntity<ApiResponse<NoteDto>> {
         ValidationUtils.validateUUID(request.folderId, "folderId")
-        val note = noteService.createNote(request.title, request.content, request.folderId)
+        val note = noteService.createNote(
+            request.title,
+            request.content,
+            request.folderId,
+            request.icon,
+            request.backdropType,
+            request.backdropValue,
+            request.backdropPositionY
+        )
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(successResponse(note.toDto()))
     }
@@ -49,7 +57,16 @@ class NoteController(
         if (request.folderId != null) {
             ValidationUtils.validateUUID(request.folderId, "folderId")
         }
-        val note = noteService.updateNote(id, request.title, request.content, request.folderId)
+        val note = noteService.updateNote(
+            id,
+            request.title,
+            request.content,
+            request.folderId,
+            request.icon,
+            request.backdropType,
+            request.backdropValue,
+            request.backdropPositionY
+        )
             ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(errorResponse("NOT_FOUND", "Note not found"))
 

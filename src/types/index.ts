@@ -11,6 +11,10 @@ export interface Note {
   title: string;
   content: string;
   folderId: string;
+  icon?: string | null;
+  backdropType?: string | null;
+  backdropValue?: string | null;
+  backdropPositionY?: number;
   createdAt: number;
   updatedAt: number;
   isBlockFormat?: boolean;
