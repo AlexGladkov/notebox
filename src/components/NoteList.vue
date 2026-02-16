@@ -24,12 +24,19 @@
         <div
           v-for="note in notes"
           :key="note.id"
-          @click="$emit('selectNote', note.id)"
+          @click="handleNoteClick(note.id, $event)"
           :class="[
             'p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors',
             { 'bg-blue-50 dark:bg-blue-900': selectedNoteId === note.id }
           ]"
         >
+          <div
+            v-if="note.backdropType"
+            class="note-cover-preview"
+            :style="getCoverStyle(note)"
+          >
+            <span v-if="note.icon" class="note-list-icon">{{ note.icon }}</span>
+          </div>
           <div class="flex items-start justify-between gap-4">
             <div class="flex-1 min-w-0">
               <h3 class="font-medium text-gray-900 dark:text-gray-100 truncate">{{ note.title }}</h3>
@@ -66,11 +73,17 @@ defineProps<{
   selectedNoteId: string | null;
 }>();
 
-defineEmits<{
+const emit = defineEmits<{
   createNote: [];
-  selectNote: [id: string];
+  selectNote: [id: string, forceNewTab: boolean];
   deleteNote: [id: string];
 }>();
+
+// Обработка клика с учётом модификатора Ctrl/Cmd
+const handleNoteClick = (noteId: string, event: MouseEvent) => {
+  const forceNewTab = event.ctrlKey || event.metaKey;
+  emit('selectNote', noteId, forceNewTab);
+};
 
 const getPreview = (content: string): string => {
   if (!content) return 'Пустая заметка';
@@ -96,4 +109,54 @@ const formatDate = (timestamp: number): string => {
     year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
   });
 };
+
+const getCoverStyle = (note: Note): Record<string, string> => {
+  const style: Record<string, string> = {};
+
+  if (note.backdropType === 'gradient' && note.backdropValue) {
+    // Валидация градиента
+    const value = note.backdropValue;
+    if (value.startsWith('linear-gradient(')) {
+      style.background = value;
+    }
+  } else if (note.backdropType === 'image' && note.backdropValue) {
+    // Валидация URL для безопасности (защита от XSS)
+    const value = note.backdropValue;
+    try {
+      const url = new URL(value);
+      if (url.protocol === 'http:' || url.protocol === 'https:') {
+        style.backgroundImage = `url("${value}")`;
+        style.backgroundPosition = `center ${note.backdropPositionY || 50}%`;
+      }
+    } catch {
+      // Невалидный URL - игнорируем
+    }
+  }
+
+  return style;
+};
 </script>
+
+<style scoped>
+.note-cover-preview {
+  position: relative;
+  width: 100%;
+  height: 48px;
+  border-radius: 8px 8px 0 0;
+  margin-bottom: 16px;
+  overflow: visible;
+  background-size: cover;
+  background-position: center;
+}
+
+.note-list-icon {
+  position: absolute;
+  bottom: -8px;
+  left: 8px;
+  font-size: 32px;
+  line-height: 1;
+  z-index: 1;
+  pointer-events: none;
+  user-select: none;
+}
+</style>

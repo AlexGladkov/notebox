@@ -23,7 +23,7 @@ class DatabaseInitializer(
         Database.connect(dataSource)
 
         transaction {
-            SchemaUtils.create(
+            SchemaUtils.createMissingTablesAndColumns(
                 FoldersTable,
                 NotesTable,
                 CustomDatabasesTable,
