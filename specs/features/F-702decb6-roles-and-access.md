@@ -1,10 +1,17 @@
-# F-702decb6: Роли и управление доступом
+# Feature Specification: Роли и управление доступом
 
-## Статус
-**DRAFT** — требуется уточнение требований от пользователя
+**Feature ID:** F-702decb6
+**Title:** Роли и управление доступом
+**Created:** 2026-02-16
+**Status:** DRAFT — требуется уточнение требований от пользователя
 
-## Краткое описание
+---
+
+## Summary
+
 Реализация системы ролей и управления доступом для NoteBox, позволяющей назначать различные роли пользователям и управлять доступом к папкам и заметкам на уровне ролей и отдельных пользователей.
+
+---
 
 ## Исходное описание задачи
 > As user i want to add different roles for my account with per-role access and per-user access to folders and notes
@@ -152,7 +159,7 @@ CREATE TABLE resource_permissions (
     principal_id UUID NOT NULL,
     permission VARCHAR(20) NOT NULL, -- 'read' | 'write' | 'delete' | 'share'
     created_at TIMESTAMP,
-    UNIQUE(resource_type, resource_id, principal_type, principal_id, permission)
+    CONSTRAINT unique_resource_permission UNIQUE (resource_type, resource_id, principal_type, principal_id, permission)
 );
 ```
 
@@ -190,6 +197,3 @@ CREATE TABLE resource_permissions (
 3. **Детализировать реализацию** — после уточнения требований
 
 ---
-
-*Документ создан: 2026-02-16*
-*Статус: Требуется доработка*
