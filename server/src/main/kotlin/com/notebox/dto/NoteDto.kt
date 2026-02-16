@@ -1,5 +1,7 @@
 package com.notebox.dto
 
+import jakarta.validation.constraints.Max
+import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 
@@ -11,7 +13,7 @@ data class NoteDto(
     val icon: String?,
     val backdropType: String?,
     val backdropValue: String?,
-    val backdropPositionY: Int,
+    val backdropPositionY: Int?,
     val createdAt: Long,
     val updatedAt: Long
 )
@@ -33,9 +35,12 @@ data class CreateNoteRequest(
     @field:Size(max = 20, message = "BackdropType must be less than 20 characters")
     val backdropType: String? = null,
 
+    @field:Size(max = 2000, message = "BackdropValue must be less than 2000 characters")
     val backdropValue: String? = null,
 
-    val backdropPositionY: Int = 50
+    @field:Min(value = 0, message = "BackdropPositionY must be between 0 and 100")
+    @field:Max(value = 100, message = "BackdropPositionY must be between 0 and 100")
+    val backdropPositionY: Int? = 50
 )
 
 data class UpdateNoteRequest(
@@ -55,7 +60,10 @@ data class UpdateNoteRequest(
     @field:Size(max = 20, message = "BackdropType must be less than 20 characters")
     val backdropType: String? = null,
 
+    @field:Size(max = 2000, message = "BackdropValue must be less than 2000 characters")
     val backdropValue: String? = null,
 
-    val backdropPositionY: Int = 50
+    @field:Min(value = 0, message = "BackdropPositionY must be between 0 and 100")
+    @field:Max(value = 100, message = "BackdropPositionY must be between 0 and 100")
+    val backdropPositionY: Int? = 50
 )

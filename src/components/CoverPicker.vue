@@ -123,17 +123,32 @@ const handleFileSelect = async (event: Event) => {
     const formData = new FormData()
     formData.append('file', file)
 
-    const response = await fetch('/api/files/upload', {
+    // Загрузка файла
+    const uploadResponse = await fetch('/api/files/upload', {
       method: 'POST',
       body: formData,
     })
 
-    if (!response.ok) {
+    if (!uploadResponse.ok) {
       throw new Error('Ошибка загрузки файла')
     }
 
-    const data = await response.json()
-    const imageUrl = data.data?.url
+    const uploadData = await uploadResponse.json()
+    const fileKey = uploadData.data?.key
+
+    if (!fileKey) {
+      throw new Error('Ключ файла не получен')
+    }
+
+    // Получение URL файла
+    const urlResponse = await fetch(`/api/files/${fileKey}`)
+
+    if (!urlResponse.ok) {
+      throw new Error('Ошибка получения URL файла')
+    }
+
+    const urlData = await urlResponse.json()
+    const imageUrl = urlData.data?.url
 
     if (!imageUrl) {
       throw new Error('URL изображения не получен')

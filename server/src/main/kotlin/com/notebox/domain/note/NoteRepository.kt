@@ -32,7 +32,7 @@ class NoteRepository {
         icon: String? = null,
         backdropType: String? = null,
         backdropValue: String? = null,
-        backdropPositionY: Int = 50
+        backdropPositionY: Int? = 50
     ): Note = transaction {
         val id = UUID.randomUUID().toString()
         val now = Instant.now()
@@ -61,7 +61,7 @@ class NoteRepository {
         icon: String? = null,
         backdropType: String? = null,
         backdropValue: String? = null,
-        backdropPositionY: Int = 50
+        backdropPositionY: Int? = 50
     ): Note? = transaction {
         val exists = NotesTable.select { NotesTable.id eq id }.count() > 0
         if (!exists) return@transaction null

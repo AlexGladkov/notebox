@@ -1,5 +1,6 @@
 <template>
   <div
+    v-if="backdropType || showActions"
     class="note-cover"
     @mouseenter="showActions = true"
     @mouseleave="showActions = false"

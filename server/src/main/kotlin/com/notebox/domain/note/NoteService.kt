@@ -26,7 +26,7 @@ class NoteService(
         icon: String? = null,
         backdropType: String? = null,
         backdropValue: String? = null,
-        backdropPositionY: Int = 50
+        backdropPositionY: Int? = 50
     ): Note {
         return noteRepository.create(title, content, folderId, icon, backdropType, backdropValue, backdropPositionY)
     }
@@ -39,7 +39,7 @@ class NoteService(
         icon: String? = null,
         backdropType: String? = null,
         backdropValue: String? = null,
-        backdropPositionY: Int = 50
+        backdropPositionY: Int? = 50
     ): Note? {
         return noteRepository.update(id, title, content, folderId, icon, backdropType, backdropValue, backdropPositionY)
     }

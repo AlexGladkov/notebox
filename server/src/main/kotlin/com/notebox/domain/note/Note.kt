@@ -11,7 +11,7 @@ data class Note(
     val icon: String?,
     val backdropType: String?,
     val backdropValue: String?,
-    val backdropPositionY: Int,
+    val backdropPositionY: Int?,
     val createdAt: Instant,
     val updatedAt: Instant
 ) {
@@ -23,7 +23,7 @@ data class Note(
         icon = icon,
         backdropType = backdropType,
         backdropValue = backdropValue,
-        backdropPositionY = backdropPositionY,
+        backdropPositionY = backdropPositionY ?: 50,
         createdAt = createdAt.toEpochMilli(),
         updatedAt = updatedAt.toEpochMilli()
     )
