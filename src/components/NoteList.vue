@@ -34,19 +34,18 @@
             v-if="note.backdropType"
             class="note-cover-preview"
             :style="getCoverStyle(note)"
-          />
+          >
+            <span v-if="note.icon" class="note-list-icon">{{ note.icon }}</span>
+          </div>
           <div class="flex items-start justify-between gap-4">
-            <div class="flex-1 min-w-0 flex items-start gap-2">
-              <span v-if="note.icon" class="text-2xl flex-shrink-0">{{ note.icon }}</span>
-              <div class="flex-1 min-w-0">
-                <h3 class="font-medium text-gray-900 dark:text-gray-100 truncate">{{ note.title }}</h3>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
-                  {{ getPreview(note.content) }}
-                </p>
-                <p class="text-xs text-gray-400 dark:text-gray-500 mt-2">
-                  {{ formatDate(note.updatedAt) }}
-                </p>
-              </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="font-medium text-gray-900 dark:text-gray-100 truncate">{{ note.title }}</h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
+                {{ getPreview(note.content) }}
+              </p>
+              <p class="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                {{ formatDate(note.updatedAt) }}
+              </p>
             </div>
             <button
               @click.stop="$emit('deleteNote', note.id)"
@@ -140,12 +139,22 @@ const getCoverStyle = (note: Note): Record<string, string> => {
 
 <style scoped>
 .note-cover-preview {
+  position: relative;
   width: 100%;
   height: 48px;
   border-radius: 8px 8px 0 0;
   margin-bottom: 8px;
-  overflow: hidden;
+  overflow: visible;
   background-size: cover;
   background-position: center;
+}
+
+.note-list-icon {
+  position: absolute;
+  bottom: -8px;
+  left: 8px;
+  font-size: 32px;
+  line-height: 1;
+  z-index: 1;
 }
 </style>

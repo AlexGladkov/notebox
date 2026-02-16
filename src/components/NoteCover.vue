@@ -36,6 +36,9 @@
         Перетащите изображение для изменения позиции
         <button class="done-btn" @click="finishReposition">Готово</button>
       </div>
+
+      <!-- Слот для иконки поверх обложки -->
+      <slot name="icon"></slot>
     </div>
 
     <button v-else-if="showActions" class="add-cover-btn" @click="openPicker">

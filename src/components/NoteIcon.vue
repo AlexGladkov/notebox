@@ -1,19 +1,24 @@
 <template>
-  <div v-if="icon || showActions" class="note-icon-wrapper" @mouseenter="showActions = true" @mouseleave="showActions = false">
+  <div
+    v-if="icon || showAddButton"
+    class="note-icon-wrapper"
+    :class="{ 'has-icon': icon }"
+    @mouseenter="showDeleteBtn = true"
+    @mouseleave="showDeleteBtn = false"
+  >
     <div v-if="icon" class="note-icon" @click="togglePicker">
       <span class="icon-emoji">{{ icon }}</span>
-      <div v-if="showActions" class="icon-actions" @click.stop>
-        <button class="action-btn" @click="togglePicker" title="Изменить иконку">
-          Изменить
-        </button>
-        <button class="action-btn remove-btn" @click="removeIcon" title="Удалить иконку">
-          Удалить
-        </button>
-      </div>
+      <button
+        v-if="showDeleteBtn"
+        class="delete-btn"
+        @click.stop="removeIcon"
+        title="Удалить иконку"
+      >
+        ×
+      </button>
     </div>
 
-    <button v-else-if="showActions" class="add-icon-btn" @click="togglePicker">
-      <span class="icon">📝</span>
+    <button v-else class="add-icon-btn" @click="togglePicker">
       <span>Добавить иконку</span>
     </button>
 
@@ -31,14 +36,18 @@ import EmojiPicker from './EmojiPicker.vue'
 
 interface Props {
   icon?: string | null
+  showAddButton?: boolean
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  showAddButton: true,
+})
+
 const emit = defineEmits<{
   update: [icon: string | null]
 }>()
 
-const showActions = ref(false)
+const showDeleteBtn = ref(false)
 const pickerOpen = ref(false)
 
 const togglePicker = () => {
@@ -80,47 +89,36 @@ const removeIcon = () => {
   transform: scale(1.05);
 }
 
-.icon-actions {
+.delete-btn {
   position: absolute;
-  bottom: -8px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: -4px;
+  right: -4px;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  font-size: 18px;
+  line-height: 1;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s;
   display: flex;
-  gap: 4px;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  padding: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  align-items: center;
+  justify-content: center;
   opacity: 0;
   animation: fadeIn 0.2s forwards;
+}
+
+.delete-btn:hover {
+  background: var(--danger-color);
+  transform: scale(1.1);
 }
 
 @keyframes fadeIn {
   to {
     opacity: 1;
   }
-}
-
-.action-btn {
-  padding: 4px 8px;
-  border: none;
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  font-size: 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  white-space: nowrap;
-}
-
-.action-btn:hover {
-  background: var(--bg-hover);
-}
-
-.remove-btn:hover {
-  background: var(--danger-color);
-  color: white;
 }
 
 .add-icon-btn {
@@ -141,9 +139,5 @@ const removeIcon = () => {
   border-color: var(--primary-color);
   color: var(--primary-color);
   background: var(--bg-hover);
-}
-
-.add-icon-btn .icon {
-  font-size: 16px;
 }
 </style>

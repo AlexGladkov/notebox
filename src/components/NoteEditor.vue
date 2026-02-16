@@ -1,14 +1,27 @@
 <template>
   <div v-if="note" class="h-full flex flex-col bg-white dark:bg-gray-900">
+    <!-- Если есть обложка, иконка внутри неё -->
     <NoteCover
+      v-if="note.backdropType"
       :backdrop-type="note.backdropType"
       :backdrop-value="note.backdropValue"
       :backdrop-position-y="note.backdropPositionY"
       @update="handleCoverUpdate"
-    />
+    >
+      <template #icon>
+        <div class="icon-over-cover">
+          <NoteIcon
+            :icon="note.icon"
+            @update="handleIconUpdate"
+          />
+        </div>
+      </template>
+    </NoteCover>
 
     <div class="border-b border-gray-200 dark:border-gray-700 p-4">
+      <!-- Если нет обложки, иконка отдельно над заголовком -->
       <NoteIcon
+        v-if="!note.backdropType"
         :icon="note.icon"
         @update="handleIconUpdate"
       />
@@ -127,3 +140,12 @@ const formatDate = (timestamp: number): string => {
   });
 };
 </script>
+
+<style scoped>
+.icon-over-cover {
+  position: absolute;
+  bottom: -39px;
+  left: 24px;
+  z-index: 10;
+}
+</style>
