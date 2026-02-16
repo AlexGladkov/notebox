@@ -555,7 +555,7 @@ onBeforeUnmount(() => {
   outline: none;
 }
 
-:deep(.dark) .block-editor-content :deep(.ProseMirror) {
+.dark :deep(.block-editor-content .ProseMirror) {
   color: #e5e7eb;
 }
 
@@ -567,7 +567,7 @@ onBeforeUnmount(() => {
   height: 0;
 }
 
-:deep(.dark) .block-editor-content :deep(.ProseMirror p.is-editor-empty:first-child::before) {
+.dark :deep(.block-editor-content .ProseMirror p.is-editor-empty:first-child::before) {
   color: #6b7280;
 }
 
@@ -634,7 +634,7 @@ onBeforeUnmount(() => {
   font-style: italic;
 }
 
-:deep(.dark) .block-editor-content :deep(.ProseMirror blockquote) {
+.dark :deep(.block-editor-content .ProseMirror blockquote) {
   border-left-color: #4b5563;
   color: #9ca3af;
 }
@@ -647,7 +647,7 @@ onBeforeUnmount(() => {
   font-family: 'Courier New', monospace;
 }
 
-:deep(.dark) .block-editor-content :deep(.ProseMirror code) {
+.dark :deep(.block-editor-content .ProseMirror code) {
   background-color: #374151;
   color: #e5e7eb;
 }
@@ -673,7 +673,7 @@ onBeforeUnmount(() => {
   margin: 2em 0;
 }
 
-:deep(.dark) .block-editor-content :deep(.ProseMirror hr) {
+.dark :deep(.block-editor-content .ProseMirror hr) {
   border-top-color: #4b5563;
 }
 
@@ -687,11 +687,11 @@ onBeforeUnmount(() => {
   color: #1e40af;
 }
 
-:deep(.dark) .block-editor-content :deep(.ProseMirror a) {
+.dark :deep(.block-editor-content .ProseMirror a) {
   color: #60a5fa;
 }
 
-:deep(.dark) .block-editor-content :deep(.ProseMirror a:hover) {
+.dark :deep(.block-editor-content .ProseMirror a:hover) {
   color: #93c5fd;
 }
 
@@ -701,7 +701,7 @@ onBeforeUnmount(() => {
   border-radius: 0.2em;
 }
 
-:deep(.dark) .block-editor-content :deep(.ProseMirror mark) {
+.dark :deep(.block-editor-content .ProseMirror mark) {
   background-color: #854d0e;
   color: #fef3c7;
 }
@@ -712,7 +712,7 @@ onBeforeUnmount(() => {
   padding: 0 0.2em;
 }
 
-:deep(.dark) .block-editor-content :deep(.slash-command-active) {
+.dark :deep(.block-editor-content .slash-command-active) {
   background-color: #374151;
 }
 
@@ -746,13 +746,13 @@ onBeforeUnmount(() => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-:deep(.dark) .block-handle {
+.dark :deep(.block-handle) {
   background-color: #374151;
   border-color: #4b5563;
   color: #9ca3af;
 }
 
-:deep(.dark) .block-handle:hover {
+.dark :deep(.block-handle:hover) {
   color: #e5e7eb;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
