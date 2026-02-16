@@ -229,7 +229,7 @@ onUnmounted(() => {
 }
 
 .remove-btn:hover {
-  background: var(--danger-color);
+  background: #ef4444;
 }
 
 .reposition-hint {

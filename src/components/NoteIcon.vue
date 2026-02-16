@@ -13,6 +13,7 @@
         class="delete-btn"
         @click.stop="removeIcon"
         title="Удалить иконку"
+        aria-label="Удалить иконку"
       >
         ×
       </button>
@@ -96,7 +97,7 @@ const removeIcon = () => {
   width: 24px;
   height: 24px;
   border: none;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.8);
   color: white;
   font-size: 18px;
   line-height: 1;
@@ -108,11 +109,22 @@ const removeIcon = () => {
   justify-content: center;
   opacity: 0;
   animation: fadeIn 0.2s forwards;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .delete-btn:hover {
-  background: var(--danger-color);
+  background: #ef4444;
   transform: scale(1.1);
+}
+
+.dark .delete-btn {
+  background: rgba(255, 255, 255, 0.9);
+  color: #1f2937;
+}
+
+.dark .delete-btn:hover {
+  background: #ef4444;
+  color: white;
 }
 
 @keyframes fadeIn {

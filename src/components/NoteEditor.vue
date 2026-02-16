@@ -147,5 +147,6 @@ const formatDate = (timestamp: number): string => {
   bottom: -39px;
   left: 24px;
   z-index: 10;
+  pointer-events: auto;
 }
 </style>

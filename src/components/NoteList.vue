@@ -143,7 +143,7 @@ const getCoverStyle = (note: Note): Record<string, string> => {
   width: 100%;
   height: 48px;
   border-radius: 8px 8px 0 0;
-  margin-bottom: 8px;
+  margin-bottom: 16px;
   overflow: visible;
   background-size: cover;
   background-position: center;
@@ -156,5 +156,7 @@ const getCoverStyle = (note: Note): Record<string, string> => {
   font-size: 32px;
   line-height: 1;
   z-index: 1;
+  pointer-events: none;
+  user-select: none;
 }
 </style>
