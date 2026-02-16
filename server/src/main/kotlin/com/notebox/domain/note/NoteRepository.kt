@@ -45,7 +45,7 @@ class NoteRepository {
             it[NotesTable.icon] = icon
             it[NotesTable.backdropType] = backdropType
             it[NotesTable.backdropValue] = backdropValue
-            it[NotesTable.backdropPositionY] = backdropPositionY
+            it[NotesTable.backdropPositionY] = backdropPositionY ?: 50
             it[createdAt] = now
             it[updatedAt] = now
         }
@@ -74,7 +74,7 @@ class NoteRepository {
             it[NotesTable.icon] = icon
             it[NotesTable.backdropType] = backdropType
             it[NotesTable.backdropValue] = backdropValue
-            it[NotesTable.backdropPositionY] = backdropPositionY
+            it[NotesTable.backdropPositionY] = backdropPositionY ?: 50
             it[updatedAt] = now
         }
 
