@@ -24,7 +24,7 @@
         <div
           v-for="note in notes"
           :key="note.id"
-          @click="$emit('selectNote', note.id)"
+          @click="handleNoteClick(note.id, $event)"
           :class="[
             'p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors',
             { 'bg-blue-50 dark:bg-blue-900': selectedNoteId === note.id }
@@ -66,11 +66,17 @@ defineProps<{
   selectedNoteId: string | null;
 }>();
 
-defineEmits<{
+const emit = defineEmits<{
   createNote: [];
-  selectNote: [id: string];
+  selectNote: [id: string, forceNewTab: boolean];
   deleteNote: [id: string];
 }>();
+
+// Обработка клика с учётом модификатора Ctrl/Cmd
+const handleNoteClick = (noteId: string, event: MouseEvent) => {
+  const forceNewTab = event.ctrlKey || event.metaKey;
+  emit('selectNote', noteId, forceNewTab);
+};
 
 const getPreview = (content: string): string => {
   if (!content) return 'Пустая заметка';

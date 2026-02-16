@@ -1,13 +1,11 @@
 <template>
   <div class="flex flex-col h-screen bg-white dark:bg-gray-900">
-    <Header />
-
     <div class="flex flex-1 overflow-hidden">
       <Sidebar
       :folders="folders"
       :search-query="searchQuery"
       :selected-folder-id="selectedFolderId"
-      :selected-note-id="selectedNoteId"
+      :selected-note-id="activeNoteId"
       :expanded-folders="expandedFolders"
       :search-results="searchResults"
       @update:search-query="searchQuery = $event"
@@ -25,18 +23,33 @@
           <NoteList
             :notes="currentFolderNotes"
             :folder-name="currentFolder?.name"
-            :selected-note-id="selectedNoteId"
+            :selected-note-id="activeNoteId"
             @create-note="handleCreateNote"
             @select-note="handleSelectNote"
             @delete-note="handleDeleteNote"
           />
         </div>
 
-        <div class="flex-1">
-          <NoteEditor
-            :note="currentNote"
-            @update-note="handleUpdateNote"
+        <div class="flex-1 flex flex-col">
+          <!-- Панель вкладок -->
+          <TabBar
+            v-if="tabs.length > 0"
+            :tabs="tabs"
+            :active-tab-id="activeTabId"
+            @select-tab="setActiveTab"
+            @close-tab="closeTab"
+            @close-other-tabs="closeOtherTabs"
+            @close-all-tabs="closeAllTabs"
+            @move-tab="moveTab"
           />
+
+          <!-- Редактор -->
+          <div class="flex-1 overflow-hidden">
+            <NoteEditor
+              :note="currentNote"
+              @update-note="handleUpdateNote"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -52,16 +65,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive } from 'vue';
+import { ref, computed, reactive, watch } from 'vue';
 import { useStorage } from './composables/useStorage';
 import { useFolders } from './composables/useFolders';
 import { useNotes } from './composables/useNotes';
 import { useSearch } from './composables/useSearch';
 import { useTheme } from './composables/useTheme';
-import Header from './components/Header.vue';
+import { useTabs } from './composables/useTabs';
 import Sidebar from './components/Sidebar.vue';
 import NoteList from './components/NoteList.vue';
 import NoteEditor from './components/NoteEditor.vue';
+import TabBar from './components/TabBar.vue';
 import ConfirmDialog from './components/ConfirmDialog.vue';
 
 // Инициализация темы
@@ -84,11 +98,26 @@ const {
   getNotesByFolder,
 } = useNotes(notes);
 
+// Система вкладок
+const {
+  tabs,
+  activeTabId,
+  openTab,
+  closeTab,
+  closeOtherTabs,
+  closeAllTabs,
+  setActiveTab,
+  moveTab,
+  getActiveNote,
+  updateTabTitle,
+  removeTabsByNoteId,
+  removeTabsByFolderIds,
+} = useTabs(getNoteById);
+
 const searchQuery = ref('');
 const { searchResults } = useSearch(notes, searchQuery);
 
 const selectedFolderId = ref<string | null>(null);
-const selectedNoteId = ref<string | null>(null);
 const expandedFolders = ref<Set<string>>(new Set());
 
 const confirmDialog = reactive({
@@ -108,20 +137,24 @@ const currentFolderNotes = computed(() => {
 });
 
 const currentNote = computed(() => {
-  return selectedNoteId.value ? getNoteById(selectedNoteId.value) : undefined;
+  return getActiveNote();
+});
+
+const activeNoteId = computed(() => {
+  const note = getActiveNote();
+  return note?.id || null;
 });
 
 const handleSelectFolder = (folderId: string) => {
   selectedFolderId.value = folderId;
-  selectedNoteId.value = null;
   searchQuery.value = '';
 };
 
-const handleSelectNote = (noteId: string) => {
+const handleSelectNote = (noteId: string, forceNewTab: boolean = false) => {
   const note = getNoteById(noteId);
   if (note) {
     selectedFolderId.value = note.folderId;
-    selectedNoteId.value = noteId;
+    openTab(noteId, forceNewTab);
     searchQuery.value = '';
   }
 };
@@ -180,9 +213,11 @@ const handleDeleteFolder = (folderId: string) => {
       const deletedFolderIds = await deleteFolder(folderId);
       deleteNotesByFolderIds(deletedFolderIds);
 
+      // Закрываем все вкладки с заметками из удаленных папок
+      removeTabsByFolderIds(deletedFolderIds);
+
       if (selectedFolderId.value === folderId || deletedFolderIds.includes(selectedFolderId.value || '')) {
         selectedFolderId.value = null;
-        selectedNoteId.value = null;
       }
 
       deletedFolderIds.forEach(id => expandedFolders.value.delete(id));
@@ -197,16 +232,23 @@ const handleCreateNote = async () => {
 
   try {
     const note = await createNote('Новая заметка', selectedFolderId.value);
-    selectedNoteId.value = note.id;
+    openTab(note.id, false);
   } catch (error) {
     console.error('Не удалось создать заметку:', error);
   }
 };
 
 const handleUpdateNote = async (updates: { title?: string; content?: string }) => {
-  if (!selectedNoteId.value) return;
+  const note = getActiveNote();
+  if (!note) return;
+
   try {
-    await updateNote(selectedNoteId.value, updates);
+    await updateNote(note.id, updates);
+
+    // Обновляем название вкладки при изменении заголовка
+    if (updates.title !== undefined) {
+      updateTabTitle(note.id, updates.title);
+    }
   } catch (error) {
     console.error('Не удалось обновить заметку:', error);
   }
@@ -222,9 +264,8 @@ const handleDeleteNote = (noteId: string) => {
   confirmDialog.action = async () => {
     try {
       await deleteNote(noteId);
-      if (selectedNoteId.value === noteId) {
-        selectedNoteId.value = null;
-      }
+      // Закрываем все вкладки с этой заметкой
+      removeTabsByNoteId(noteId);
     } catch (error) {
       console.error('Не удалось удалить заметку:', error);
     }
