@@ -52,7 +52,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onUnmounted, watch } from 'vue'
 import CoverPicker from './CoverPicker.vue'
 
 interface Props {
@@ -76,15 +76,37 @@ const currentPositionY = ref(props.backdropPositionY)
 const dragStartY = ref(0)
 const dragStartPosition = ref(0)
 
+// Ссылки на обработчики для cleanup
+let cleanupDragHandlers: (() => void) | null = null
+
+// Обновление currentPositionY при изменении props
+watch(() => props.backdropPositionY, (newValue) => {
+  currentPositionY.value = newValue || 50
+})
+
 const coverStyle = computed(() => {
   const style: Record<string, string> = {}
 
   if (props.backdropType === 'gradient') {
-    style.background = props.backdropValue || ''
+    // Градиенты должны начинаться с 'linear-gradient('
+    const value = props.backdropValue || ''
+    if (value.startsWith('linear-gradient(')) {
+      style.background = value
+    }
   } else if (props.backdropType === 'image') {
-    style.backgroundImage = `url(${props.backdropValue})`
-    style.backgroundSize = 'cover'
-    style.backgroundPosition = `center ${currentPositionY.value}%`
+    // Валидация URL
+    const value = props.backdropValue || ''
+    try {
+      // Проверяем, что это валидный URL (http/https)
+      const url = new URL(value)
+      if (url.protocol === 'http:' || url.protocol === 'https:') {
+        style.backgroundImage = `url("${value}")`
+        style.backgroundSize = 'cover'
+        style.backgroundPosition = `center ${currentPositionY.value}%`
+      }
+    } catch {
+      // Невалидный URL - игнорируем
+    }
   }
 
   return style
@@ -125,16 +147,30 @@ const startReposition = (event: MouseEvent) => {
   const handleMouseUp = () => {
     document.removeEventListener('mousemove', handleMouseMove)
     document.removeEventListener('mouseup', handleMouseUp)
+    cleanupDragHandlers = null
   }
 
   document.addEventListener('mousemove', handleMouseMove)
   document.addEventListener('mouseup', handleMouseUp)
+
+  // Сохраняем функцию очистки для onUnmounted
+  cleanupDragHandlers = () => {
+    document.removeEventListener('mousemove', handleMouseMove)
+    document.removeEventListener('mouseup', handleMouseUp)
+  }
 }
 
 const finishReposition = () => {
   repositioning.value = false
   emit('update', props.backdropType, props.backdropValue, currentPositionY.value)
 }
+
+// Cleanup при размонтировании компонента
+onUnmounted(() => {
+  if (cleanupDragHandlers) {
+    cleanupDragHandlers()
+  }
+})
 </script>
 
 <style scoped>

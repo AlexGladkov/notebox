@@ -1,5 +1,5 @@
 <template>
-  <div class="note-icon-wrapper" @mouseenter="showActions = true" @mouseleave="showActions = false">
+  <div v-if="icon || showActions" class="note-icon-wrapper" @mouseenter="showActions = true" @mouseleave="showActions = false">
     <div v-if="icon" class="note-icon" @click="togglePicker">
       <span class="icon-emoji">{{ icon }}</span>
       <div v-if="showActions" class="icon-actions" @click.stop>

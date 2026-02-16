@@ -36,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 interface Props {
   isOpen: boolean
@@ -50,6 +50,24 @@ const emit = defineEmits<{
 
 const searchQuery = ref('')
 const selectedCategory = ref('smileys')
+
+// Закрытие picker при клике вне компонента
+const handleClickOutside = (event: MouseEvent) => {
+  const target = event.target as HTMLElement
+  if (!target.closest('.emoji-picker') && !target.closest('.note-icon')) {
+    emit('close')
+  }
+}
+
+onMounted(() => {
+  if (props.isOpen) {
+    document.addEventListener('click', handleClickOutside)
+  }
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 
 const categories = [
   { id: 'smileys', name: 'Смайлики и люди', icon: '😀' },
