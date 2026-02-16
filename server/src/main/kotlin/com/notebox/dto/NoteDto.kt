@@ -17,6 +17,7 @@ data class CreateNoteRequest(
     @field:Size(max = 255, message = "Title must be less than 255 characters")
     val title: String,
 
+    @field:Size(max = 1000000, message = "Content must be less than 1000000 characters")
     val content: String,
 
     @field:NotBlank(message = "FolderId cannot be blank")
@@ -28,6 +29,7 @@ data class UpdateNoteRequest(
     @field:Size(max = 255, message = "Title must be less than 255 characters")
     val title: String,
 
+    @field:Size(max = 1000000, message = "Content must be less than 1000000 characters")
     val content: String,
 
     @field:NotBlank(message = "FolderId cannot be blank")
