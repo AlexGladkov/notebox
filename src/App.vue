@@ -21,7 +21,7 @@
     />
 
       <div class="flex-1 flex overflow-hidden">
-        <div v-if="selectedFolderId && !selectedNoteId" class="w-80 border-r border-gray-200 dark:border-gray-700">
+        <div v-if="selectedFolderId" class="w-80 border-r border-gray-200 dark:border-gray-700">
           <NoteList
             :notes="currentFolderNotes"
             :folder-name="currentFolder?.name"
