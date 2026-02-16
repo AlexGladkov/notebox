@@ -112,18 +112,26 @@ const formatDate = (timestamp: number): string => {
 };
 
 const getCoverStyle = (note: Note): Record<string, string> => {
-  const style: Record<string, string> = {
-    height: '48px',
-    borderRadius: '8px 8px 0 0',
-    marginBottom: '8px',
-  };
+  const style: Record<string, string> = {};
 
   if (note.backdropType === 'gradient' && note.backdropValue) {
-    style.background = note.backdropValue;
+    // Валидация градиента
+    const value = note.backdropValue;
+    if (value.startsWith('linear-gradient(')) {
+      style.background = value;
+    }
   } else if (note.backdropType === 'image' && note.backdropValue) {
-    style.backgroundImage = `url("${note.backdropValue}")`;
-    style.backgroundSize = 'cover';
-    style.backgroundPosition = `center ${note.backdropPositionY || 50}%`;
+    // Валидация URL для безопасности (защита от XSS)
+    const value = note.backdropValue;
+    try {
+      const url = new URL(value);
+      if (url.protocol === 'http:' || url.protocol === 'https:') {
+        style.backgroundImage = `url("${value}")`;
+        style.backgroundPosition = `center ${note.backdropPositionY || 50}%`;
+      }
+    } catch {
+      // Невалидный URL - игнорируем
+    }
   }
 
   return style;
@@ -135,8 +143,9 @@ const getCoverStyle = (note: Note): Record<string, string> => {
   width: 100%;
   height: 48px;
   border-radius: 8px 8px 0 0;
+  margin-bottom: 8px;
   overflow: hidden;
-  background-position: center;
   background-size: cover;
+  background-position: center;
 }
 </style>
