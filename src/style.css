@@ -29,3 +29,28 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* CSS Variables for backdrop and icon components */
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f3f4f6;
+  --bg-hover: #e5e7eb;
+  --bg-active: #d1d5db;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --border-color: #e5e7eb;
+  --primary-color: #3b82f6;
+  --danger-color: #ef4444;
+}
+
+.dark {
+  --bg-primary: #111827;
+  --bg-secondary: #1f2937;
+  --bg-hover: #374151;
+  --bg-active: #4b5563;
+  --text-primary: #f9fafb;
+  --text-secondary: #9ca3af;
+  --border-color: #374151;
+  --primary-color: #60a5fa;
+  --danger-color: #f87171;
+}
