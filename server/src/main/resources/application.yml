@@ -8,8 +8,8 @@ spring:
 
   datasource:
     url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:notebox}
-    username: ${POSTGRES_USER}
-    password: ${POSTGRES_PASSWORD}
+    username: ${POSTGRES_USER:notebox}
+    password: ${POSTGRES_PASSWORD:notebox}
     driver-class-name: org.postgresql.Driver
 
   exposed:
@@ -32,9 +32,9 @@ server:
         http-only: true
 
 s3:
-  endpoint: ${S3_ENDPOINT}
-  access-key: ${S3_ACCESS_KEY}
-  secret-key: ${S3_SECRET_KEY}
+  endpoint: ${S3_ENDPOINT:http://localhost:9000}
+  access-key: ${S3_ACCESS_KEY:minioadmin}
+  secret-key: ${S3_SECRET_KEY:minioadmin}
   bucket: ${S3_BUCKET:notebox-files}
   region: ${S3_REGION:us-east-1}
 
@@ -43,9 +43,9 @@ frontend:
 
 oauth:
   google:
-    client-id: ${GOOGLE_CLIENT_ID}
-    client-secret: ${GOOGLE_CLIENT_SECRET}
+    client-id: ${GOOGLE_CLIENT_ID:}
+    client-secret: ${GOOGLE_CLIENT_SECRET:}
   apple:
-    client-id: ${APPLE_CLIENT_ID}
-    client-secret: ${APPLE_CLIENT_SECRET}
-    team-id: ${APPLE_TEAM_ID}
+    client-id: ${APPLE_CLIENT_ID:}
+    client-secret: ${APPLE_CLIENT_SECRET:}
+    team-id: ${APPLE_TEAM_ID:}
