@@ -1,13 +1,33 @@
 package com.notebox.migration
 
 import com.notebox.domain.folder.FoldersTable
-import com.notebox.domain.note.NotesTable
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.time.Instant
 import java.util.UUID
+
+/**
+ * Legacy table definition that includes the old folderId column
+ * Used only during migration from folder-based to page-based hierarchy
+ */
+private object LegacyNotesTable : Table("notes") {
+    val id = varchar("id", 36)
+    val title = varchar("title", 500)
+    val content = text("content")
+    val folderId = varchar("folder_id", 36)
+    val parentId = varchar("parent_id", 36).nullable()
+    val icon = varchar("icon", 50).nullable()
+    val backdropType = varchar("backdrop_type", 20).nullable()
+    val backdropValue = text("backdrop_value").nullable()
+    val backdropPositionY = integer("backdrop_position_y").default(50)
+    val createdAt = timestamp("created_at").default(Instant.now())
+    val updatedAt = timestamp("updated_at").default(Instant.now())
+
+    override val primaryKey = PrimaryKey(id)
+}
 
 /**
  * Миграция для преобразования папок в страницы
@@ -71,7 +91,7 @@ class FolderToNoteMigration {
 
         // Проверяем, существует ли колонка folderId
         val hasFolderIdColumn = try {
-            NotesTable.select { NotesTable.folderId eq "test" }
+            LegacyNotesTable.select { LegacyNotesTable.folderId eq "test" }
             true
         } catch (e: Exception) {
             false
@@ -104,11 +124,11 @@ class FolderToNoteMigration {
             // Создаем новую заметку-страницу из папки
             val noteId = UUID.randomUUID().toString()
 
-            NotesTable.insert {
+            LegacyNotesTable.insert {
                 it[id] = noteId
                 it[title] = folderName
                 it[content] = "" // Папки превращаются в пустые страницы
-                it[folderId] = folderId // Временно сохраняем старый folderId
+                it[LegacyNotesTable.folderId] = folderId // Временно сохраняем старый folderId
                 it[parentId] = if (folderParentId != null) {
                     // Родительская папка уже обработана благодаря топологической сортировке
                     folderToNoteIdMap[folderParentId]
@@ -128,18 +148,18 @@ class FolderToNoteMigration {
         }
 
         // Шаг 4: Обновляем parentId для всех заметок, которые были в папках
-        val notes = NotesTable.selectAll().toList()
+        val notes = LegacyNotesTable.selectAll().toList()
         logger.info("Обновление parentId для ${notes.size} заметок...")
 
         notes.forEach { noteRow ->
-            val noteId = noteRow[NotesTable.id]
-            val noteFolderId = noteRow[NotesTable.folderId]
-            val noteParentId = noteRow[NotesTable.parentId]
+            val noteId = noteRow[LegacyNotesTable.id]
+            val noteFolderId = noteRow[LegacyNotesTable.folderId]
+            val noteParentId = noteRow[LegacyNotesTable.parentId]
 
             // Если у заметки не было родителя, её родителем становится страница-папка
             if (noteParentId == null && noteFolderId in folderToNoteIdMap) {
                 val newParentId = folderToNoteIdMap[noteFolderId]
-                NotesTable.update({ NotesTable.id eq noteId }) {
+                LegacyNotesTable.update({ LegacyNotesTable.id eq noteId }) {
                     it[parentId] = newParentId
                     it[updatedAt] = Instant.now()
                 }

@@ -39,7 +39,7 @@ class FolderService(
         childFolders.forEach { deleteFolderRecursive(it.id) }
 
         // Delete all notes in this folder
-        noteRepository.deleteByFolderId(folderId)
+        noteRepository.deleteByParentId(folderId)
 
         // Delete the folder itself
         folderRepository.delete(folderId)
