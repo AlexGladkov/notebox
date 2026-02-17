@@ -23,6 +23,45 @@ class FolderToNoteMigration {
     private val logger = LoggerFactory.getLogger(FolderToNoteMigration::class.java)
 
     /**
+     * Топологическая сортировка папок для корректной миграции иерархии
+     * Сначала обрабатываются корневые папки, затем их дочерние
+     */
+    private fun topologicalSortFolders(folders: List<ResultRow>): List<ResultRow> {
+        val sortedFolders = mutableListOf<ResultRow>()
+        val processed = mutableSetOf<String>()
+
+        // Рекурсивная функция для добавления папки и её потомков
+        fun addFolderWithDescendants(folderId: String?) {
+            folders.forEach { folder ->
+                val id = folder[FoldersTable.id]
+                val parentId = folder[FoldersTable.parentId]
+
+                // Добавляем папку, если её родитель соответствует текущему уровню
+                if (parentId == folderId && !processed.contains(id)) {
+                    sortedFolders.add(folder)
+                    processed.add(id)
+                    // Рекурсивно добавляем дочерние папки
+                    addFolderWithDescendants(id)
+                }
+            }
+        }
+
+        // Начинаем с корневых папок (parentId == null)
+        addFolderWithDescendants(null)
+
+        // Обрабатываем оставшиеся папки (на случай циклов или orphans)
+        folders.forEach { folder ->
+            val id = folder[FoldersTable.id]
+            if (!processed.contains(id)) {
+                sortedFolders.add(folder)
+                processed.add(id)
+            }
+        }
+
+        return sortedFolders
+    }
+
+    /**
      * Выполняет миграцию папок в страницы
      *
      * @return true если миграция выполнена успешно, false если она уже была выполнена ранее
@@ -50,8 +89,12 @@ class FolderToNoteMigration {
         val folders = FoldersTable.selectAll().toList()
         logger.info("Найдено ${folders.size} папок для преобразования")
 
-        // Шаг 3: Преобразуем каждую папку в страницу
-        folders.forEach { folderRow ->
+        // Шаг 3: Сортируем папки топологически (сначала корневые, потом дочерние)
+        val sortedFolders = topologicalSortFolders(folders)
+        logger.debug("Папки отсортированы в правильном порядке для миграции")
+
+        // Шаг 4: Преобразуем каждую папку в страницу
+        sortedFolders.forEach { folderRow ->
             val folderId = folderRow[FoldersTable.id]
             val folderName = folderRow[FoldersTable.name]
             val folderParentId = folderRow[FoldersTable.parentId]
@@ -67,7 +110,7 @@ class FolderToNoteMigration {
                 it[content] = "" // Папки превращаются в пустые страницы
                 it[folderId] = folderId // Временно сохраняем старый folderId
                 it[parentId] = if (folderParentId != null) {
-                    // Если у папки был родитель, найдем соответствующую страницу
+                    // Родительская папка уже обработана благодаря топологической сортировке
                     folderToNoteIdMap[folderParentId]
                 } else {
                     null
