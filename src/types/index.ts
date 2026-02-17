@@ -11,6 +11,7 @@ export interface Note {
   title: string;
   content: string;
   folderId: string;
+  parentId?: string | null;
   icon?: string | null;
   backdropType?: string | null;
   backdropValue?: string | null;
@@ -18,6 +19,15 @@ export interface Note {
   createdAt: number;
   updatedAt: number;
   isBlockFormat?: boolean;
+}
+
+export interface NoteWithChildren extends Note {
+  children: NoteWithChildren[];
+}
+
+export interface NotePath {
+  note: Note;
+  ancestors: Note[];
 }
 
 export interface AppState {

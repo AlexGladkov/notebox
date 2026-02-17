@@ -24,9 +24,12 @@
             :notes="currentFolderNotes"
             :folder-name="currentFolder?.name"
             :selected-note-id="activeNoteId"
+            :expanded-notes="expandedNotes"
             @create-note="handleCreateNote"
             @select-note="handleSelectNote"
             @delete-note="handleDeleteNote"
+            @create-subpage="handleCreateSubpage"
+            @toggle-expand="toggleExpandNote"
           />
         </div>
 
@@ -96,6 +99,10 @@ const {
   deleteNotesByFolderIds,
   getNoteById,
   getNotesByFolder,
+  getChildrenCount,
+  expandedNotes,
+  toggleNoteExpanded,
+  expandAllAncestors,
 } = useNotes(notes);
 
 // Система вкладок
@@ -231,11 +238,29 @@ const handleCreateNote = async () => {
   if (!selectedFolderId.value) return;
 
   try {
-    const note = await createNote('Новая заметка', selectedFolderId.value);
+    const note = await createNote('Новая заметка', selectedFolderId.value, null);
     openTab(note.id, false);
   } catch (error) {
     console.error('Не удалось создать заметку:', error);
   }
+};
+
+const handleCreateSubpage = async (parentId: string) => {
+  const parentNote = getNoteById(parentId);
+  if (!parentNote) return;
+
+  try {
+    const note = await createNote('Новая страница', parentNote.folderId, parentId);
+    expandAllAncestors(note.id);
+    openTab(note.id, false);
+  } catch (error) {
+    console.error('Не удалось создать подстраницу:', error);
+    alert(error instanceof Error ? error.message : 'Не удалось создать подстраницу');
+  }
+};
+
+const toggleExpandNote = (noteId: string) => {
+  toggleNoteExpanded(noteId);
 };
 
 const handleUpdateNote = async (updates: { title?: string; content?: string }) => {
@@ -254,17 +279,43 @@ const handleUpdateNote = async (updates: { title?: string; content?: string }) =
   }
 };
 
-const handleDeleteNote = (noteId: string) => {
+const handleDeleteNote = (noteId: string, cascadeDelete: boolean = true) => {
   const note = getNoteById(noteId);
   if (!note) return;
 
+  const childrenCount = getChildrenCount(noteId);
+
+  if (childrenCount > 0) {
+    // Показываем специальный диалог для заметок с детьми
+    showDeleteNoteWithChildrenDialog(noteId, childrenCount);
+  } else {
+    // Обычное подтверждение удаления
+    confirmDialog.show = true;
+    confirmDialog.title = 'Удалить заметку?';
+    confirmDialog.message = `Вы уверены, что хотите удалить заметку "${note.title}"?`;
+    confirmDialog.action = async () => {
+      try {
+        await deleteNote(noteId, cascadeDelete);
+        removeTabsByNoteId(noteId);
+      } catch (error) {
+        console.error('Не удалось удалить заметку:', error);
+      }
+    };
+  }
+};
+
+const showDeleteNoteWithChildrenDialog = (noteId: string, childrenCount: number) => {
+  const note = getNoteById(noteId);
+  if (!note) return;
+
+  // Используем существующий ConfirmDialog с расширенным сообщением
+  // В будущем можно заменить на DeleteNoteDialog
   confirmDialog.show = true;
-  confirmDialog.title = 'Удалить заметку?';
-  confirmDialog.message = `Вы уверены, что хотите удалить заметку "${note.title}"?`;
+  confirmDialog.title = 'Удалить заметку с вложенными страницами?';
+  confirmDialog.message = `У заметки "${note.title}" есть ${childrenCount} вложенных страниц. Удалить всё?`;
   confirmDialog.action = async () => {
     try {
-      await deleteNote(noteId);
-      // Закрываем все вкладки с этой заметкой
+      await deleteNote(noteId, true); // cascade delete
       removeTabsByNoteId(noteId);
     } catch (error) {
       console.error('Не удалось удалить заметку:', error);

@@ -10,6 +10,7 @@ data class NoteDto(
     val title: String,
     val content: String,
     val folderId: String,
+    val parentId: String?,
     val icon: String?,
     val backdropType: String?,
     val backdropValue: String?,
@@ -28,6 +29,8 @@ data class CreateNoteRequest(
 
     @field:NotBlank(message = "FolderId cannot be blank")
     val folderId: String,
+
+    val parentId: String? = null,
 
     @field:Size(max = 50, message = "Icon must be less than 50 characters")
     val icon: String? = null,
@@ -54,6 +57,8 @@ data class UpdateNoteRequest(
     @field:NotBlank(message = "FolderId cannot be blank")
     val folderId: String,
 
+    val parentId: String? = null,
+
     @field:Size(max = 50, message = "Icon must be less than 50 characters")
     val icon: String? = null,
 
@@ -66,4 +71,8 @@ data class UpdateNoteRequest(
     @field:Min(value = 0, message = "BackdropPositionY must be between 0 and 100")
     @field:Max(value = 100, message = "BackdropPositionY must be between 0 and 100")
     val backdropPositionY: Int? = 50
+)
+
+data class MoveNoteRequest(
+    val parentId: String? = null
 )

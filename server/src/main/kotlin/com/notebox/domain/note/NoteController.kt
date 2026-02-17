@@ -35,17 +35,26 @@ class NoteController(
     @PostMapping
     fun createNote(@Valid @RequestBody request: CreateNoteRequest): ResponseEntity<ApiResponse<NoteDto>> {
         ValidationUtils.validateUUID(request.folderId, "folderId")
-        val note = noteService.createNote(
-            request.title,
-            request.content,
-            request.folderId,
-            request.icon,
-            request.backdropType,
-            request.backdropValue,
-            request.backdropPositionY
-        )
-        return ResponseEntity.status(HttpStatus.CREATED)
-            .body(successResponse(note.toDto()))
+        if (request.parentId != null) {
+            ValidationUtils.validateUUID(request.parentId, "parentId")
+        }
+        try {
+            val note = noteService.createNote(
+                request.title,
+                request.content,
+                request.folderId,
+                request.parentId,
+                request.icon,
+                request.backdropType,
+                request.backdropValue,
+                request.backdropPositionY
+            )
+            return ResponseEntity.status(HttpStatus.CREATED)
+                .body(successResponse(note.toDto()))
+        } catch (e: IllegalArgumentException) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(errorResponse("VALIDATION_ERROR", e.message ?: "Invalid request"))
+        }
     }
 
     @PutMapping("/{id}")
@@ -57,11 +66,15 @@ class NoteController(
         if (request.folderId != null) {
             ValidationUtils.validateUUID(request.folderId, "folderId")
         }
+        if (request.parentId != null) {
+            ValidationUtils.validateUUID(request.parentId, "parentId")
+        }
         val note = noteService.updateNote(
             id,
             request.title,
             request.content,
             request.folderId,
+            request.parentId,
             request.icon,
             request.backdropType,
             request.backdropValue,
@@ -74,9 +87,47 @@ class NoteController(
     }
 
     @DeleteMapping("/{id}")
-    fun deleteNote(@PathVariable id: String): ResponseEntity<Void> {
+    fun deleteNote(
+        @PathVariable id: String,
+        @RequestParam(required = false, defaultValue = "cascade") action: String
+    ): ResponseEntity<Void> {
         ValidationUtils.validateUUID(id, "id")
-        noteService.deleteNote(id)
+        val cascadeDelete = action == "cascade"
+        noteService.deleteNote(id, cascadeDelete)
         return ResponseEntity.noContent().build()
+    }
+
+    @GetMapping("/{id}/children")
+    fun getChildren(@PathVariable id: String): ResponseEntity<ApiResponse<List<NoteDto>>> {
+        ValidationUtils.validateUUID(id, "id")
+        val children = noteService.getChildren(id).map { it.toDto() }
+        return ResponseEntity.ok(successResponse(children))
+    }
+
+    @GetMapping("/{id}/path")
+    fun getPath(@PathVariable id: String): ResponseEntity<ApiResponse<List<NoteDto>>> {
+        ValidationUtils.validateUUID(id, "id")
+        val path = noteService.getAncestorPath(id).map { it.toDto() }
+        return ResponseEntity.ok(successResponse(path))
+    }
+
+    @PutMapping("/{id}/move")
+    fun moveNote(
+        @PathVariable id: String,
+        @RequestBody request: MoveNoteRequest
+    ): ResponseEntity<ApiResponse<NoteDto>> {
+        ValidationUtils.validateUUID(id, "id")
+        if (request.parentId != null) {
+            ValidationUtils.validateUUID(request.parentId, "parentId")
+        }
+        try {
+            val note = noteService.moveNote(id, request.parentId)
+                ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(errorResponse("NOT_FOUND", "Note not found"))
+            return ResponseEntity.ok(successResponse(note.toDto()))
+        } catch (e: IllegalArgumentException) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(errorResponse("VALIDATION_ERROR", e.message ?: "Invalid request"))
+        }
     }
 }

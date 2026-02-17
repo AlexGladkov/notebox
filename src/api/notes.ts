@@ -5,6 +5,7 @@ export interface CreateNoteRequest {
   title: string;
   content: string;
   folderId: string;
+  parentId?: string | null;
   icon?: string | null;
   backdropType?: string | null;
   backdropValue?: string | null;
@@ -15,10 +16,15 @@ export interface UpdateNoteRequest {
   title: string;
   content: string;
   folderId: string;
+  parentId?: string | null;
   icon?: string | null;
   backdropType?: string | null;
   backdropValue?: string | null;
   backdropPositionY?: number;
+}
+
+export interface MoveNoteRequest {
+  parentId: string | null;
 }
 
 export const notesApi = {
@@ -39,7 +45,29 @@ export const notesApi = {
     return apiClient.put<Note>(`/api/notes/${id}`, request);
   },
 
-  async delete(id: string): Promise<void> {
-    return apiClient.delete(`/api/notes/${id}`);
+  async delete(id: string, cascadeDelete: boolean = true): Promise<void> {
+    const action = cascadeDelete ? 'cascade' : 'orphan';
+    return apiClient.delete(`/api/notes/${id}?action=${action}`);
+  },
+
+  async getChildren(parentId: string): Promise<Note[]> {
+    return apiClient.get<Note[]>(`/api/notes/${parentId}/children`);
+  },
+
+  async getPath(noteId: string): Promise<Note[]> {
+    return apiClient.get<Note[]>(`/api/notes/${noteId}/path`);
+  },
+
+  async move(noteId: string, request: MoveNoteRequest): Promise<Note> {
+    return apiClient.put<Note>(`/api/notes/${noteId}/move`, request);
+  },
+
+  async createSubpage(parentId: string, title: string): Promise<Note> {
+    return this.create({
+      title,
+      content: '',
+      folderId: '', // Will be set from parent
+      parentId,
+    });
   },
 };

@@ -29,6 +29,7 @@ class NoteRepository {
         title: String,
         content: String,
         folderId: String,
+        parentId: String? = null,
         icon: String? = null,
         backdropType: String? = null,
         backdropValue: String? = null,
@@ -42,6 +43,7 @@ class NoteRepository {
             it[NotesTable.title] = title
             it[NotesTable.content] = content
             it[NotesTable.folderId] = folderId
+            it[NotesTable.parentId] = parentId
             it[NotesTable.icon] = icon
             it[NotesTable.backdropType] = backdropType
             it[NotesTable.backdropValue] = backdropValue
@@ -50,7 +52,7 @@ class NoteRepository {
             it[updatedAt] = now
         }
 
-        Note(id, title, content, folderId, icon, backdropType, backdropValue, backdropPositionY, now, now)
+        Note(id, title, content, folderId, parentId, icon, backdropType, backdropValue, backdropPositionY, now, now)
     }
 
     fun update(
@@ -58,6 +60,7 @@ class NoteRepository {
         title: String,
         content: String,
         folderId: String,
+        parentId: String? = null,
         icon: String? = null,
         backdropType: String? = null,
         backdropValue: String? = null,
@@ -71,6 +74,7 @@ class NoteRepository {
             it[NotesTable.title] = title
             it[NotesTable.content] = content
             it[NotesTable.folderId] = folderId
+            it[NotesTable.parentId] = parentId
             it[NotesTable.icon] = icon
             it[NotesTable.backdropType] = backdropType
             it[NotesTable.backdropValue] = backdropValue
@@ -89,11 +93,96 @@ class NoteRepository {
         NotesTable.deleteWhere { NotesTable.folderId eq folderId }
     }
 
+    fun findByParentId(parentId: String?): List<Note> = transaction {
+        if (parentId == null) {
+            NotesTable.select { NotesTable.parentId.isNull() }
+                .map { toNote(it) }
+        } else {
+            NotesTable.select { NotesTable.parentId eq parentId }
+                .map { toNote(it) }
+        }
+    }
+
+    fun findAllDescendants(noteId: String): List<Note> = transaction {
+        val descendants = mutableListOf<Note>()
+        val queue = mutableListOf(noteId)
+
+        while (queue.isNotEmpty()) {
+            val currentId = queue.removeAt(0)
+            val children = findByParentId(currentId)
+            descendants.addAll(children)
+            queue.addAll(children.map { it.id })
+        }
+
+        descendants
+    }
+
+    fun getDepth(noteId: String): Int = transaction {
+        var depth = 0
+        var currentId: String? = noteId
+
+        while (currentId != null) {
+            val note = findById(currentId) ?: break
+            currentId = note.parentId
+            if (currentId != null) depth++
+        }
+
+        depth
+    }
+
+    fun getAncestorPath(noteId: String): List<Note> = transaction {
+        val path = mutableListOf<Note>()
+        var currentId: String? = noteId
+
+        while (currentId != null) {
+            val note = findById(currentId) ?: break
+            path.add(0, note)
+            currentId = note.parentId
+        }
+
+        path
+    }
+
+    fun updateParentId(noteId: String, newParentId: String?): Boolean = transaction {
+        val exists = NotesTable.select { NotesTable.id eq noteId }.count() > 0
+        if (!exists) return@transaction false
+
+        val now = Instant.now()
+        NotesTable.update({ NotesTable.id eq noteId }) {
+            it[parentId] = newParentId
+            it[updatedAt] = now
+        }
+
+        true
+    }
+
+    fun deleteWithDescendants(noteId: String): Int = transaction {
+        val descendants = findAllDescendants(noteId)
+        val allIds = listOf(noteId) + descendants.map { it.id }
+        NotesTable.deleteWhere { NotesTable.id inList allIds }
+    }
+
+    fun orphanChildren(noteId: String): Int = transaction {
+        val note = findById(noteId) ?: return@transaction 0
+        val children = findByParentId(noteId)
+
+        val now = Instant.now()
+        children.forEach { child ->
+            NotesTable.update({ NotesTable.id eq child.id }) {
+                it[parentId] = note.parentId
+                it[updatedAt] = now
+            }
+        }
+
+        children.size
+    }
+
     private fun toNote(row: ResultRow) = Note(
         id = row[NotesTable.id],
         title = row[NotesTable.title],
         content = row[NotesTable.content],
         folderId = row[NotesTable.folderId],
+        parentId = row[NotesTable.parentId],
         icon = row[NotesTable.icon],
         backdropType = row[NotesTable.backdropType],
         backdropValue = row[NotesTable.backdropValue],
