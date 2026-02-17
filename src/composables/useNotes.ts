@@ -28,12 +28,11 @@ export function useNotes(notes: Ref<Note[]>) {
 
   loadExpandedState();
 
-  const createNote = async (title: string, folderId: string, parentId?: string | null) => {
+  const createNote = async (title: string, parentId?: string | null) => {
     try {
       const newNote = await notesApi.create({
         title,
         content: '',
-        folderId,
         parentId,
       });
       notes.value.push(newNote);
@@ -54,7 +53,6 @@ export function useNotes(notes: Ref<Note[]>) {
       const updatedNote = await notesApi.update(id, {
         title: updates.title ?? note.title,
         content: updates.content ?? note.content,
-        folderId: updates.folderId ?? note.folderId,
         parentId: updates.parentId !== undefined ? updates.parentId : note.parentId,
         icon: updates.icon !== undefined ? updates.icon : note.icon,
         backdropType: updates.backdropType !== undefined ? updates.backdropType : note.backdropType,
@@ -91,27 +89,14 @@ export function useNotes(notes: Ref<Note[]>) {
     }
   };
 
-  const deleteNotesByFolderIds = (folderIds: string[]) => {
-    // Notes are deleted on the server via cascade delete when folders are deleted
-    // Just clean up local state
-    notes.value = notes.value.filter(n => !folderIds.includes(n.folderId));
-  };
-
   const getNoteById = (id: string) => {
     return notes.value.find(n => n.id === id);
   };
 
-  const getNotesByFolder = (folderId: string) => {
-    return computed(() =>
-      notes.value.filter(n => n.folderId === folderId)
-        .sort((a, b) => b.updatedAt - a.updatedAt)
-    );
-  };
-
-  const getRootNotes = (folderId: string) => {
+  const getRootNotes = () => {
     return computed(() =>
       notes.value
-        .filter(n => n.folderId === folderId && !n.parentId)
+        .filter(n => !n.parentId)
         .sort((a, b) => a.title.localeCompare(b.title))
     );
   };
@@ -204,9 +189,7 @@ export function useNotes(notes: Ref<Note[]>) {
     createNote,
     updateNote,
     deleteNote,
-    deleteNotesByFolderIds,
     getNoteById,
-    getNotesByFolder,
     getRootNotes,
     getChildren,
     getAllDescendants,

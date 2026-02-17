@@ -9,7 +9,6 @@ data class NoteDto(
     val id: String,
     val title: String,
     val content: String,
-    val folderId: String,
     val parentId: String?,
     val icon: String?,
     val backdropType: String?,
@@ -26,9 +25,6 @@ data class CreateNoteRequest(
 
     @field:Size(max = 1000000, message = "Content must be less than 1000000 characters")
     val content: String,
-
-    @field:NotBlank(message = "FolderId cannot be blank")
-    val folderId: String,
 
     val parentId: String? = null,
 
@@ -53,9 +49,6 @@ data class UpdateNoteRequest(
 
     @field:Size(max = 1000000, message = "Content must be less than 1000000 characters")
     val content: String,
-
-    @field:NotBlank(message = "FolderId cannot be blank")
-    val folderId: String,
 
     val parentId: String? = null,
 

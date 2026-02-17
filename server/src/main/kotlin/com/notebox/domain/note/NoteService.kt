@@ -11,12 +11,12 @@ class NoteService(
         const val MAX_DEPTH = 3
     }
 
-    fun getAllNotes(folderId: String?): List<Note> {
-        return if (folderId != null) {
-            noteRepository.findByFolderId(folderId)
-        } else {
-            noteRepository.findAll()
-        }
+    fun getAllNotes(): List<Note> {
+        return noteRepository.findAll()
+    }
+
+    fun getRootNotes(): List<Note> {
+        return noteRepository.findRootNotes()
     }
 
     fun getNoteById(id: String): Note? {
@@ -34,7 +34,6 @@ class NoteService(
     fun createNote(
         title: String,
         content: String,
-        folderId: String,
         parentId: String? = null,
         icon: String? = null,
         backdropType: String? = null,
@@ -53,21 +52,20 @@ class NoteService(
             }
         }
 
-        return noteRepository.create(title, content, folderId, parentId, icon, backdropType, backdropValue, backdropPositionY)
+        return noteRepository.create(title, content, parentId, icon, backdropType, backdropValue, backdropPositionY)
     }
 
     fun updateNote(
         id: String,
         title: String,
         content: String,
-        folderId: String,
         parentId: String? = null,
         icon: String? = null,
         backdropType: String? = null,
         backdropValue: String? = null,
         backdropPositionY: Int? = 50
     ): Note? {
-        return noteRepository.update(id, title, content, folderId, parentId, icon, backdropType, backdropValue, backdropPositionY)
+        return noteRepository.update(id, title, content, parentId, icon, backdropType, backdropValue, backdropPositionY)
     }
 
     fun moveNote(noteId: String, newParentId: String?): Note? {

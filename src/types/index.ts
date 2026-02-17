@@ -10,7 +10,6 @@ export interface Note {
   id: string;
   title: string;
   content: string;
-  folderId: string;
   parentId?: string | null;
   icon?: string | null;
   backdropType?: string | null;
@@ -31,11 +30,19 @@ export interface NotePath {
 }
 
 export interface AppState {
-  folders: Folder[];
   notes: Note[];
-  selectedFolderId: string | null;
   selectedNoteId: string | null;
   searchQuery: string;
+}
+
+// УСТАРЕЛО: Интерфейс Folder больше не используется
+// Папки теперь реализованы как страницы (Note с пустым content)
+export interface Folder {
+  id: string;
+  name: string;
+  parentId: string | null;
+  createdAt: number;
+  updatedAt: number;
 }
 
 // Custom Database types

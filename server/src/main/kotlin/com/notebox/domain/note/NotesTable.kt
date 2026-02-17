@@ -8,7 +8,6 @@ object NotesTable : Table("notes") {
     val id = varchar("id", 36)
     val title = varchar("title", 500)
     val content = text("content")
-    val folderId = varchar("folder_id", 36).index()
     val parentId = varchar("parent_id", 36).nullable().index()
     val icon = varchar("icon", 50).nullable()
     val backdropType = varchar("backdrop_type", 20).nullable()

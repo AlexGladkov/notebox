@@ -4,7 +4,6 @@ import type { Note } from '../types';
 export interface CreateNoteRequest {
   title: string;
   content: string;
-  folderId: string;
   parentId?: string | null;
   icon?: string | null;
   backdropType?: string | null;
@@ -15,7 +14,6 @@ export interface CreateNoteRequest {
 export interface UpdateNoteRequest {
   title: string;
   content: string;
-  folderId: string;
   parentId?: string | null;
   icon?: string | null;
   backdropType?: string | null;
@@ -28,9 +26,12 @@ export interface MoveNoteRequest {
 }
 
 export const notesApi = {
-  async getAll(folderId?: string): Promise<Note[]> {
-    const url = folderId ? `/api/notes?folderId=${folderId}` : '/api/notes';
-    return apiClient.get<Note[]>(url);
+  async getAll(): Promise<Note[]> {
+    return apiClient.get<Note[]>('/api/notes');
+  },
+
+  async getRootNotes(): Promise<Note[]> {
+    return apiClient.get<Note[]>('/api/notes/root');
   },
 
   async getById(id: string): Promise<Note> {

@@ -20,15 +20,14 @@ class NoteRepository {
             .singleOrNull()
     }
 
-    fun findByFolderId(folderId: String): List<Note> = transaction {
-        NotesTable.select { NotesTable.folderId eq folderId }
+    fun findRootNotes(): List<Note> = transaction {
+        NotesTable.select { NotesTable.parentId.isNull() }
             .map { toNote(it) }
     }
 
     fun create(
         title: String,
         content: String,
-        folderId: String,
         parentId: String? = null,
         icon: String? = null,
         backdropType: String? = null,
@@ -42,7 +41,6 @@ class NoteRepository {
             it[NotesTable.id] = id
             it[NotesTable.title] = title
             it[NotesTable.content] = content
-            it[NotesTable.folderId] = folderId
             it[NotesTable.parentId] = parentId
             it[NotesTable.icon] = icon
             it[NotesTable.backdropType] = backdropType
@@ -52,14 +50,13 @@ class NoteRepository {
             it[updatedAt] = now
         }
 
-        Note(id, title, content, folderId, parentId, icon, backdropType, backdropValue, backdropPositionY, now, now)
+        Note(id, title, content, parentId, icon, backdropType, backdropValue, backdropPositionY, now, now)
     }
 
     fun update(
         id: String,
         title: String,
         content: String,
-        folderId: String,
         parentId: String? = null,
         icon: String? = null,
         backdropType: String? = null,
@@ -73,7 +70,6 @@ class NoteRepository {
         NotesTable.update({ NotesTable.id eq id }) {
             it[NotesTable.title] = title
             it[NotesTable.content] = content
-            it[NotesTable.folderId] = folderId
             it[NotesTable.parentId] = parentId
             it[NotesTable.icon] = icon
             it[NotesTable.backdropType] = backdropType
@@ -87,10 +83,6 @@ class NoteRepository {
 
     fun delete(id: String): Boolean = transaction {
         NotesTable.deleteWhere { NotesTable.id eq id } > 0
-    }
-
-    fun deleteByFolderId(folderId: String) = transaction {
-        NotesTable.deleteWhere { NotesTable.folderId eq folderId }
     }
 
     fun findByParentId(parentId: String?): List<Note> = transaction {
@@ -185,7 +177,6 @@ class NoteRepository {
         id = row[NotesTable.id],
         title = row[NotesTable.title],
         content = row[NotesTable.content],
-        folderId = row[NotesTable.folderId],
         parentId = row[NotesTable.parentId],
         icon = row[NotesTable.icon],
         backdropType = row[NotesTable.backdropType],

@@ -14,11 +14,14 @@ class NoteController(
 ) {
 
     @GetMapping
-    fun getAllNotes(@RequestParam(required = false) folderId: String?): ResponseEntity<ApiResponse<List<NoteDto>>> {
-        if (folderId != null) {
-            ValidationUtils.validateUUID(folderId, "folderId")
-        }
-        val notes = noteService.getAllNotes(folderId).map { it.toDto() }
+    fun getAllNotes(): ResponseEntity<ApiResponse<List<NoteDto>>> {
+        val notes = noteService.getAllNotes().map { it.toDto() }
+        return ResponseEntity.ok(successResponse(notes))
+    }
+
+    @GetMapping("/root")
+    fun getRootNotes(): ResponseEntity<ApiResponse<List<NoteDto>>> {
+        val notes = noteService.getRootNotes().map { it.toDto() }
         return ResponseEntity.ok(successResponse(notes))
     }
 
@@ -34,7 +37,6 @@ class NoteController(
 
     @PostMapping
     fun createNote(@Valid @RequestBody request: CreateNoteRequest): ResponseEntity<ApiResponse<NoteDto>> {
-        ValidationUtils.validateUUID(request.folderId, "folderId")
         if (request.parentId != null) {
             ValidationUtils.validateUUID(request.parentId, "parentId")
         }
@@ -42,7 +44,6 @@ class NoteController(
             val note = noteService.createNote(
                 request.title,
                 request.content,
-                request.folderId,
                 request.parentId,
                 request.icon,
                 request.backdropType,
@@ -63,9 +64,6 @@ class NoteController(
         @Valid @RequestBody request: UpdateNoteRequest
     ): ResponseEntity<ApiResponse<NoteDto>> {
         ValidationUtils.validateUUID(id, "id")
-        if (request.folderId != null) {
-            ValidationUtils.validateUUID(request.folderId, "folderId")
-        }
         if (request.parentId != null) {
             ValidationUtils.validateUUID(request.parentId, "parentId")
         }
@@ -73,7 +71,6 @@ class NoteController(
             id,
             request.title,
             request.content,
-            request.folderId,
             request.parentId,
             request.icon,
             request.backdropType,
