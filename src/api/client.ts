@@ -1,4 +1,5 @@
 import type { ApiResponse } from '../types';
+import { authStore } from '../stores/authStore';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
@@ -28,6 +29,13 @@ async function handleResponse<T>(response: Response): Promise<T> {
       // Ignore JSON parse errors
     }
 
+    // Handle 401 Unauthorized
+    if (response.status === 401) {
+      if (errorCode === 'SESSION_EXPIRED') {
+        authStore.setSessionExpired(true);
+      }
+    }
+
     throw new ApiError(errorCode, errorMessage, response.status);
   }
 
@@ -51,6 +59,7 @@ export const apiClient = {
       headers: {
         'Content-Type': 'application/json',
       },
+      credentials: 'include',
     });
     return handleResponse<T>(response);
   },
@@ -61,6 +70,7 @@ export const apiClient = {
       headers: {
         'Content-Type': 'application/json',
       },
+      credentials: 'include',
       body: body ? JSON.stringify(body) : undefined,
     });
     return handleResponse<T>(response);
@@ -72,6 +82,7 @@ export const apiClient = {
       headers: {
         'Content-Type': 'application/json',
       },
+      credentials: 'include',
       body: body ? JSON.stringify(body) : undefined,
     });
     return handleResponse<T>(response);
@@ -80,6 +91,7 @@ export const apiClient = {
   async delete(path: string): Promise<void> {
     const response = await fetch(`${API_BASE_URL}${path}`, {
       method: 'DELETE',
+      credentials: 'include',
     });
 
     if (!response.ok) {
@@ -97,6 +109,7 @@ export const apiClient = {
 
     const response = await fetch(`${API_BASE_URL}${path}`, {
       method: 'POST',
+      credentials: 'include',
       body: formData,
     });
 
