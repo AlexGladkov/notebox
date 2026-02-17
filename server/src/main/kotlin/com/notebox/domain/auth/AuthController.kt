@@ -4,6 +4,7 @@ import com.notebox.dto.ApiResponse
 import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -21,8 +22,11 @@ class AuthController(
 ) {
 
     companion object {
+        private val logger = LoggerFactory.getLogger(AuthController::class.java)
         private const val SESSION_COOKIE_NAME = "SESSION_ID"
+        private const val STATE_COOKIE_NAME = "OAUTH_STATE"
         private const val SESSION_COOKIE_MAX_AGE = 30 * 24 * 60 * 60 // 30 days
+        private const val STATE_COOKIE_MAX_AGE = 10 * 60 // 10 minutes
     }
 
     @GetMapping("/login/{provider}")
@@ -32,6 +36,15 @@ class AuthController(
     ): ResponseEntity<Void> {
         val state = UUID.randomUUID().toString()
         val redirectUri = "$serverUrl/api/auth/callback/$provider"
+
+        // Store state in cookie for CSRF protection
+        val stateCookie = Cookie(STATE_COOKIE_NAME, state).apply {
+            isHttpOnly = true
+            secure = true
+            path = "/"
+            maxAge = STATE_COOKIE_MAX_AGE
+        }
+        response.addCookie(stateCookie)
 
         val authUrl = oauthService.getAuthorizationUrl(provider, redirectUri, state)
 
@@ -45,9 +58,26 @@ class AuthController(
         @PathVariable provider: String,
         @RequestParam code: String,
         @RequestParam(required = false) state: String?,
+        request: HttpServletRequest,
         response: HttpServletResponse
     ): ResponseEntity<Void> {
         try {
+            // Validate state parameter for CSRF protection
+            val expectedState = request.cookies?.find { it.name == STATE_COOKIE_NAME }?.value
+            if (state == null || expectedState == null || state != expectedState) {
+                response.sendRedirect("$frontendUrl/login?error=invalid_state")
+                return ResponseEntity.status(HttpStatus.FOUND).build()
+            }
+
+            // Clear state cookie
+            val clearStateCookie = Cookie(STATE_COOKIE_NAME, "").apply {
+                isHttpOnly = true
+                secure = true
+                path = "/"
+                maxAge = 0
+            }
+            response.addCookie(clearStateCookie)
+
             val redirectUri = "$serverUrl/api/auth/callback/$provider"
 
             val (user, session) = oauthService.handleCallback(provider, code, redirectUri)
@@ -64,8 +94,12 @@ class AuthController(
             // Redirect to frontend
             response.sendRedirect(frontendUrl)
             return ResponseEntity.status(HttpStatus.FOUND).build()
+        } catch (e: IllegalArgumentException) {
+            logger.error("Invalid OAuth provider: $provider", e)
+            response.sendRedirect("$frontendUrl/login?error=invalid_provider")
+            return ResponseEntity.status(HttpStatus.FOUND).build()
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.error("OAuth callback failed for provider $provider", e)
             response.sendRedirect("$frontendUrl/login?error=auth_failed")
             return ResponseEntity.status(HttpStatus.FOUND).build()
         }
@@ -77,10 +111,27 @@ class AuthController(
         @RequestParam code: String,
         @RequestParam(required = false) id_token: String?,
         @RequestParam(required = false) state: String?,
+        request: HttpServletRequest,
         response: HttpServletResponse
     ): ResponseEntity<Void> {
         // Handle POST callback (for Apple Sign In)
         try {
+            // Validate state parameter for CSRF protection
+            val expectedState = request.cookies?.find { it.name == STATE_COOKIE_NAME }?.value
+            if (state == null || expectedState == null || state != expectedState) {
+                response.sendRedirect("$frontendUrl/login?error=invalid_state")
+                return ResponseEntity.status(HttpStatus.FOUND).build()
+            }
+
+            // Clear state cookie
+            val clearStateCookie = Cookie(STATE_COOKIE_NAME, "").apply {
+                isHttpOnly = true
+                secure = true
+                path = "/"
+                maxAge = 0
+            }
+            response.addCookie(clearStateCookie)
+
             val redirectUri = "$serverUrl/api/auth/callback/$provider"
 
             val (user, session) = if (provider == "apple" && id_token != null) {
@@ -101,8 +152,12 @@ class AuthController(
             // Redirect to frontend
             response.sendRedirect(frontendUrl)
             return ResponseEntity.status(HttpStatus.FOUND).build()
+        } catch (e: IllegalArgumentException) {
+            logger.error("Invalid OAuth provider: $provider", e)
+            response.sendRedirect("$frontendUrl/login?error=invalid_provider")
+            return ResponseEntity.status(HttpStatus.FOUND).build()
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.error("OAuth callback (POST) failed for provider $provider", e)
             response.sendRedirect("$frontendUrl/login?error=auth_failed")
             return ResponseEntity.status(HttpStatus.FOUND).build()
         }
@@ -150,5 +205,16 @@ class AuthController(
 
     private fun getSessionIdFromCookies(request: HttpServletRequest): String? {
         return request.cookies?.find { it.name == SESSION_COOKIE_NAME }?.value
+    }
+
+    private fun createSecureCookie(name: String, value: String, maxAge: Int): Cookie {
+        return Cookie(name, value).apply {
+            isHttpOnly = true
+            secure = true
+            path = "/"
+            this.maxAge = maxAge
+            // Note: SameSite attribute is not directly supported by Jakarta Cookie class
+            // In production, consider using ResponseCookie or setting via Set-Cookie header
+        }
     }
 }
