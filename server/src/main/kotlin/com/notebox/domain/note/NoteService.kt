@@ -65,6 +65,36 @@ class NoteService(
         backdropValue: String? = null,
         backdropPositionY: Int? = 50
     ): Note? {
+        // Проверка существования заметки
+        val existingNote = noteRepository.findById(id)
+            ?: throw IllegalArgumentException("Note not found")
+
+        // Валидация изменения parentId (если оно меняется)
+        if (parentId != existingNote.parentId) {
+            if (parentId != null) {
+                // Проверка существования нового родителя
+                noteRepository.findById(parentId)
+                    ?: throw IllegalArgumentException("Parent note not found")
+
+                if (id == parentId) {
+                    throw IllegalArgumentException("Note cannot be its own parent")
+                }
+
+                // Проверка на циклические ссылки
+                val descendants = noteRepository.findAllDescendants(id)
+                if (descendants.any { it.id == parentId }) {
+                    throw IllegalArgumentException("Cannot set parent to a descendant note")
+                }
+
+                // Проверка глубины вложенности
+                val newParentDepth = noteRepository.getDepth(parentId)
+                val noteWithDescendantsDepth = calculateMaxDescendantDepth(id)
+                if (newParentDepth + noteWithDescendantsDepth > MAX_DEPTH) {
+                    throw IllegalArgumentException("This change would exceed maximum nesting depth of $MAX_DEPTH levels")
+                }
+            }
+        }
+
         return noteRepository.update(id, title, content, parentId, icon, backdropType, backdropValue, backdropPositionY)
     }
 
