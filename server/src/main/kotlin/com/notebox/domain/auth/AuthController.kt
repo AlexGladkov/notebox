@@ -167,15 +167,15 @@ class AuthController(
     fun getCurrentUser(request: HttpServletRequest): ResponseEntity<ApiResponse<*>> {
         val sessionId = getSessionIdFromCookies(request)
             ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.error("UNAUTHORIZED", "Not authenticated"))
+                .body(ApiResponse.error<Nothing>("UNAUTHORIZED", "Not authenticated"))
 
         val userId = sessionService.getUserIdFromSession(sessionId)
             ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.error("SESSION_EXPIRED", "Session expired"))
+                .body(ApiResponse.error<Nothing>("SESSION_EXPIRED", "Session expired"))
 
         val user = userService.findById(userId)
             ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.error("USER_NOT_FOUND", "User not found"))
+                .body(ApiResponse.error<Nothing>("USER_NOT_FOUND", "User not found"))
 
         return ResponseEntity.ok(ApiResponse.success(user.toDto()))
     }
