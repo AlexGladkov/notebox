@@ -66,7 +66,7 @@ class NoteRepository {
         backdropValue: String? = null,
         backdropPositionY: Int? = 50
     ): Note? = transaction {
-        val exists = NotesTable.select { NotesTable.id eq id }.count() > 0
+        val exists = NotesTable.select { NotesTable.id eq id }.any()
         if (!exists) return@transaction null
 
         val now = Instant.now()
@@ -144,7 +144,7 @@ class NoteRepository {
     }
 
     fun updateParentId(noteId: String, newParentId: String?): Boolean = transaction {
-        val exists = NotesTable.select { NotesTable.id eq noteId }.count() > 0
+        val exists = NotesTable.select { NotesTable.id eq noteId }.any()
         if (!exists) return@transaction false
 
         val now = Instant.now()

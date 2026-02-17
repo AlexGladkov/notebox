@@ -43,6 +43,10 @@ class NoteService(
     ): Note {
         // Валидация глубины вложенности
         if (parentId != null) {
+            // Проверка существования родителя
+            val parent = noteRepository.findById(parentId)
+                ?: throw IllegalArgumentException("Parent note not found")
+
             val parentDepth = noteRepository.getDepth(parentId)
             if (parentDepth >= MAX_DEPTH) {
                 throw IllegalArgumentException("Maximum nesting depth of $MAX_DEPTH levels exceeded")
@@ -67,8 +71,16 @@ class NoteService(
     }
 
     fun moveNote(noteId: String, newParentId: String?): Note? {
+        // Проверка существования заметки
+        noteRepository.findById(noteId)
+            ?: throw IllegalArgumentException("Note not found")
+
         // Проверка на циклические ссылки
         if (newParentId != null) {
+            // Проверка существования нового родителя
+            noteRepository.findById(newParentId)
+                ?: throw IllegalArgumentException("Parent note not found")
+
             if (noteId == newParentId) {
                 throw IllegalArgumentException("Note cannot be its own parent")
             }

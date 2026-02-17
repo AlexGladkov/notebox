@@ -61,13 +61,4 @@ export const notesApi = {
   async move(noteId: string, request: MoveNoteRequest): Promise<Note> {
     return apiClient.put<Note>(`/api/notes/${noteId}/move`, request);
   },
-
-  async createSubpage(parentId: string, title: string): Promise<Note> {
-    return this.create({
-      title,
-      content: '',
-      folderId: '', // Will be set from parent
-      parentId,
-    });
-  },
 };

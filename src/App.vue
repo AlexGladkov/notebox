@@ -100,6 +100,7 @@ const {
   getNoteById,
   getNotesByFolder,
   getChildrenCount,
+  getAllDescendants,
   expandedNotes,
   toggleNoteExpanded,
   expandAllAncestors,
@@ -296,6 +297,7 @@ const handleDeleteNote = (noteId: string, cascadeDelete: boolean = true) => {
     confirmDialog.action = async () => {
       try {
         await deleteNote(noteId, cascadeDelete);
+        // Закрываем вкладки удаленной заметки
         removeTabsByNoteId(noteId);
       } catch (error) {
         console.error('Не удалось удалить заметку:', error);
@@ -315,8 +317,14 @@ const showDeleteNoteWithChildrenDialog = (noteId: string, childrenCount: number)
   confirmDialog.message = `У заметки "${note.title}" есть ${childrenCount} вложенных страниц. Удалить всё?`;
   confirmDialog.action = async () => {
     try {
+      // Получаем все ID заметок, которые будут удалены (включая потомков)
+      const descendants = getAllDescendants(noteId);
+      const allNoteIds = [noteId, ...descendants.map(n => n.id)];
+
       await deleteNote(noteId, true); // cascade delete
-      removeTabsByNoteId(noteId);
+
+      // Закрываем вкладки всех удаленных заметок
+      allNoteIds.forEach(id => removeTabsByNoteId(id));
     } catch (error) {
       console.error('Не удалось удалить заметку:', error);
     }
