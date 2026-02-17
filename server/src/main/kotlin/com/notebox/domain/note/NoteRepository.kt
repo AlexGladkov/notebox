@@ -159,7 +159,11 @@ class NoteRepository {
     fun deleteWithDescendants(noteId: String): Int = transaction {
         val descendants = findAllDescendants(noteId)
         val allIds = listOf(noteId) + descendants.map { it.id }
-        NotesTable.deleteWhere { NotesTable.id inList allIds }
+        var deletedCount = 0
+        allIds.forEach { id ->
+            deletedCount += NotesTable.deleteWhere { NotesTable.id eq id }
+        }
+        deletedCount
     }
 
     fun orphanChildren(noteId: String): Int = transaction {
