@@ -9,6 +9,8 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import java.util.Base64
 
 data class AppleTokenResponse(
@@ -41,12 +43,16 @@ class AppleOAuthProvider(
     }
 
     override fun getAuthorizationUrl(redirectUri: String, state: String): String {
+        val encodedRedirectUri = URLEncoder.encode(redirectUri, StandardCharsets.UTF_8)
+        val encodedScope = URLEncoder.encode(SCOPE, StandardCharsets.UTF_8)
+        val encodedState = URLEncoder.encode(state, StandardCharsets.UTF_8)
+
         return "$AUTHORIZATION_URL?" +
                 "client_id=$clientId&" +
-                "redirect_uri=$redirectUri&" +
+                "redirect_uri=$encodedRedirectUri&" +
                 "response_type=code&" +
-                "scope=$SCOPE&" +
-                "state=$state&" +
+                "scope=$encodedScope&" +
+                "state=$encodedState&" +
                 "response_mode=form_post"
     }
 
@@ -65,14 +71,18 @@ class AppleOAuthProvider(
             .build()
 
         httpClient.newCall(request).execute().use { response ->
+            val responseBody = response.body?.string()
+                ?: throw RuntimeException("Empty response body from Apple token endpoint")
+
             if (!response.isSuccessful) {
-                throw RuntimeException("Failed to exchange code: ${response.code}")
+                throw RuntimeException("Failed to exchange code with Apple (${response.code}): $responseBody")
             }
 
-            val responseBody = response.body?.string()
-                ?: throw RuntimeException("Empty response body")
-
-            val tokenResponse = objectMapper.readValue(responseBody, AppleTokenResponse::class.java)
+            val tokenResponse = try {
+                objectMapper.readValue(responseBody, AppleTokenResponse::class.java)
+            } catch (e: Exception) {
+                throw RuntimeException("Failed to parse Apple token response: ${e.message}", e)
+            }
 
             OAuthTokens(
                 accessToken = tokenResponse.accessToken,
@@ -93,16 +103,31 @@ class AppleOAuthProvider(
         // Decode JWT - this is simplified, in production use a proper JWT library
         val parts = idToken.split(".")
         if (parts.size != 3) {
-            throw RuntimeException("Invalid ID token format")
+            throw RuntimeException("Invalid Apple ID token format: expected 3 parts, got ${parts.size}")
         }
 
-        val payload = String(Base64.getUrlDecoder().decode(parts[1]))
-        val payloadMap = objectMapper.readValue(payload, Map::class.java)
+        val payload = try {
+            String(Base64.getUrlDecoder().decode(parts[1]))
+        } catch (e: Exception) {
+            throw RuntimeException("Failed to decode Apple ID token payload: ${e.message}", e)
+        }
+
+        val payloadMap = try {
+            @Suppress("UNCHECKED_CAST")
+            objectMapper.readValue(payload, Map::class.java) as Map<String, Any>
+        } catch (e: Exception) {
+            throw RuntimeException("Failed to parse Apple ID token JSON: ${e.message}", e)
+        }
+
+        val sub = payloadMap["sub"] as? String
+            ?: throw RuntimeException("Missing 'sub' field in Apple ID token")
+        val email = payloadMap["email"] as? String
+            ?: throw RuntimeException("Missing 'email' field in Apple ID token")
 
         return OAuthUserInfo(
-            id = payloadMap["sub"] as String,
-            email = payloadMap["email"] as String,
-            name = payloadMap["name"] as? String ?: payloadMap["email"] as String,
+            id = sub,
+            email = email,
+            name = payloadMap["name"] as? String ?: email,
             avatarUrl = null
         )
     }

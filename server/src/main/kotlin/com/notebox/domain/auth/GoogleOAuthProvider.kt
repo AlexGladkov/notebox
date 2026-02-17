@@ -9,6 +9,8 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 data class GoogleTokenResponse(
     @JsonProperty("access_token") val accessToken: String,
@@ -41,12 +43,16 @@ class GoogleOAuthProvider(
     }
 
     override fun getAuthorizationUrl(redirectUri: String, state: String): String {
+        val encodedRedirectUri = URLEncoder.encode(redirectUri, StandardCharsets.UTF_8)
+        val encodedScope = URLEncoder.encode(SCOPE, StandardCharsets.UTF_8)
+        val encodedState = URLEncoder.encode(state, StandardCharsets.UTF_8)
+
         return "$AUTHORIZATION_URL?" +
                 "client_id=$clientId&" +
-                "redirect_uri=$redirectUri&" +
+                "redirect_uri=$encodedRedirectUri&" +
                 "response_type=code&" +
-                "scope=$SCOPE&" +
-                "state=$state&" +
+                "scope=$encodedScope&" +
+                "state=$encodedState&" +
                 "access_type=offline&" +
                 "prompt=consent"
     }
@@ -66,14 +72,18 @@ class GoogleOAuthProvider(
             .build()
 
         httpClient.newCall(request).execute().use { response ->
+            val responseBody = response.body?.string()
+                ?: throw RuntimeException("Empty response body from Google token endpoint")
+
             if (!response.isSuccessful) {
-                throw RuntimeException("Failed to exchange code: ${response.code}")
+                throw RuntimeException("Failed to exchange code with Google (${response.code}): $responseBody")
             }
 
-            val responseBody = response.body?.string()
-                ?: throw RuntimeException("Empty response body")
-
-            val tokenResponse = objectMapper.readValue(responseBody, GoogleTokenResponse::class.java)
+            val tokenResponse = try {
+                objectMapper.readValue(responseBody, GoogleTokenResponse::class.java)
+            } catch (e: Exception) {
+                throw RuntimeException("Failed to parse Google token response: ${e.message}", e)
+            }
 
             OAuthTokens(
                 accessToken = tokenResponse.accessToken,
@@ -91,14 +101,18 @@ class GoogleOAuthProvider(
             .build()
 
         httpClient.newCall(request).execute().use { response ->
+            val responseBody = response.body?.string()
+                ?: throw RuntimeException("Empty response body from Google userinfo endpoint")
+
             if (!response.isSuccessful) {
-                throw RuntimeException("Failed to get user info: ${response.code}")
+                throw RuntimeException("Failed to get user info from Google (${response.code}): $responseBody")
             }
 
-            val responseBody = response.body?.string()
-                ?: throw RuntimeException("Empty response body")
-
-            val userInfo = objectMapper.readValue(responseBody, GoogleUserInfoResponse::class.java)
+            val userInfo = try {
+                objectMapper.readValue(responseBody, GoogleUserInfoResponse::class.java)
+            } catch (e: Exception) {
+                throw RuntimeException("Failed to parse Google userinfo response: ${e.message}", e)
+            }
 
             OAuthUserInfo(
                 id = userInfo.sub,
