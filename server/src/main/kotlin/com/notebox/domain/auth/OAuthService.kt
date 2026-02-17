@@ -8,7 +8,8 @@ import java.time.Instant
 class OAuthService(
     private val googleProvider: GoogleOAuthProvider,
     private val appleProvider: AppleOAuthProvider,
-    private val userService: UserService
+    private val userService: UserService,
+    private val sessionService: SessionService
 ) {
 
     fun getProvider(providerName: String): OAuthProvider {
@@ -57,11 +58,6 @@ class OAuthService(
         )
 
         // Create session
-        val sessionService = SessionService(
-            org.springframework.beans.factory.annotation.Autowired()
-            SessionRepository()
-        )
-
         user to sessionService.createSession(user.id)
     }
 
@@ -99,11 +95,6 @@ class OAuthService(
         )
 
         // Create session
-        val sessionService = SessionService(
-            org.springframework.beans.factory.annotation.Autowired()
-            SessionRepository()
-        )
-
         user to sessionService.createSession(user.id)
     }
 }
