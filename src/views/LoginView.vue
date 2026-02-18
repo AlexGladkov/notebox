@@ -9,6 +9,7 @@
       <div class="login-buttons">
         <OAuthButton provider="google" @click="handleGoogleLogin" />
         <OAuthButton provider="apple" @click="handleAppleLogin" />
+        <DemoButton v-if="demoModeEnabled" @click="handleDemoLogin" />
       </div>
 
       <div v-if="error" class="error-message">
@@ -20,17 +21,30 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import OAuthButton from '../components/auth/OAuthButton.vue';
+import DemoButton from '../components/auth/DemoButton.vue';
 import { oauthService } from '../services/auth/oauthService';
+import { authService } from '../services/auth/authService';
+import { authStore } from '../stores/authStore';
 
 const route = useRoute();
+const router = useRouter();
 const error = ref<string | null>(null);
+const demoModeEnabled = ref<boolean>(false);
 
-onMounted(() => {
+onMounted(async () => {
   const errorParam = route.query.error;
   if (errorParam === 'auth_failed') {
     error.value = 'Не удалось выполнить вход. Попробуйте еще раз.';
+  }
+
+  // Check if demo mode is enabled
+  try {
+    const config = await authService.getConfig();
+    demoModeEnabled.value = config.demoModeEnabled;
+  } catch (err) {
+    console.error('Failed to load config:', err);
   }
 });
 
@@ -40,6 +54,18 @@ function handleGoogleLogin() {
 
 function handleAppleLogin() {
   oauthService.initiateLogin('apple');
+}
+
+async function handleDemoLogin() {
+  try {
+    error.value = null;
+    const user = await authService.loginDemo();
+    authStore.setUser(user);
+    router.push('/');
+  } catch (err) {
+    error.value = 'Не удалось войти в демо-режим. Попробуйте еще раз.';
+    console.error('Demo login failed:', err);
+  }
 }
 </script>
 

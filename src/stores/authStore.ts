@@ -39,6 +39,10 @@ export const authStore = {
     return computed(() => state.sessionExpired);
   },
 
+  get isDemoUser() {
+    return computed(() => state.user?.email === 'demo@notebox.app');
+  },
+
   async checkAuth() {
     if (state.isLoading) return;
 

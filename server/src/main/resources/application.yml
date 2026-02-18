@@ -49,3 +49,7 @@ oauth:
     client-id: ${APPLE_CLIENT_ID:}
     client-secret: ${APPLE_CLIENT_SECRET:}
     team-id: ${APPLE_TEAM_ID:}
+
+demo:
+  mode:
+    enabled: ${DEMO_MODE_ENABLED:false}

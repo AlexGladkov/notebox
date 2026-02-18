@@ -7,6 +7,7 @@ export function useAuth() {
     isLoading: authStore.isLoading,
     isInitialized: authStore.isInitialized,
     sessionExpired: authStore.sessionExpired,
+    isDemoUser: authStore.isDemoUser,
     checkAuth: () => authStore.checkAuth(),
     logout: () => authStore.logout(),
     setSessionExpired: (expired: boolean) => authStore.setSessionExpired(expired)

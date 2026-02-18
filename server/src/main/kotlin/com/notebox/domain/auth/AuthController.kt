@@ -17,6 +17,7 @@ class AuthController(
     private val oauthService: OAuthService,
     private val sessionService: SessionService,
     private val userService: UserService,
+    private val demoAuthProvider: DemoAuthProvider,
     @Value("\${frontend.url}") private val frontendUrl: String,
     @Value("\${server.url}") private val serverUrl: String
 ) {
@@ -178,6 +179,35 @@ class AuthController(
                 .body(ApiResponse.error<Nothing>("USER_NOT_FOUND", "User not found"))
 
         return ResponseEntity.ok(ApiResponse.success(user.toDto()))
+    }
+
+    @PostMapping("/demo")
+    fun loginDemo(
+        response: HttpServletResponse
+    ): ResponseEntity<ApiResponse<*>> {
+        try {
+            if (!demoAuthProvider.isDemoModeEnabled()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error<Nothing>("DEMO_MODE_DISABLED", "Demo mode is not enabled"))
+            }
+
+            val (user, session) = demoAuthProvider.createDemoSession()
+
+            // Set session cookie without maxAge (session cookie - expires when browser closes)
+            val cookie = Cookie(SESSION_COOKIE_NAME, session.id).apply {
+                isHttpOnly = true
+                secure = true
+                path = "/"
+                // No maxAge set - this makes it a session cookie
+            }
+            response.addCookie(cookie)
+
+            return ResponseEntity.ok(ApiResponse.success(user.toDto()))
+        } catch (e: Exception) {
+            logger.error("Demo login failed", e)
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error<Nothing>("DEMO_LOGIN_FAILED", "Failed to login in demo mode"))
+        }
     }
 
     @PostMapping("/logout")

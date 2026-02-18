@@ -1,5 +1,6 @@
 <template>
   <div class="flex flex-col h-screen bg-white dark:bg-gray-900">
+    <DemoBanner v-if="isDemoUser" />
     <div class="flex flex-1 overflow-hidden">
       <!-- Единая левая панель с деревом страниц -->
       <div class="flex flex-col bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 h-full" style="width: 288px;">
@@ -182,9 +183,10 @@ import TabBar from '../components/TabBar.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import UserProfile from '../components/auth/UserProfile.vue';
 import ProfileModal from '../components/auth/ProfileModal.vue';
+import DemoBanner from '../components/layout/DemoBanner.vue';
 
 // Auth
-const { user, logout } = useAuth();
+const { user, logout, isDemoUser } = useAuth();
 const showProfileModal = ref(false);
 
 // Инициализация темы

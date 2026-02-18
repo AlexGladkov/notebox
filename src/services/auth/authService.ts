@@ -19,5 +19,15 @@ export const authService = {
 
   getLoginUrl(provider: 'google' | 'apple'): string {
     return `${API_BASE_URL}/api/auth/login/${provider}`;
+  },
+
+  async loginDemo(): Promise<User> {
+    const user = await apiClient.post<User>('/api/auth/demo');
+    return user;
+  },
+
+  async getConfig(): Promise<{ demoModeEnabled: boolean }> {
+    const config = await apiClient.get<{ demoModeEnabled: boolean }>('/api/config');
+    return config;
   }
 };
