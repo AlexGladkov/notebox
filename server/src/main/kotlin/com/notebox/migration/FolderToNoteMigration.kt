@@ -13,7 +13,7 @@ import java.util.UUID
  * Legacy table definition that includes the old folderId column
  * Used only during migration from folder-based to page-based hierarchy
  */
-private object LegacyNotesTable : Table("notes") {
+internal object LegacyNotesTable : Table("notes") {
     val id = varchar("id", 36)
     val title = varchar("title", 500)
     val content = text("content")
