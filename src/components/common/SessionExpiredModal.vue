@@ -22,6 +22,7 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
+import { authStore } from '../../stores/authStore';
 
 defineProps<{
   isOpen: boolean;
@@ -30,6 +31,7 @@ defineProps<{
 const router = useRouter();
 
 function handleLogin() {
+  authStore.setSessionExpired(false);
   router.push('/login');
 }
 </script>
