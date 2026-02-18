@@ -259,20 +259,37 @@ function handleSelectNote(noteId: string, forceNewTab = false) {
   }
 }
 
-function handleCreateRootPage() {
-  const newNote = createNote('', null);
-  openTab(newNote);
+async function handleCreateRootPage() {
+  try {
+    const newNote = await createNote('Новая страница', null);
+    openTab(newNote.id);
+  } catch (error) {
+    console.error('Не удалось создать страницу:', error);
+  }
 }
 
-function handleCreateSubpage(parentId: string) {
-  const newNote = createNote('', parentId);
-  openTab(newNote);
-  expandAllAncestors(newNote.id);
+async function handleCreateSubpage(parentId: string) {
+  try {
+    const newNote = await createNote('Новая страница', parentId);
+    expandAllAncestors(newNote.id);
+    openTab(newNote.id);
+  } catch (error) {
+    console.error('Не удалось создать подстраницу:', error);
+  }
 }
 
-function handleUpdateNote(updatedNote: any) {
-  updateNote(updatedNote);
-  updateTabTitle(updatedNote.id, updatedNote.title);
+async function handleUpdateNote(updatedNote: { id: string; title?: string; content?: string }) {
+  try {
+    await updateNote(updatedNote.id, {
+      title: updatedNote.title,
+      content: updatedNote.content,
+    });
+    if (updatedNote.title !== undefined) {
+      updateTabTitle(updatedNote.id, updatedNote.title);
+    }
+  } catch (error) {
+    console.error('Не удалось обновить заметку:', error);
+  }
 }
 
 function toggleExpandNote(noteId: string) {
