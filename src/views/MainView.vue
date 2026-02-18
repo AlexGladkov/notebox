@@ -254,7 +254,7 @@ const rootNotes = computed(() =>
 function handleSelectNote(noteId: string, forceNewTab = false) {
   const note = getNoteById(noteId);
   if (note) {
-    openTab(note, forceNewTab);
+    openTab(noteId, forceNewTab);
     expandAllAncestors(noteId);
   }
 }
@@ -278,14 +278,20 @@ async function handleCreateSubpage(parentId: string) {
   }
 }
 
-async function handleUpdateNote(updatedNote: { id: string; title?: string; content?: string }) {
+async function handleUpdateNote(updates: {
+  title?: string;
+  content?: string;
+  icon?: string | null;
+  backdropType?: string | null;
+  backdropValue?: string | null;
+  backdropPositionY?: number;
+}) {
+  if (!currentNote.value) return;
+
   try {
-    await updateNote(updatedNote.id, {
-      title: updatedNote.title,
-      content: updatedNote.content,
-    });
-    if (updatedNote.title !== undefined) {
-      updateTabTitle(updatedNote.id, updatedNote.title);
+    await updateNote(currentNote.value.id, updates);
+    if (updates.title !== undefined) {
+      updateTabTitle(currentNote.value.id, updates.title);
     }
   } catch (error) {
     console.error('Не удалось обновить заметку:', error);
