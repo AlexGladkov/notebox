@@ -57,6 +57,7 @@ services:
       S3_BUCKET: ${S3_BUCKET:-notebox-files}
       S3_REGION: ${S3_REGION:-us-east-1}
       SERVER_PORT: 8080
+      DEMO_MODE_ENABLED: ${DEMO_MODE_ENABLED:-false}
     ports:
       - "${SERVER_PORT:-8080}:8080"
     depends_on:
