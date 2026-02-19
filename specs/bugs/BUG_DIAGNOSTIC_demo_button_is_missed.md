@@ -1,7 +1,7 @@
 # Диагностический отчёт: Demo button is missed
 
 ## Bug Summary
-Кнопка "Войти в демо" отсутствует на странице логина NoteBox, потому что переменная окружения `DEMO_MODE_ENABLED` не задана в конфигурационных файлах `.env.development` и `.env.example`, а значение по умолчанию установлено в `false`.
+Кнопка "Войти в демо" отсутствует на странице логина NoteBox, потому что файл `.env` не существует в локальной среде разработки. Docker Compose использует именно `.env` файл для передачи переменных окружения в контейнеры, а значение по умолчанию для `DEMO_MODE_ENABLED` установлено в `false`.
 
 ## Root Cause
 
@@ -13,19 +13,22 @@ demo:
     enabled: ${DEMO_MODE_ENABLED:false}
 ```
 
-Корневая причина — отсутствие переменной `DEMO_MODE_ENABLED` в файлах окружения:
+Корневая причина — **отсутствие файла `.env`** в корне проекта:
 
-| Файл | DEMO_MODE_ENABLED |
-|------|-------------------|
-| `.env.example` | **Отсутствует** |
-| `.env.development` | **Отсутствует** |
-| `application.yml` | По умолчанию `false` |
-| `docker-compose.yml:60` | По умолчанию `false` |
+| Файл | DEMO_MODE_ENABLED | Статус |
+|------|-------------------|--------|
+| `.env.example` | `true` | ✅ Существует (шаблон) |
+| `.env` | — | ❌ **НЕ существует** |
+| `.env.development` | — | Только для Vite (VITE_*) |
+| `application.yml` | По умолчанию `false` | Серверная конфигурация |
+| `docker-compose.yml:60` | По умолчанию `false` | Docker Compose |
 
-При запуске сервера без явно установленной переменной `DEMO_MODE_ENABLED=true`:
-1. Сервер использует значение по умолчанию `false`
-2. Эндпоинт `/api/config` возвращает `{ demoModeEnabled: false }`
-3. Кнопка Demo не отображается из-за условия `v-if="demoModeEnabled"` в `LoginView.vue:12`
+При запуске `docker compose up` без файла `.env`:
+1. Docker Compose не находит переменную `DEMO_MODE_ENABLED`
+2. Используется значение по умолчанию `${DEMO_MODE_ENABLED:-false}` из `docker-compose.yml:60`
+3. Сервер получает `DEMO_MODE_ENABLED=false`
+4. Эндпоинт `/api/config` возвращает `{ demoModeEnabled: false }`
+5. Кнопка Demo не отображается из-за условия `v-if="demoModeEnabled"` в `LoginView.vue:12`
 
 ## Analysis
 
@@ -65,26 +68,14 @@ d56953a fix: добавлена переменная DEMO_MODE_ENABLED для о
 
 ## Affected Files
 
-| Файл | Требуемые изменения |
-|------|---------------------|
-| `.env.example` | Добавить `DEMO_MODE_ENABLED=true` для документации |
-| `.env` | Создать из `.env.example` с `DEMO_MODE_ENABLED=true` |
+| Файл | Статус | Требуемые изменения |
+|------|--------|---------------------|
+| `.env.example` | ✅ Готов | Уже содержит `DEMO_MODE_ENABLED=true` |
+| `.env` | ❌ Отсутствует | **Создать из `.env.example`** |
 
 ## Fix Plan
 
-### Шаг 1: Обновить `.env.example`
-
-Добавить переменную в раздел "Server":
-
-```env
-# Server
-SERVER_PORT=8080
-DEMO_MODE_ENABLED=true
-```
-
-**Почему:** Документирует переменную для всех разработчиков и новых развёртываний.
-
-### Шаг 2: Создать `.env` файл
+### Шаг 1: Создать `.env` файл
 
 Разработчики должны создать локальный `.env` файл на основе `.env.example`:
 
