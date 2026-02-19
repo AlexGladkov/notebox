@@ -57,14 +57,18 @@ d56953a fix: добавлена переменная DEMO_MODE_ENABLED для о
 124f4d5 feat: implement demo mode for NoteBox
 ```
 
-Из истории видно, что переменная была добавлена в `.env.development`, но затем удалена в коммите `331a29b`, что вновь привело к появлению бага.
+Из истории видно:
+- Изначально переменная была добавлена в `.env.development` (коммит `d56953a`), что было ошибкой
+- Затем она была правильно удалена из `.env.development` (коммит `331a29b`), так как этот файл используется Vite для frontend
+- Значение по умолчанию в `docker-compose.yml` было возвращено на `false` для безопасности (коммит `d1625a9`)
+- **Правильное решение:** переменная должна быть в `.env.example` (для документации) и в локальном `.env` файле (который создаётся разработчиком)
 
 ## Affected Files
 
 | Файл | Требуемые изменения |
 |------|---------------------|
-| `.env.example` | Добавить `DEMO_MODE_ENABLED=true` |
-| `.env.development` | Добавить `DEMO_MODE_ENABLED=true` |
+| `.env.example` | Добавить `DEMO_MODE_ENABLED=true` для документации |
+| `.env` | Создать из `.env.example` с `DEMO_MODE_ENABLED=true` |
 
 ## Fix Plan
 
@@ -80,16 +84,22 @@ DEMO_MODE_ENABLED=true
 
 **Почему:** Документирует переменную для всех разработчиков и новых развёртываний.
 
-### Шаг 2: Обновить `.env.development`
+### Шаг 2: Создать `.env` файл
 
-Добавить переменную для локальной разработки:
+Разработчики должны создать локальный `.env` файл на основе `.env.example`:
 
-```env
-VITE_API_URL=http://localhost:8080
-DEMO_MODE_ENABLED=true
+```bash
+cp .env.example .env
 ```
 
-**Почему:** Включает демо-режим при локальной разработке автоматически.
+Docker Compose автоматически читает файл `.env` из корневой директории и передаёт переменные в контейнеры.
+
+**Почему:**
+- Docker Compose использует файл `.env` (без суффикса) для переменных окружения
+- Файл `.env` не коммитится в Git (.gitignore), что позволяет каждому разработчику иметь свою локальную конфигурацию
+- Переменная `DEMO_MODE_ENABLED=true` из `.env` будет передана в контейнер server
+
+**Важно:** Файл `.env.development` НЕ используется для backend. Он предназначен только для Vite (frontend) и содержит переменные с префиксом `VITE_`.
 
 ### Примечание о docker-compose.yml
 
@@ -100,8 +110,10 @@ DEMO_MODE_ENABLED=true
 ### Ручное тестирование:
 
 1. **Проверка с включённым DEMO_MODE_ENABLED:**
-   - Убедиться, что `DEMO_MODE_ENABLED=true` установлена в `.env.development`
-   - Запустить backend: `cd server && ./gradlew bootRun`
+   - Создать `.env` файл из `.env.example`: `cp .env.example .env`
+   - Убедиться, что `DEMO_MODE_ENABLED=true` установлена в `.env`
+   - Запустить все сервисы: `docker compose up --build`
+   - В отдельном терминале запустить frontend: `npm run dev`
    - Открыть `http://localhost:5173/login`
    - **Ожидание:** Кнопка "Войти в демо" видна под кнопками Google и Apple
 
@@ -110,8 +122,8 @@ DEMO_MODE_ENABLED=true
    - **Ожидание:** Успешный вход, редирект на главную страницу, баннер демо-режима вверху
 
 3. **Проверка с выключенным DEMO_MODE_ENABLED:**
-   - Установить `DEMO_MODE_ENABLED=false`
-   - Перезапустить сервер
+   - Установить `DEMO_MODE_ENABLED=false` в файле `.env`
+   - Перезапустить Docker Compose: `docker compose down && docker compose up --build`
    - Открыть страницу логина
    - **Ожидание:** Кнопка "Войти в демо" НЕ отображается
 
