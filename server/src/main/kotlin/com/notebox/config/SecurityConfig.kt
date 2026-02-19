@@ -75,9 +75,20 @@ class SessionAuthenticationFilter(
         val requestPath = request.requestURI
 
         // Пропускаем публичные эндпоинты без проверки сессии
-        // Используем точное сравнение или проверку, что после префикса идёт '/' или конец строки
         if (PUBLIC_PATHS.any { publicPath ->
-            requestPath == publicPath.removeSuffix("/") || requestPath.startsWith(publicPath)
+            when {
+                publicPath.endsWith("/") -> {
+                    // Для путей со слэшем: пропускаем всё, что начинается с этого пути
+                    // или точное совпадение без слэша
+                    requestPath.startsWith(publicPath) || requestPath == publicPath.removeSuffix("/")
+                }
+                else -> {
+                    // Для путей без слэша: точное совпадение или с '/', '?' после
+                    requestPath == publicPath ||
+                    requestPath.startsWith("$publicPath/") ||
+                    requestPath.startsWith("$publicPath?")
+                }
+            }
         }) {
             filterChain.doFilter(request, response)
             return
