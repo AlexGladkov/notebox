@@ -75,6 +75,7 @@ class SessionAuthenticationFilter(
         val requestPath = request.requestURI
 
         // Пропускаем публичные эндпоинты без проверки сессии
+        // Примечание: requestURI не содержит query string параметры (они в request.queryString)
         if (PUBLIC_PATHS.any { publicPath ->
             when {
                 publicPath.endsWith("/") -> {
@@ -83,10 +84,8 @@ class SessionAuthenticationFilter(
                     requestPath.startsWith(publicPath) || requestPath == publicPath.removeSuffix("/")
                 }
                 else -> {
-                    // Для путей без слэша: точное совпадение или с '/', '?' после
-                    requestPath == publicPath ||
-                    requestPath.startsWith("$publicPath/") ||
-                    requestPath.startsWith("$publicPath?")
+                    // Для путей без слэша: точное совпадение или с '/' после
+                    requestPath == publicPath || requestPath.startsWith("$publicPath/")
                 }
             }
         }) {
