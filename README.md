@@ -18,6 +18,9 @@
 ### Быстрый старт с Docker Compose (рекомендуется)
 
 ```bash
+# Создать файл .env из примера (обязательно для первого запуска)
+cp .env.example .env
+
 # Запустить все сервисы (PostgreSQL, MinIO, Backend)
 docker-compose up --build
 
