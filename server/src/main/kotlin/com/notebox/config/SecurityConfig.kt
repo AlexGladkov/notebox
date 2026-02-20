@@ -5,9 +5,11 @@ import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter
@@ -95,11 +97,22 @@ class SessionAuthenticationFilter(
 
         val sessionId = getSessionIdFromCookies(request)
 
-        if (sessionId != null && !sessionService.validateSession(sessionId)) {
-            response.status = HttpServletResponse.SC_UNAUTHORIZED
-            response.contentType = "application/json"
-            response.writer.write("""{"error":{"code":"SESSION_EXPIRED","message":"Session expired"}}""")
-            return
+        if (sessionId != null) {
+            val session = sessionService.getSession(sessionId)
+            if (session == null || !sessionService.validateSession(sessionId)) {
+                response.status = HttpServletResponse.SC_UNAUTHORIZED
+                response.contentType = "application/json"
+                response.writer.write("""{"error":{"code":"SESSION_EXPIRED","message":"Session expired"}}""")
+                return
+            }
+
+            // Устанавливаем authentication в SecurityContext для авторизации запроса
+            val authentication = UsernamePasswordAuthenticationToken(
+                session.userId,  // principal
+                null,            // credentials
+                emptyList()      // authorities
+            )
+            SecurityContextHolder.getContext().authentication = authentication
         }
 
         filterChain.doFilter(request, response)

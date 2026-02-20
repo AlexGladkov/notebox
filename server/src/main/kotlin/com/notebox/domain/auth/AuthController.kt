@@ -33,6 +33,7 @@ class AuthController(
     @GetMapping("/login/{provider}")
     fun initiateOAuthLogin(
         @PathVariable provider: String,
+        request: HttpServletRequest,
         response: HttpServletResponse
     ): ResponseEntity<Void> {
         val state = UUID.randomUUID().toString()
@@ -41,7 +42,7 @@ class AuthController(
         // Store state in cookie for CSRF protection
         val stateCookie = Cookie(STATE_COOKIE_NAME, state).apply {
             isHttpOnly = true
-            secure = true
+            secure = isSecureConnection(request)
             path = "/"
             maxAge = STATE_COOKIE_MAX_AGE
         }
@@ -73,7 +74,7 @@ class AuthController(
             // Clear state cookie
             val clearStateCookie = Cookie(STATE_COOKIE_NAME, "").apply {
                 isHttpOnly = true
-                secure = true
+                secure = isSecureConnection(request)
                 path = "/"
                 maxAge = 0
             }
@@ -86,7 +87,7 @@ class AuthController(
             // Set session cookie
             val cookie = Cookie(SESSION_COOKIE_NAME, session.id).apply {
                 isHttpOnly = true
-                secure = true // Set to true in production with HTTPS
+                secure = isSecureConnection(request)
                 path = "/"
                 maxAge = SESSION_COOKIE_MAX_AGE
             }
@@ -127,7 +128,7 @@ class AuthController(
             // Clear state cookie
             val clearStateCookie = Cookie(STATE_COOKIE_NAME, "").apply {
                 isHttpOnly = true
-                secure = true
+                secure = isSecureConnection(request)
                 path = "/"
                 maxAge = 0
             }
@@ -144,7 +145,7 @@ class AuthController(
             // Set session cookie
             val cookie = Cookie(SESSION_COOKIE_NAME, session.id).apply {
                 isHttpOnly = true
-                secure = true
+                secure = isSecureConnection(request)
                 path = "/"
                 maxAge = SESSION_COOKIE_MAX_AGE
             }
@@ -183,6 +184,7 @@ class AuthController(
 
     @PostMapping("/demo")
     fun loginDemo(
+        request: HttpServletRequest,
         response: HttpServletResponse
     ): ResponseEntity<ApiResponse<*>> {
         try {
@@ -196,7 +198,7 @@ class AuthController(
             // Set session cookie without maxAge (session cookie - expires when browser closes)
             val cookie = Cookie(SESSION_COOKIE_NAME, session.id).apply {
                 isHttpOnly = true
-                secure = true
+                secure = isSecureConnection(request)
                 path = "/"
                 // No maxAge set - this makes it a session cookie
             }
@@ -224,7 +226,7 @@ class AuthController(
         // Clear session cookie
         val cookie = Cookie(SESSION_COOKIE_NAME, "").apply {
             isHttpOnly = true
-            secure = true
+            secure = isSecureConnection(request)
             path = "/"
             maxAge = 0
         }
@@ -235,6 +237,14 @@ class AuthController(
 
     private fun getSessionIdFromCookies(request: HttpServletRequest): String? {
         return request.cookies?.find { it.name == SESSION_COOKIE_NAME }?.value
+    }
+
+    /**
+     * Определяет, должен ли cookie быть Secure на основе протокола запроса.
+     * Возвращает true для HTTPS или если X-Forwarded-Proto указывает на https (для прокси/балансировщиков).
+     */
+    private fun isSecureConnection(request: HttpServletRequest): Boolean {
+        return request.isSecure || request.getHeader("X-Forwarded-Proto")?.lowercase() == "https"
     }
 
     private fun createSecureCookie(name: String, value: String, maxAge: Int): Cookie {
