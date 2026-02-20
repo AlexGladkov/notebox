@@ -246,15 +246,4 @@ class AuthController(
     private fun isSecureConnection(request: HttpServletRequest): Boolean {
         return request.isSecure || request.getHeader("X-Forwarded-Proto")?.lowercase() == "https"
     }
-
-    private fun createSecureCookie(name: String, value: String, maxAge: Int): Cookie {
-        return Cookie(name, value).apply {
-            isHttpOnly = true
-            secure = true
-            path = "/"
-            this.maxAge = maxAge
-            // Note: SameSite attribute is not directly supported by Jakarta Cookie class
-            // In production, consider using ResponseCookie or setting via Set-Cookie header
-        }
-    }
 }
