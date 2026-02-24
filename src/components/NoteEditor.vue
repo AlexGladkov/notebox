@@ -40,7 +40,9 @@
     <div class="flex-1 overflow-hidden">
       <BlockEditor
         v-model="localContent"
+        :note-id="note?.id"
         @update:model-value="handleContentChange"
+        @note-created="handleNoteCreated"
       />
     </div>
   </div>
@@ -71,6 +73,7 @@ const emit = defineEmits<{
     backdropValue?: string | null;
     backdropPositionY?: number;
   }];
+  noteCreated: [noteId: string];
 }>();
 
 const localTitle = ref('');
@@ -138,6 +141,11 @@ const formatDate = (timestamp: number): string => {
     hour: '2-digit',
     minute: '2-digit',
   });
+};
+
+const handleNoteCreated = (noteId: string) => {
+  // Forward the event to parent component (MainView)
+  emit('noteCreated', noteId);
 };
 </script>
 

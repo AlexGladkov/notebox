@@ -21,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch } from 'vue';
 import type { Editor } from '@tiptap/vue-3';
 import type { SlashCommand } from '../../types/editor';
 
@@ -61,39 +61,24 @@ const selectCommand = (command: SlashCommand) => {
   emit('commandSelected');
 };
 
-const handleKeyDown = (event: KeyboardEvent) => {
-  if (!props.visible || filteredCommands.value.length === 0) {
-    return;
-  }
+const navigateDown = () => {
+  if (filteredCommands.value.length === 0) return;
+  selectedIndex.value = (selectedIndex.value + 1) % filteredCommands.value.length;
+};
 
-  if (event.key === 'ArrowDown') {
-    event.preventDefault();
-    selectedIndex.value = (selectedIndex.value + 1) % filteredCommands.value.length;
-    return;
-  }
+const navigateUp = () => {
+  if (filteredCommands.value.length === 0) return;
+  selectedIndex.value =
+    selectedIndex.value === 0
+      ? filteredCommands.value.length - 1
+      : selectedIndex.value - 1;
+};
 
-  if (event.key === 'ArrowUp') {
-    event.preventDefault();
-    selectedIndex.value =
-      selectedIndex.value === 0
-        ? filteredCommands.value.length - 1
-        : selectedIndex.value - 1;
-    return;
-  }
-
-  if (event.key === 'Enter') {
-    event.preventDefault();
-    const command = filteredCommands.value[selectedIndex.value];
-    if (command) {
-      selectCommand(command);
-    }
-    return;
-  }
-
-  if (event.key === 'Escape') {
-    event.preventDefault();
-    emit('commandSelected');
-    return;
+const selectCurrent = () => {
+  if (filteredCommands.value.length === 0) return;
+  const command = filteredCommands.value[selectedIndex.value];
+  if (command) {
+    selectCommand(command);
   }
 };
 
@@ -126,12 +111,11 @@ watch(
   }
 );
 
-onMounted(() => {
-  document.addEventListener('keydown', handleKeyDown);
-});
-
-onUnmounted(() => {
-  document.removeEventListener('keydown', handleKeyDown);
+// Expose methods to parent component
+defineExpose({
+  navigateUp,
+  navigateDown,
+  selectCurrent,
 });
 </script>
 

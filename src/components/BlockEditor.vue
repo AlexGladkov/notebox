@@ -24,6 +24,7 @@
 
     <SlashCommandMenu
       v-if="editor"
+      ref="slashMenuRef"
       :editor="editor"
       :visible="slashMenuVisible"
       :query="slashQuery"
@@ -37,6 +38,12 @@
       :actions="blockMenuActions"
       :position="blockMenuPosition"
       @close="blockMenuVisible = false"
+    />
+
+    <CreateNestedNoteModal
+      :visible="nestedNoteModalVisible"
+      @create="handleCreateNestedNote"
+      @close="nestedNoteModalVisible = false"
     />
   </div>
 </template>
@@ -61,19 +68,25 @@ import { BlockComment } from '../extensions/BlockComment';
 import EditorBubbleMenu from './BlockEditor/BubbleMenu.vue';
 import SlashCommandMenu from './BlockEditor/SlashCommandMenu.vue';
 import BlockMenu from './BlockEditor/BlockMenu.vue';
+import CreateNestedNoteModal from './BlockEditor/CreateNestedNoteModal.vue';
 
 import type { SlashCommand as SlashCommandType, BlockMenuAction } from '../types/editor';
+import { notesApi } from '../api/notes';
 
 const props = defineProps<{
   modelValue: string;
+  noteId?: string;
 }>();
 
 const emit = defineEmits<{
   'update:modelValue': [value: string];
+  'noteCreated': [noteId: string];
 }>();
 
 const slashMenuVisible = ref(false);
 const slashQuery = ref('');
+const slashMenuRef = ref<InstanceType<typeof SlashCommandMenu> | null>(null);
+const nestedNoteModalVisible = ref(false);
 const blockMenuVisible = ref(false);
 const blockMenuPosition = ref({ top: 0, left: 0 });
 const blockMenuActions = ref<BlockMenuAction[]>([]);
@@ -212,6 +225,19 @@ const slashCommands = computed<SlashCommandType[]>(() => [
       editor.chain().focus().deleteRange({ from: editor.state.selection.from - slashQuery.value.length - 1, to: editor.state.selection.to }).setCallout({ type: 'success' }).run();
     },
   },
+  {
+    id: 'nested',
+    title: 'Вложенная заметка',
+    description: 'Создать дочернюю заметку',
+    icon: '📄',
+    keywords: ['nested', 'child', 'subpage', 'вложенная', 'дочерняя'],
+    command: (editor) => {
+      // Delete slash command from text
+      editor.chain().focus().deleteRange({ from: editor.state.selection.from - slashQuery.value.length - 1, to: editor.state.selection.to }).run();
+      // Show modal to create nested note
+      nestedNoteModalVisible.value = true;
+    },
+  },
 ]);
 
 const editor = useEditor({
@@ -243,6 +269,15 @@ const editor = useEditor({
         slashMenuVisible.value = false;
         slashQuery.value = '';
       },
+      onNavigateUp: () => {
+        slashMenuRef.value?.navigateUp();
+      },
+      onNavigateDown: () => {
+        slashMenuRef.value?.navigateDown();
+      },
+      onSelectCurrent: () => {
+        slashMenuRef.value?.selectCurrent();
+      },
     }),
     BlockComment,
   ],
@@ -260,6 +295,62 @@ const editor = useEditor({
 const handleSlashCommand = () => {
   slashMenuVisible.value = false;
   slashQuery.value = '';
+};
+
+const handleCreateNestedNote = async (title: string) => {
+  try {
+    // Check if current note exists (is saved)
+    if (!props.noteId) {
+      console.warn('Cannot create nested note: current note is not saved yet');
+      // Could emit event to request save, but for now just close modal
+      nestedNoteModalVisible.value = false;
+      return;
+    }
+
+    // Create nested note with parentId = current note ID
+    const newNote = await notesApi.create({
+      title,
+      content: '',
+      parentId: props.noteId,
+    });
+
+    // Close modal
+    nestedNoteModalVisible.value = false;
+
+    // Insert link to created note in editor
+    if (editor.value) {
+      const noteUrl = `/notes/${newNote.id}`;
+      editor.value
+        .chain()
+        .focus()
+        .insertContent([
+          {
+            type: 'text',
+            text: `📄 ${title}`,
+            marks: [
+              {
+                type: 'link',
+                attrs: {
+                  href: noteUrl,
+                  target: '_self',
+                },
+              },
+            ],
+          },
+          {
+            type: 'text',
+            text: ' ',
+          },
+        ])
+        .run();
+    }
+
+    // Emit event to notify parent that a new note was created
+    emit('noteCreated', newNote.id);
+  } catch (error) {
+    console.error('Failed to create nested note:', error);
+    nestedNoteModalVisible.value = false;
+  }
 };
 
 // Block handle and menu functionality

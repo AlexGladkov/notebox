@@ -7,12 +7,16 @@ export interface SlashCommandOptions {
   commands: SlashCommandType[];
   onShow?: (query: string) => void;
   onHide?: () => void;
+  onNavigateUp?: () => void;
+  onNavigateDown?: () => void;
+  onSelectCurrent?: () => void;
 }
 
 export interface SlashCommandStorage {
   active: boolean;
   query: string;
   range: { from: number; to: number } | null;
+  selectedIndex: number;
 }
 
 export const SlashCommandPluginKey = new PluginKey('slashCommand');
@@ -25,6 +29,9 @@ export const SlashCommand = Extension.create<SlashCommandOptions, SlashCommandSt
       commands: [],
       onShow: () => {},
       onHide: () => {},
+      onNavigateUp: () => {},
+      onNavigateDown: () => {},
+      onSelectCurrent: () => {},
     };
   },
 
@@ -33,6 +40,40 @@ export const SlashCommand = Extension.create<SlashCommandOptions, SlashCommandSt
       active: false,
       query: '',
       range: null,
+      selectedIndex: 0,
+    };
+  },
+
+  addKeyboardShortcuts() {
+    return {
+      Enter: () => {
+        if (this.storage.active) {
+          this.options.onSelectCurrent?.();
+          return true; // prevent default behavior
+        }
+        return false;
+      },
+      ArrowDown: () => {
+        if (this.storage.active) {
+          this.options.onNavigateDown?.();
+          return true;
+        }
+        return false;
+      },
+      ArrowUp: () => {
+        if (this.storage.active) {
+          this.options.onNavigateUp?.();
+          return true;
+        }
+        return false;
+      },
+      Escape: () => {
+        if (this.storage.active) {
+          this.options.onHide?.();
+          return true;
+        }
+        return false;
+      },
     };
   },
 
@@ -49,6 +90,7 @@ export const SlashCommand = Extension.create<SlashCommandOptions, SlashCommandSt
               active: false,
               query: '',
               range: null,
+              selectedIndex: 0,
             };
           },
 
@@ -63,7 +105,12 @@ export const SlashCommand = Extension.create<SlashCommandOptions, SlashCommandSt
             const { from, to } = selection;
 
             if (from !== to) {
-              return { active: false, query: '', range: null };
+              const newState = { active: false, query: '', range: null, selectedIndex: 0 };
+              extension.storage.active = false;
+              extension.storage.query = '';
+              extension.storage.range = null;
+              extension.storage.selectedIndex = 0;
+              return newState;
             }
 
             const $pos = doc.resolve(from);
@@ -80,7 +127,12 @@ export const SlashCommand = Extension.create<SlashCommandOptions, SlashCommandSt
               if (prev.active) {
                 extension.options.onHide?.();
               }
-              return { active: false, query: '', range: null };
+              const newState = { active: false, query: '', range: null, selectedIndex: 0 };
+              extension.storage.active = false;
+              extension.storage.query = '';
+              extension.storage.range = null;
+              extension.storage.selectedIndex = 0;
+              return newState;
             }
 
             // Check if slash is at the start of the line or after a space
@@ -91,7 +143,12 @@ export const SlashCommand = Extension.create<SlashCommandOptions, SlashCommandSt
               if (prev.active) {
                 extension.options.onHide?.();
               }
-              return { active: false, query: '', range: null };
+              const newState = { active: false, query: '', range: null, selectedIndex: 0 };
+              extension.storage.active = false;
+              extension.storage.query = '';
+              extension.storage.range = null;
+              extension.storage.selectedIndex = 0;
+              return newState;
             }
 
             const query = match[1];
@@ -104,7 +161,12 @@ export const SlashCommand = Extension.create<SlashCommandOptions, SlashCommandSt
               extension.options.onShow?.(query);
             }
 
-            return { active: true, query, range };
+            const newState = { active: true, query, range, selectedIndex: prev.query !== query ? 0 : prev.selectedIndex };
+            extension.storage.active = true;
+            extension.storage.query = query;
+            extension.storage.range = range;
+            extension.storage.selectedIndex = newState.selectedIndex;
+            return newState;
           },
         },
 

@@ -145,6 +145,7 @@
           <NoteEditor
             :note="currentNote"
             @update-note="handleUpdateNote"
+            @note-created="handleNoteCreated"
           />
         </div>
       </div>
@@ -176,6 +177,7 @@ import { useSearch } from '../composables/useSearch';
 import { useTheme } from '../composables/useTheme';
 import { useTabs } from '../composables/useTabs';
 import { useAuth } from '../composables/useAuth';
+import { notesApi } from '../api/notes';
 import SearchBar from '../components/SearchBar.vue';
 import NoteTree from '../components/NoteTree.vue';
 import NoteEditor from '../components/NoteEditor.vue';
@@ -317,6 +319,21 @@ function cancelConfirm() {
 
 async function handleLogout() {
   await logout();
+}
+
+async function handleNoteCreated(noteId: string) {
+  try {
+    // Fetch the created note and add it to the notes list
+    const createdNote = await notesApi.getById(noteId);
+    notes.value.push(createdNote);
+
+    // Expand ancestors to show the new note in the tree
+    if (createdNote.parentId) {
+      expandAllAncestors(createdNote.parentId);
+    }
+  } catch (error) {
+    console.error('Failed to fetch created note:', error);
+  }
 }
 </script>
 
