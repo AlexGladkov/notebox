@@ -80,6 +80,24 @@ export const SlashCommand = Extension.create<SlashCommandOptions, SlashCommandSt
   addProseMirrorPlugins() {
     const extension = this;
 
+    // Helper function to update both plugin state and extension storage
+    const updateState = (state: Partial<SlashCommandStorage>): SlashCommandStorage => {
+      const newState: SlashCommandStorage = {
+        active: state.active ?? false,
+        query: state.query ?? '',
+        range: state.range ?? null,
+        selectedIndex: state.selectedIndex ?? 0,
+      };
+
+      // Sync extension storage
+      extension.storage.active = newState.active;
+      extension.storage.query = newState.query;
+      extension.storage.range = newState.range;
+      extension.storage.selectedIndex = newState.selectedIndex;
+
+      return newState;
+    };
+
     return [
       new Plugin({
         key: SlashCommandPluginKey,
@@ -105,12 +123,7 @@ export const SlashCommand = Extension.create<SlashCommandOptions, SlashCommandSt
             const { from, to } = selection;
 
             if (from !== to) {
-              const newState = { active: false, query: '', range: null, selectedIndex: 0 };
-              extension.storage.active = false;
-              extension.storage.query = '';
-              extension.storage.range = null;
-              extension.storage.selectedIndex = 0;
-              return newState;
+              return updateState({ active: false, query: '', range: null, selectedIndex: 0 });
             }
 
             const $pos = doc.resolve(from);
@@ -127,12 +140,7 @@ export const SlashCommand = Extension.create<SlashCommandOptions, SlashCommandSt
               if (prev.active) {
                 extension.options.onHide?.();
               }
-              const newState = { active: false, query: '', range: null, selectedIndex: 0 };
-              extension.storage.active = false;
-              extension.storage.query = '';
-              extension.storage.range = null;
-              extension.storage.selectedIndex = 0;
-              return newState;
+              return updateState({ active: false, query: '', range: null, selectedIndex: 0 });
             }
 
             // Check if slash is at the start of the line or after a space
@@ -143,12 +151,7 @@ export const SlashCommand = Extension.create<SlashCommandOptions, SlashCommandSt
               if (prev.active) {
                 extension.options.onHide?.();
               }
-              const newState = { active: false, query: '', range: null, selectedIndex: 0 };
-              extension.storage.active = false;
-              extension.storage.query = '';
-              extension.storage.range = null;
-              extension.storage.selectedIndex = 0;
-              return newState;
+              return updateState({ active: false, query: '', range: null, selectedIndex: 0 });
             }
 
             const query = match[1];
@@ -161,12 +164,12 @@ export const SlashCommand = Extension.create<SlashCommandOptions, SlashCommandSt
               extension.options.onShow?.(query);
             }
 
-            const newState = { active: true, query, range, selectedIndex: prev.query !== query ? 0 : prev.selectedIndex };
-            extension.storage.active = true;
-            extension.storage.query = query;
-            extension.storage.range = range;
-            extension.storage.selectedIndex = newState.selectedIndex;
-            return newState;
+            return updateState({
+              active: true,
+              query,
+              range,
+              selectedIndex: prev.query !== query ? 0 : prev.selectedIndex,
+            });
           },
         },
 

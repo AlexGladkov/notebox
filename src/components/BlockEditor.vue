@@ -42,6 +42,7 @@
 
     <CreateNestedNoteModal
       :visible="nestedNoteModalVisible"
+      :loading="nestedNoteLoading"
       @create="handleCreateNestedNote"
       @close="nestedNoteModalVisible = false"
     />
@@ -81,12 +82,14 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:modelValue': [value: string];
   'noteCreated': [noteId: string];
+  'requestSave': [];
 }>();
 
 const slashMenuVisible = ref(false);
 const slashQuery = ref('');
 const slashMenuRef = ref<InstanceType<typeof SlashCommandMenu> | null>(null);
 const nestedNoteModalVisible = ref(false);
+const nestedNoteLoading = ref(false);
 const blockMenuVisible = ref(false);
 const blockMenuPosition = ref({ top: 0, left: 0 });
 const blockMenuActions = ref<BlockMenuAction[]>([]);
@@ -297,15 +300,21 @@ const handleSlashCommand = () => {
   slashQuery.value = '';
 };
 
+const pendingNestedNoteTitle = ref<string | null>(null);
+
 const handleCreateNestedNote = async (title: string) => {
   try {
     // Check if current note exists (is saved)
     if (!props.noteId) {
-      console.warn('Cannot create nested note: current note is not saved yet');
-      // Could emit event to request save, but for now just close modal
-      nestedNoteModalVisible.value = false;
+      // Save the pending title and request parent to save the note first
+      pendingNestedNoteTitle.value = title;
+      nestedNoteLoading.value = true;
+      emit('requestSave');
+      // Keep modal open - it will be processed after save
       return;
     }
+
+    nestedNoteLoading.value = true;
 
     // Create nested note with parentId = current note ID
     const newNote = await notesApi.create({
@@ -316,6 +325,8 @@ const handleCreateNestedNote = async (title: string) => {
 
     // Close modal
     nestedNoteModalVisible.value = false;
+    nestedNoteLoading.value = false;
+    pendingNestedNoteTitle.value = null;
 
     // Insert link to created note in editor
     if (editor.value) {
@@ -350,8 +361,18 @@ const handleCreateNestedNote = async (title: string) => {
   } catch (error) {
     console.error('Failed to create nested note:', error);
     nestedNoteModalVisible.value = false;
+    nestedNoteLoading.value = false;
+    pendingNestedNoteTitle.value = null;
   }
 };
+
+// Watch for noteId changes to handle pending nested note creation
+watch(() => props.noteId, (newNoteId) => {
+  if (newNoteId && pendingNestedNoteTitle.value) {
+    // Note was saved, now create the nested note
+    handleCreateNestedNote(pendingNestedNoteTitle.value);
+  }
+});
 
 // Block handle and menu functionality
 const handleMouseMove = (event: MouseEvent) => {

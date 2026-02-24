@@ -325,7 +325,15 @@ async function handleNoteCreated(noteId: string) {
   try {
     // Fetch the created note and add it to the notes list
     const createdNote = await notesApi.getById(noteId);
-    notes.value.push(createdNote);
+
+    // Check if note already exists to avoid duplicates
+    const existingIndex = notes.value.findIndex(n => n.id === createdNote.id);
+    if (existingIndex !== -1) {
+      // Update existing note instead of adding duplicate
+      notes.value[existingIndex] = createdNote;
+    } else {
+      notes.value.push(createdNote);
+    }
 
     // Expand ancestors to show the new note in the tree
     if (createdNote.parentId) {

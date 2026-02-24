@@ -13,10 +13,11 @@
           @keydown.escape="handleClose"
         />
         <div class="modal-actions">
-          <button class="btn btn-primary" @click="handleCreate" :disabled="!noteTitle.trim()">
-            Создать
+          <button class="btn btn-primary" @click="handleCreate" :disabled="!noteTitle.trim() || loading">
+            <span v-if="loading" class="loading-spinner"></span>
+            <span v-else>Создать</span>
           </button>
-          <button class="btn btn-secondary" @click="handleClose">
+          <button class="btn btn-secondary" @click="handleClose" :disabled="loading">
             Отмена
           </button>
         </div>
@@ -30,6 +31,7 @@ import { ref, watch, nextTick } from 'vue';
 
 const props = defineProps<{
   visible: boolean;
+  loading?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -169,8 +171,29 @@ watch(
   color: #374151;
 }
 
-.btn-secondary:hover {
+.btn-secondary:hover:not(:disabled) {
   background-color: #e5e7eb;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.loading-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Dark mode support */
