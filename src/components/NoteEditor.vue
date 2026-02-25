@@ -43,6 +43,7 @@
         :note-id="note?.id"
         @update:model-value="handleContentChange"
         @note-created="handleNoteCreated"
+        @navigate-to-note="handleNavigateToNote"
       />
     </div>
   </div>
@@ -74,6 +75,7 @@ const emit = defineEmits<{
     backdropPositionY?: number;
   }];
   noteCreated: [noteId: string];
+  navigateToNote: [noteId: string];
 }>();
 
 const localTitle = ref('');
@@ -146,6 +148,10 @@ const formatDate = (timestamp: number): string => {
 const handleNoteCreated = (noteId: string) => {
   // Forward the event to parent component (MainView)
   emit('noteCreated', noteId);
+};
+
+const handleNavigateToNote = (noteId: string) => {
+  emit('navigateToNote', noteId);
 };
 </script>
 

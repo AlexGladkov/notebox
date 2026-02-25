@@ -146,6 +146,7 @@
             :note="currentNote"
             @update-note="handleUpdateNote"
             @note-created="handleNoteCreated"
+            @navigate-to-note="handleSelectNote"
           />
         </div>
       </div>

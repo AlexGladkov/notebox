@@ -83,6 +83,7 @@ const emit = defineEmits<{
   'update:modelValue': [value: string];
   'noteCreated': [noteId: string];
   'requestSave': [];
+  'navigate-to-note': [noteId: string];
 }>();
 
 const slashMenuVisible = ref(false);
@@ -291,6 +292,23 @@ const editor = useEditor({
   editorProps: {
     attributes: {
       class: 'prose prose-sm max-w-none focus:outline-none dark:prose-invert',
+    },
+    handleClick: (view, pos, event) => {
+      const target = event.target as HTMLElement;
+      const link = target.closest('a');
+      if (link) {
+        const href = link.getAttribute('href');
+        if (href && href.startsWith('/notes/')) {
+          event.preventDefault();
+          event.stopPropagation();
+          const noteId = href.replace('/notes/', '');
+          if (noteId) {
+            emit('navigate-to-note', noteId);
+          }
+          return true;
+        }
+      }
+      return false;
     },
   },
 });
