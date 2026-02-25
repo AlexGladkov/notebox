@@ -651,7 +651,11 @@ watch(
     if (!editor.value) return;
 
     try {
-      const json = JSON.parse(newValue);
+      // Обработка пустого или невалидного контента
+      const json = newValue && newValue.trim()
+        ? JSON.parse(newValue)
+        : { type: 'doc', content: [{ type: 'paragraph' }] };
+
       const currentContent = editor.value.getJSON();
 
       if (JSON.stringify(json) !== JSON.stringify(currentContent)) {
@@ -659,8 +663,11 @@ watch(
       }
     } catch (error) {
       console.error('Failed to parse editor content:', error);
+      // При ошибке парсинга установить пустой документ
+      editor.value.commands.setContent({ type: 'doc', content: [{ type: 'paragraph' }] });
     }
-  }
+  },
+  { immediate: true }
 );
 
 onBeforeUnmount(() => {
