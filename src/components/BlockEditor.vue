@@ -244,8 +244,21 @@ const slashCommands = computed<SlashCommandType[]>(() => [
   },
 ]);
 
+// Парсим начальное значение так же, как в watch
+const parseInitialContent = () => {
+  try {
+    const value = props.modelValue;
+    return value && value.trim()
+      ? JSON.parse(value)
+      : { type: 'doc', content: [{ type: 'paragraph' }] };
+  } catch (error) {
+    console.error('Failed to parse initial editor content:', error);
+    return { type: 'doc', content: [{ type: 'paragraph' }] };
+  }
+};
+
 const editor = useEditor({
-  content: props.modelValue,
+  content: parseInitialContent(),
   extensions: [
     StarterKit,
     Highlight,
