@@ -31,7 +31,7 @@ import { authStore } from '../stores/authStore';
 const route = useRoute();
 const router = useRouter();
 const error = ref<string | null>(null);
-const demoModeEnabled = ref<boolean>(false);
+const demoModeEnabled = ref<boolean>(true);
 
 onMounted(async () => {
   const errorParam = route.query.error;
