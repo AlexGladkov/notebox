@@ -208,7 +208,7 @@ onUnmounted(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 1001;
+  z-index: 999;
 }
 
 .column-menu {
