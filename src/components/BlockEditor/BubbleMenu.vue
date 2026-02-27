@@ -84,7 +84,7 @@ const props = defineProps<{
   editor: Editor;
 }>();
 
-const shouldShow = ({ state, from, to }: any) => {
+const shouldShow = ({ state, from, to, view }: any) => {
   const { doc, selection } = state;
   const { empty } = selection;
 
@@ -92,7 +92,49 @@ const shouldShow = ({ state, from, to }: any) => {
     !doc.textBetween(from, to).length && selection.$from.parent.isTextblock;
 
   // Проверяем, не находимся ли мы внутри atomic ноды (Database, etc.)
-  const isInsideAtomicNode = selection.$from.parent.type.spec.atom === true;
+  // Проверяем не только parent, но и всех ancestors
+  let isInsideAtomicNode = false;
+  for (let d = selection.$from.depth; d >= 0; d--) {
+    const node = selection.$from.node(d);
+    // Проверяем atom или специфические типы нод (database, table, tableRow, tableCell)
+    if (node.type.spec.atom === true ||
+        node.type.name === 'database' ||
+        node.type.name === 'table' ||
+        node.type.name === 'tableRow' ||
+        node.type.name === 'tableCell') {
+      isInsideAtomicNode = true;
+      break;
+    }
+  }
+
+  // Дополнительная проверка через DOM - если мы внутри database-block
+  if (view && view.dom) {
+    try {
+      const domAtPos = view.domAtPos(from);
+      let element = domAtPos.node instanceof Element ? domAtPos.node : domAtPos.node.parentElement;
+      while (element && element !== view.dom) {
+        if (element.classList && (element.classList.contains('database-block') || element.classList.contains('database-container'))) {
+          isInsideAtomicNode = true;
+          break;
+        }
+        element = element.parentElement;
+      }
+    } catch (e) {
+      // Ignore errors
+    }
+  }
+
+  // Проверка через activeElement - если фокус на input/textarea внутри database
+  if (typeof document !== 'undefined' && document.activeElement) {
+    let el = document.activeElement;
+    while (el && el !== document.body) {
+      if (el.classList && (el.classList.contains('database-block') || el.classList.contains('database-container') || el.classList.contains('text-cell'))) {
+        isInsideAtomicNode = true;
+        break;
+      }
+      el = el.parentElement;
+    }
+  }
 
   if (empty || isEmptyTextBlock || isInsideAtomicNode) {
     return false;

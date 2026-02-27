@@ -72,8 +72,8 @@ services:
     ports:
     - 0:80
     volumes:
-    - /tmp/swarm-test-nginx/notebox-database-works-incorrect-test/default.conf:/etc/nginx/conf.d/default.conf:ro
-    - /tmp/swarm-frontends/notebox-database-works-incorrect-test:/usr/share/nginx/html:ro
+    - /tmp/swarm-test-nginx/notebox-database-context-menu-cut-test/default.conf:/etc/nginx/conf.d/default.conf:ro
+    - /tmp/swarm-frontends/notebox-database-context-menu-cut-test:/usr/share/nginx/html:ro
     restart: on-failure
     depends_on:
     - server
