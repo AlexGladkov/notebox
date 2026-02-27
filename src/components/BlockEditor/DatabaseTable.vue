@@ -191,8 +191,9 @@ const deleteRow = () => {
   background: white;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  overflow: hidden;
+  overflow: visible;
   font-size: 14px;
+  table-layout: fixed;
 }
 
 .database-table thead {

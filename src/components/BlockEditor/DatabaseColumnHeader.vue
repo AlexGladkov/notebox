@@ -51,13 +51,13 @@
     <div
       v-if="menuVisible"
       class="column-menu-overlay"
-      @click="closeMenu"
+      @click.capture="closeMenu"
     ></div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick } from 'vue';
+import { ref, nextTick, onMounted, onUnmounted } from 'vue';
 import type { Column, ColumnType } from '../../types';
 
 const props = defineProps<{
@@ -140,6 +140,20 @@ const deleteColumn = () => {
   emit('delete', props.column.id);
   closeMenu();
 };
+
+const handleEscape = (event: KeyboardEvent) => {
+  if (event.key === 'Escape' && menuVisible.value) {
+    closeMenu();
+  }
+};
+
+onMounted(() => {
+  document.addEventListener('keydown', handleEscape);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleEscape);
+});
 </script>
 
 <style scoped>
@@ -191,7 +205,7 @@ const deleteColumn = () => {
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 999;
+  z-index: 1001;
 }
 
 .column-menu {

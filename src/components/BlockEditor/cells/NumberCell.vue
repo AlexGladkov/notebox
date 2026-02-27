@@ -46,7 +46,8 @@ const startEdit = async () => {
 };
 
 const saveEdit = () => {
-  const numValue = editedValue.value.trim() === '' ? null : parseFloat(editedValue.value);
+  const strValue = String(editedValue.value ?? '').trim();
+  const numValue = strValue === '' ? null : parseFloat(strValue);
   emit('update', numValue);
   editing.value = false;
 };

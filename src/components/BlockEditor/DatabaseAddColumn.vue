@@ -25,13 +25,13 @@
     <div
       v-if="menuVisible"
       class="menu-overlay"
-      @click="closeMenu"
+      @click.capture="closeMenu"
     ></div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import type { ColumnType } from '../../types';
 
 const emit = defineEmits<{
@@ -88,6 +88,20 @@ const addColumn = (type: ColumnType) => {
   emit('add', defaultNames[type], type);
   closeMenu();
 };
+
+const handleEscape = (event: KeyboardEvent) => {
+  if (event.key === 'Escape' && menuVisible.value) {
+    closeMenu();
+  }
+};
+
+onMounted(() => {
+  document.addEventListener('keydown', handleEscape);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleEscape);
+});
 </script>
 
 <style scoped>
@@ -121,7 +135,7 @@ const addColumn = (type: ColumnType) => {
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 999;
+  z-index: 1001;
 }
 
 .add-column-menu {
