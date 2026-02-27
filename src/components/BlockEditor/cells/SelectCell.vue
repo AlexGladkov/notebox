@@ -110,12 +110,13 @@ const createOption = () => {
 
   // Create new option with random color
   const newOption: SelectOption = {
-    id: `opt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    id: `opt_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
     label: searchQuery.value.trim(),
     color: colorPalette[Math.floor(Math.random() * colorPalette.length)],
   };
 
-  // Add to column options (this should ideally update the column via API)
+  // Note: This is a workaround for MVP. In production, this should update the column via API
+  // to properly persist the new option and maintain data consistency
   if (!props.column.options) {
     props.column.options = [];
   }
