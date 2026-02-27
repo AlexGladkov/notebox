@@ -62,6 +62,10 @@ const toggleMenu = () => {
   if (!menuVisible.value) {
     menuVisible.value = true;
     document.addEventListener('keydown', handleEscape);
+    // Добавляем обработчик клика с задержкой, чтобы текущий клик не закрыл меню сразу
+    setTimeout(() => {
+      document.addEventListener('click', handleClickOutside);
+    }, 0);
   } else {
     closeMenu();
   }
@@ -70,6 +74,7 @@ const toggleMenu = () => {
 const closeMenu = () => {
   menuVisible.value = false;
   document.removeEventListener('keydown', handleEscape);
+  document.removeEventListener('click', handleClickOutside);
 };
 
 const addColumn = (type: ColumnType) => {
@@ -101,9 +106,20 @@ const handleEscape = (event: KeyboardEvent) => {
   }
 };
 
+const handleClickOutside = (event: MouseEvent) => {
+  // Проверяем, что клик был вне меню
+  const menu = document.querySelector('.add-column-menu');
+  const target = event.target as Node;
+
+  if (menu && !menu.contains(target)) {
+    closeMenu();
+  }
+};
+
 onUnmounted(() => {
-  // Очистка обработчика на случай, если компонент размонтируется с открытым меню
+  // Очистка обработчиков на случай, если компонент размонтируется с открытым меню
   document.removeEventListener('keydown', handleEscape);
+  document.removeEventListener('click', handleClickOutside);
 });
 </script>
 
