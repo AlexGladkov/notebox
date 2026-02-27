@@ -57,7 +57,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick, onMounted, onUnmounted } from 'vue';
+import { ref, nextTick, onUnmounted } from 'vue';
 import type { Column, ColumnType } from '../../types';
 
 const props = defineProps<{
@@ -99,12 +99,18 @@ const getTypeIcon = (type: ColumnType): string => {
 
 const toggleMenu = () => {
   if (!editing.value) {
-    menuVisible.value = !menuVisible.value;
+    if (!menuVisible.value) {
+      menuVisible.value = true;
+      document.addEventListener('keydown', handleEscape);
+    } else {
+      closeMenu();
+    }
   }
 };
 
 const closeMenu = () => {
   menuVisible.value = false;
+  document.removeEventListener('keydown', handleEscape);
 };
 
 const startEdit = async () => {
@@ -142,16 +148,13 @@ const deleteColumn = () => {
 };
 
 const handleEscape = (event: KeyboardEvent) => {
-  if (event.key === 'Escape' && menuVisible.value) {
+  if (event.key === 'Escape') {
     closeMenu();
   }
 };
 
-onMounted(() => {
-  document.addEventListener('keydown', handleEscape);
-});
-
 onUnmounted(() => {
+  // Очистка обработчика на случай, если компонент размонтируется с открытым меню
   document.removeEventListener('keydown', handleEscape);
 });
 </script>

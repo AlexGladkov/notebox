@@ -76,7 +76,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onUnmounted } from 'vue';
 import DatabaseColumnHeader from './DatabaseColumnHeader.vue';
 import DatabaseAddColumn from './DatabaseAddColumn.vue';
 import DatabaseAddRow from './DatabaseAddRow.vue';
@@ -164,11 +164,19 @@ const handleRowContextMenu = (event: MouseEvent, recordId: string) => {
     y: event.clientY,
     recordId,
   };
+  document.addEventListener('keydown', handleContextMenuEscape);
 };
 
 const closeContextMenu = () => {
   contextMenu.value.visible = false;
   contextMenu.value.recordId = null;
+  document.removeEventListener('keydown', handleContextMenuEscape);
+};
+
+const handleContextMenuEscape = (event: KeyboardEvent) => {
+  if (event.key === 'Escape') {
+    closeContextMenu();
+  }
 };
 
 const deleteRow = () => {
@@ -177,6 +185,11 @@ const deleteRow = () => {
   }
   closeContextMenu();
 };
+
+onUnmounted(() => {
+  // Очистка обработчика на случай, если компонент размонтируется с открытым меню
+  document.removeEventListener('keydown', handleContextMenuEscape);
+});
 </script>
 
 <style scoped>
@@ -274,7 +287,7 @@ const deleteRow = () => {
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 999;
+  z-index: 1001;
 }
 
 .context-menu {

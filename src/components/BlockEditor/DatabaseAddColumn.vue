@@ -31,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onUnmounted } from 'vue';
 import type { ColumnType } from '../../types';
 
 const emit = defineEmits<{
@@ -59,11 +59,17 @@ const columnTypes = [
 ];
 
 const toggleMenu = () => {
-  menuVisible.value = !menuVisible.value;
+  if (!menuVisible.value) {
+    menuVisible.value = true;
+    document.addEventListener('keydown', handleEscape);
+  } else {
+    closeMenu();
+  }
 };
 
 const closeMenu = () => {
   menuVisible.value = false;
+  document.removeEventListener('keydown', handleEscape);
 };
 
 const addColumn = (type: ColumnType) => {
@@ -90,16 +96,13 @@ const addColumn = (type: ColumnType) => {
 };
 
 const handleEscape = (event: KeyboardEvent) => {
-  if (event.key === 'Escape' && menuVisible.value) {
+  if (event.key === 'Escape') {
     closeMenu();
   }
 };
 
-onMounted(() => {
-  document.addEventListener('keydown', handleEscape);
-});
-
 onUnmounted(() => {
+  // Очистка обработчика на случай, если компонент размонтируется с открытым меню
   document.removeEventListener('keydown', handleEscape);
 });
 </script>
