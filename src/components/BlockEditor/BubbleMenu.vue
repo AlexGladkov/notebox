@@ -91,7 +91,10 @@ const shouldShow = ({ state, from, to }: any) => {
   const isEmptyTextBlock =
     !doc.textBetween(from, to).length && selection.$from.parent.isTextblock;
 
-  if (empty || isEmptyTextBlock) {
+  // Проверяем, не находимся ли мы внутри atomic ноды (Database, etc.)
+  const isInsideAtomicNode = selection.$from.parent.type.spec.atom === true;
+
+  if (empty || isEmptyTextBlock || isInsideAtomicNode) {
     return false;
   }
 

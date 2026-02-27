@@ -37,7 +37,7 @@
       </div>
     </div>
 
-    <div class="flex-1 overflow-hidden">
+    <div class="flex-1 overflow-visible">
       <BlockEditor
         v-model="localContent"
         :note-id="note?.id"
