@@ -84,4 +84,9 @@ export const databasesApi = {
   async deleteRecord(databaseId: string, recordId: string): Promise<void> {
     return apiClient.delete(`/api/databases/${databaseId}/records/${recordId}`);
   },
+
+  // Get notes that use this database
+  async getRelatedNotes(databaseId: string): Promise<{ id: string; title: string }[]> {
+    return apiClient.get<{ id: string; title: string }[]>(`/api/databases/${databaseId}/notes`);
+  },
 };

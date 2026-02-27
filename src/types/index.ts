@@ -46,7 +46,22 @@ export interface Folder {
 }
 
 // Custom Database types
-export type ColumnType = 'TEXT' | 'NUMBER' | 'BOOLEAN' | 'DATE' | 'SELECT' | 'MULTI_SELECT' | 'FILE';
+export type ColumnType =
+  | 'TEXT'
+  | 'NUMBER'
+  | 'BOOLEAN'
+  | 'DATE'
+  | 'SELECT'
+  | 'MULTI_SELECT'
+  | 'FILE'
+  | 'RELATION'
+  | 'FORMULA'
+  | 'PERSON'
+  | 'URL'
+  | 'EMAIL'
+  | 'PHONE'
+  | 'CREATED_TIME'
+  | 'LAST_EDITED_TIME';
 
 export interface SelectOption {
   id: string;
@@ -54,12 +69,18 @@ export interface SelectOption {
   color?: string;
 }
 
+export interface FormulaConfig {
+  expression: string; // e.g., "col1 + col2", "col1 * col2"
+  referencedColumns: string[]; // column IDs used in the formula
+}
+
 export interface Column {
   id: string;
   databaseId: string;
   name: string;
   type: ColumnType;
-  options?: SelectOption[];
+  options?: SelectOption[]; // For SELECT and MULTI_SELECT types
+  formula?: FormulaConfig; // For FORMULA type
   position: number;
   createdAt: number;
 }

@@ -65,6 +65,7 @@ import Color from '@tiptap/extension-color';
 import { Callout } from '../extensions/CalloutExtension';
 import { SlashCommand } from '../extensions/SlashCommand';
 import { BlockComment } from '../extensions/BlockComment';
+import { Database } from '../extensions/DatabaseExtension';
 
 import EditorBubbleMenu from './BlockEditor/BubbleMenu.vue';
 import SlashCommandMenu from './BlockEditor/SlashCommandMenu.vue';
@@ -73,6 +74,7 @@ import CreateNestedNoteModal from './BlockEditor/CreateNestedNoteModal.vue';
 
 import type { SlashCommand as SlashCommandType, BlockMenuAction } from '../types/editor';
 import { notesApi } from '../api/notes';
+import { useDatabases } from '../composables/useDatabases';
 
 const props = defineProps<{
   modelValue: string;
@@ -97,6 +99,9 @@ const blockMenuActions = ref<BlockMenuAction[]>([]);
 const blockHandleVisible = ref(false);
 const blockHandlePosition = ref<{ top: number; left: number } | null>(null);
 const currentBlockPos = ref<number | null>(null);
+
+// Database composable for creating databases
+const { createDatabase } = useDatabases();
 
 const slashCommands = computed<SlashCommandType[]>(() => [
   {
@@ -242,6 +247,27 @@ const slashCommands = computed<SlashCommandType[]>(() => [
       nestedNoteModalVisible.value = true;
     },
   },
+  {
+    id: 'database',
+    title: 'База данных',
+    description: 'Встроить табличную базу данных',
+    icon: '📊',
+    keywords: ['database', 'table', 'data', 'база', 'таблица', 'данные'],
+    command: async (editor) => {
+      // Delete slash command from text
+      editor.chain().focus().deleteRange({ from: editor.state.selection.from - slashQuery.value.length - 1, to: editor.state.selection.to }).run();
+
+      // Create new database
+      try {
+        const newDatabase = await createDatabase('Новая база данных', props.noteId || null);
+
+        // Insert database node into editor
+        editor.chain().focus().setDatabase({ databaseId: newDatabase.id }).run();
+      } catch (error) {
+        console.error('Failed to create database:', error);
+      }
+    },
+  },
 ]);
 
 // Парсим начальное значение так же, как в watch
@@ -276,6 +302,7 @@ const editor = useEditor({
     TextStyle,
     Color,
     Callout,
+    Database,
     SlashCommand.configure({
       commands: slashCommands.value,
       onShow: (query) => {
