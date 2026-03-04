@@ -103,7 +103,9 @@ const coverStyle = computed(() => {
       // Проверяем, что это валидный URL (http/https)
       const url = new URL(value)
       if (url.protocol === 'http:' || url.protocol === 'https:') {
-        style.backgroundImage = `url("${value}")`
+        // Экранируем специальные символы для защиты от CSS injection
+        const escapedValue = value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+        style.backgroundImage = `url("${escapedValue}")`
         style.backgroundSize = 'cover'
         style.backgroundPosition = `center ${currentPositionY.value}%`
       }
