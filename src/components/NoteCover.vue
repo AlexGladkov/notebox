@@ -1,6 +1,5 @@
 <template>
   <div
-    v-if="backdropType || showActions"
     class="note-cover"
     @mouseenter="showActions = true"
     @mouseleave="showActions = false"
@@ -41,7 +40,7 @@
       <slot name="icon"></slot>
     </div>
 
-    <button v-else-if="showActions" class="add-cover-btn" @click="openPicker">
+    <button v-else class="add-cover-btn" :class="{ visible: showActions }" @click="openPicker">
       <span class="icon">🖼️</span>
       <span>Добавить обложку</span>
     </button>
@@ -276,9 +275,16 @@ onUnmounted(() => {
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s;
+  opacity: 0;
+  pointer-events: none;
 }
 
-.add-cover-btn:hover {
+.add-cover-btn.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.add-cover-btn.visible:hover {
   border-color: var(--primary-color);
   color: var(--primary-color);
   background: var(--bg-hover);

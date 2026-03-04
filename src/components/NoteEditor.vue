@@ -1,15 +1,15 @@
 <template>
   <div v-if="note" class="h-full flex flex-col bg-white dark:bg-gray-900">
-    <!-- Если есть обложка, иконка внутри неё -->
+    <!-- Компонент обложки всегда рендерится, чтобы можно было добавить backdrop -->
     <NoteCover
-      v-if="note.backdropType"
       :backdrop-type="note.backdropType"
       :backdrop-value="note.backdropValue"
       :backdrop-position-y="note.backdropPositionY"
       @update="handleCoverUpdate"
     >
       <template #icon>
-        <div class="icon-over-cover">
+        <!-- Иконка поверх обложки, только если обложка есть -->
+        <div class="icon-over-cover" v-if="note.backdropType">
           <NoteIcon
             :icon="note.icon"
             @update="handleIconUpdate"
