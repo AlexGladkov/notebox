@@ -54,7 +54,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, onBeforeUnmount } from 'vue';
 import type { Note } from '../types';
 import EmptyState from './EmptyState.vue';
 import BlockEditor from './BlockEditor.vue';
@@ -153,6 +153,13 @@ const handleNoteCreated = (noteId: string) => {
 const handleNavigateToNote = (noteId: string) => {
   emit('navigateToNote', noteId);
 };
+
+// Cleanup debounce таймера при размонтировании
+onBeforeUnmount(() => {
+  if (debounceTimer) {
+    clearTimeout(debounceTimer);
+  }
+});
 </script>
 
 <style scoped>
