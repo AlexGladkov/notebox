@@ -42,4 +42,9 @@ server/out/
 docker-compose.override.yml
 docker-compose.test.yml
 
+# Diagnostic and reproduction files
+.diagnostic-results.json
+.diagnostic-results/
+.reproduction-*
+
 .swarm/
