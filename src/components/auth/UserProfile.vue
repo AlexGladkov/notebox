@@ -1,5 +1,5 @@
 <template>
-  <div class="user-profile" @click="emit('click')" role="button" tabindex="0">
+  <div class="user-profile" @click="emit('click')" @keydown.enter="emit('click')" @keydown.space.prevent="emit('click')" role="button" tabindex="0">
     <div class="user-avatar">
       <img v-if="user.avatarUrl" :src="user.avatarUrl" :alt="user.name" />
       <div v-else class="avatar-placeholder">
@@ -25,11 +25,11 @@ const emit = defineEmits<{
 }>();
 
 const userInitials = computed(() => {
-  const names = props.user.name.split(' ');
-  if (names.length >= 2) {
+  const names = props.user.name.split(' ').filter(name => name.length > 0);
+  if (names.length >= 2 && names[0].length > 0 && names[1].length > 0) {
     return `${names[0][0]}${names[1][0]}`.toUpperCase();
   }
-  return props.user.name.substring(0, 2).toUpperCase();
+  return props.user.name.trim().substring(0, 2).toUpperCase();
 });
 
 const displayName = computed(() => {
@@ -52,7 +52,7 @@ const displayName = computed(() => {
 }
 
 .user-profile:hover {
-  background: rgba(0, 0, 0, 0.05);
+  background: var(--bg-hover);
 }
 
 .user-avatar {
