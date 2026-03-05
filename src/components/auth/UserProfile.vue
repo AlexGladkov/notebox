@@ -89,19 +89,9 @@ const displayName = computed(() => {
 .user-name {
   font-size: 14px;
   font-weight: 500;
-  color: #1a1a1a;
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-@media (prefers-color-scheme: dark) {
-  .user-profile:hover {
-    background: rgba(255, 255, 255, 0.05);
-  }
-
-  .user-name {
-    color: #e5e5e5;
-  }
 }
 </style>
