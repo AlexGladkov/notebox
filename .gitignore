@@ -40,5 +40,6 @@ server/out/
 
 # Docker
 docker-compose.override.yml
+docker-compose.test.yml
 
 .swarm/
