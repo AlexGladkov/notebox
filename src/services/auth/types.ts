@@ -3,6 +3,7 @@ export interface User {
   email: string;
   name: string;
   avatarUrl: string | null;
+  themePreference: string;
 }
 
 export interface AuthError {

@@ -8,6 +8,7 @@ data class User(
     val email: String,
     val name: String,
     val avatarUrl: String?,
+    val themePreference: String,
     val createdAt: Instant,
     val updatedAt: Instant
 ) {
@@ -15,6 +16,7 @@ data class User(
         id = id,
         email = email,
         name = name,
-        avatarUrl = avatarUrl
+        avatarUrl = avatarUrl,
+        themePreference = themePreference
     )
 }

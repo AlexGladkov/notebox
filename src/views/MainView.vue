@@ -160,12 +160,11 @@
       @cancel="cancelConfirm"
     />
 
-    <ProfileModal
+    <SettingsModal
       v-if="user"
       :is-open="showProfileModal"
       :user="user"
       @close="showProfileModal = false"
-      @logout="handleLogout"
     />
   </div>
 </template>
@@ -185,7 +184,7 @@ import NoteEditor from '../components/NoteEditor.vue';
 import TabBar from '../components/TabBar.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import UserProfile from '../components/auth/UserProfile.vue';
-import ProfileModal from '../components/auth/ProfileModal.vue';
+import SettingsModal from '../components/settings/SettingsModal.vue';
 import DemoBanner from '../components/layout/DemoBanner.vue';
 
 // Auth

@@ -1,6 +1,7 @@
 package com.notebox.domain.auth
 
 import com.notebox.dto.ApiResponse
+import com.notebox.dto.UpdateUserDto
 import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -180,6 +181,37 @@ class AuthController(
                 .body(ApiResponse.error<Nothing>("USER_NOT_FOUND", "User not found"))
 
         return ResponseEntity.ok(ApiResponse.success(user.toDto()))
+    }
+
+    @PatchMapping("/me")
+    fun updateCurrentUser(
+        @RequestBody updateDto: UpdateUserDto,
+        request: HttpServletRequest
+    ): ResponseEntity<ApiResponse<*>> {
+        val sessionId = getSessionIdFromCookies(request)
+            ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error<Nothing>("UNAUTHORIZED", "Not authenticated"))
+
+        val userId = sessionService.getUserIdFromSession(sessionId)
+            ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error<Nothing>("SESSION_EXPIRED", "Session expired"))
+
+        // Validate theme preference if provided
+        if (updateDto.themePreference != null &&
+            updateDto.themePreference !in listOf("light", "dark", "system")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error<Nothing>("INVALID_THEME", "Theme preference must be 'light', 'dark', or 'system'"))
+        }
+
+        val updatedUser = userService.updateUser(
+            userId,
+            name = updateDto.name,
+            avatarUrl = updateDto.avatarUrl,
+            themePreference = updateDto.themePreference
+        ) ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(ApiResponse.error<Nothing>("USER_NOT_FOUND", "User not found"))
+
+        return ResponseEntity.ok(ApiResponse.success(updatedUser.toDto()))
     }
 
     @PostMapping("/demo")

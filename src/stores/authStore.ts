@@ -1,5 +1,6 @@
 import { reactive, computed } from 'vue';
 import { authService } from '../services/auth/authService';
+import { userApi, type UpdateUserRequest } from '../api/user';
 import type { User } from '../services/auth/types';
 
 interface AuthState {
@@ -79,5 +80,11 @@ export const authStore = {
     if (expired) {
       state.user = null;
     }
+  },
+
+  async updateProfile(request: UpdateUserRequest): Promise<User> {
+    const updatedUser = await userApi.updateProfile(request);
+    state.user = updatedUser;
+    return updatedUser;
   }
 };

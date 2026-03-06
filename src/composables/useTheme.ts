@@ -31,6 +31,10 @@ export function useTheme() {
     themeMode.value = modes[nextIndex];
   };
 
+  const setTheme = (mode: ThemeMode) => {
+    themeMode.value = mode;
+  };
+
   const loadTheme = () => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
@@ -102,5 +106,6 @@ export function useTheme() {
     themeMode: computed(() => themeMode.value),
     effectiveTheme,
     cycleTheme,
+    setTheme,
   };
 }

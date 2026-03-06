@@ -39,18 +39,20 @@ class UserRepository {
             it[UsersTable.email] = email
             it[UsersTable.name] = name
             it[UsersTable.avatarUrl] = avatarUrl
+            it[themePreference] = "system"
             it[createdAt] = now
             it[updatedAt] = now
         }
 
-        User(id, email, name, avatarUrl, now, now)
+        User(id, email, name, avatarUrl, "system", now, now)
     }
 
     fun update(
         id: String,
         email: String? = null,
         name: String? = null,
-        avatarUrl: String? = null
+        avatarUrl: String? = null,
+        themePreference: String? = null
     ): User? = transaction {
         val existing = findById(id) ?: return@transaction null
         val now = Instant.now()
@@ -59,6 +61,7 @@ class UserRepository {
             if (email != null) it[UsersTable.email] = email
             if (name != null) it[UsersTable.name] = name
             if (avatarUrl != null) it[UsersTable.avatarUrl] = avatarUrl
+            if (themePreference != null) it[UsersTable.themePreference] = themePreference
             it[updatedAt] = now
         }
 
@@ -74,6 +77,7 @@ class UserRepository {
         email = row[UsersTable.email],
         name = row[UsersTable.name],
         avatarUrl = row[UsersTable.avatarUrl],
+        themePreference = row[UsersTable.themePreference],
         createdAt = row[UsersTable.createdAt],
         updatedAt = row[UsersTable.updatedAt]
     )

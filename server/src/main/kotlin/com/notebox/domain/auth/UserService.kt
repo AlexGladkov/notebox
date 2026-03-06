@@ -20,8 +20,8 @@ class UserService(
         return userRepository.create(email, name, avatarUrl)
     }
 
-    fun updateUser(id: String, name: String? = null, avatarUrl: String? = null): User? {
-        return userRepository.update(id, name = name, avatarUrl = avatarUrl)
+    fun updateUser(id: String, name: String? = null, avatarUrl: String? = null, themePreference: String? = null): User? {
+        return userRepository.update(id, name = name, avatarUrl = avatarUrl, themePreference = themePreference)
     }
 
     fun findOrCreateUserFromOAuth(
