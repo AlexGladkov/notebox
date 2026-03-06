@@ -116,8 +116,8 @@ const handleSave = async () => {
       avatarUrl: avatarUrl.value,
     });
     successMessage.value = 'Профиль успешно обновлён';
-  } catch (err: any) {
-    error.value = err.message || 'Не удалось сохранить изменения';
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Не удалось сохранить изменения';
   } finally {
     isSaving.value = false;
   }

@@ -1,4 +1,4 @@
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch } from 'vue';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 
@@ -6,6 +6,7 @@ const STORAGE_KEY = 'notebox-theme';
 
 const themeMode = ref<ThemeMode>('system');
 const systemPrefersDark = ref(false);
+let isInitialized = false;
 
 export function useTheme() {
   const effectiveTheme = computed<'light' | 'dark'>(() => {
@@ -86,7 +87,9 @@ export function useTheme() {
     }
   };
 
-  onMounted(() => {
+  const initialize = () => {
+    if (isInitialized) return;
+
     loadTheme();
     initSystemThemeListener();
     applyTheme();
@@ -100,12 +103,15 @@ export function useTheme() {
     watch(themeMode, () => {
       saveTheme();
     });
-  });
+
+    isInitialized = true;
+  };
 
   return {
     themeMode: computed(() => themeMode.value),
     effectiveTheme,
     cycleTheme,
     setTheme,
+    initialize,
   };
 }

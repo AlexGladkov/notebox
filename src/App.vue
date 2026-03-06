@@ -62,7 +62,8 @@ import TabBar from './components/TabBar.vue';
 import ConfirmDialog from './components/ConfirmDialog.vue';
 
 // Инициализация темы
-useTheme();
+const { initialize: initializeTheme } = useTheme();
+initializeTheme();
 
 const { notes } = useStorage();
 const {

@@ -122,8 +122,8 @@ const selectTheme = async (theme: ThemeMode) => {
     await authStore.updateProfile({
       themePreference: theme,
     });
-  } catch (err: any) {
-    error.value = err.message || 'Не удалось сохранить настройки темы';
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Не удалось сохранить настройки темы';
   }
 };
 </script>

@@ -29,6 +29,7 @@ class AuthController(
         private const val STATE_COOKIE_NAME = "OAUTH_STATE"
         private const val SESSION_COOKIE_MAX_AGE = 30 * 24 * 60 * 60 // 30 days
         private const val STATE_COOKIE_MAX_AGE = 10 * 60 // 10 minutes
+        private val VALID_THEME_PREFERENCES = listOf("light", "dark", "system")
     }
 
     @GetMapping("/login/{provider}")
@@ -198,7 +199,7 @@ class AuthController(
 
         // Validate theme preference if provided
         if (updateDto.themePreference != null &&
-            updateDto.themePreference !in listOf("light", "dark", "system")) {
+            updateDto.themePreference !in VALID_THEME_PREFERENCES) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error<Nothing>("INVALID_THEME", "Theme preference must be 'light', 'dark', or 'system'"))
         }
