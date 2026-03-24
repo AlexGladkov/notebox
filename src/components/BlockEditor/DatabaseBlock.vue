@@ -42,11 +42,18 @@
     <div v-else class="database-error">
       <span>⚠️ База данных не найдена</span>
     </div>
+
+    <!-- Toast Notification -->
+    <Transition name="toast">
+      <div v-if="toast.visible" class="toast" :class="{ 'toast-error': toast.isError }">
+        {{ toast.message }}
+      </div>
+    </Transition>
   </node-view-wrapper>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { NodeViewWrapper } from '@tiptap/vue-3';
 import DatabaseViewTabs from './DatabaseViewTabs.vue';
 import DatabaseToolbar from './DatabaseToolbar.vue';
@@ -91,6 +98,16 @@ const currentViewId = ref<string>('');
 const currentFilter = ref<DatabaseFilter | null>(null);
 const currentSort = ref<DatabaseSort | null>(null);
 const searchQuery = ref('');
+const toast = ref({ visible: false, message: '', isError: false });
+let toastTimer: ReturnType<typeof setTimeout> | null = null;
+
+const showToast = (message: string, isError = false) => {
+  toast.value = { visible: true, message, isError };
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    toast.value.visible = false;
+  }, 3000);
+};
 
 const database = computed(() => {
   return getDatabaseById(props.node.attrs.databaseId);
@@ -264,9 +281,10 @@ const handleCreateView = async () => {
       sort: currentSort.value || undefined,
     });
     currentViewId.value = newView.id;
+    showToast('Вьюха успешно создана');
   } catch (err) {
     console.error('Failed to create view:', err);
-    alert('Не удалось создать вьюху');
+    showToast('Не удалось создать вьюху', true);
   }
 };
 
@@ -279,15 +297,16 @@ const handleRenameView = async (viewId: string) => {
 
   try {
     await updateView(props.node.attrs.databaseId, viewId, { name });
+    showToast('Вьюха успешно переименована');
   } catch (err) {
     console.error('Failed to rename view:', err);
-    alert('Не удалось переименовать вьюху');
+    showToast('Не удалось переименовать вьюху', true);
   }
 };
 
 const handleDeleteView = async (viewId: string) => {
   if (views.value.length <= 1) {
-    alert('Нельзя удалить последнюю вьюху');
+    showToast('Нельзя удалить последнюю вьюху', true);
     return;
   }
 
@@ -301,9 +320,10 @@ const handleDeleteView = async (viewId: string) => {
       currentViewId.value = views.value[0].id;
       handleSelectView(views.value[0].id);
     }
+    showToast('Вьюха успешно удалена');
   } catch (err) {
     console.error('Failed to delete view:', err);
-    alert('Не удалось удалить вьюху');
+    showToast('Не удалось удалить вьюху', true);
   }
 };
 
@@ -346,6 +366,7 @@ const handleUpdateRecord = async (recordId: string, data: { [columnId: string]: 
     await updateRecord(props.node.attrs.databaseId, recordId, data);
   } catch (err) {
     console.error('Failed to update record:', err);
+    showToast('Не удалось обновить запись', true);
   }
 };
 
@@ -354,6 +375,7 @@ const handleCreateRecord = async (data: { [columnId: string]: any }) => {
     await createRecord(props.node.attrs.databaseId, data);
   } catch (err) {
     console.error('Failed to create record:', err);
+    showToast('Не удалось создать запись', true);
   }
 };
 
@@ -362,6 +384,7 @@ const handleDeleteRecord = async (recordId: string) => {
     await deleteRecord(props.node.attrs.databaseId, recordId);
   } catch (err) {
     console.error('Failed to delete record:', err);
+    showToast('Не удалось удалить запись', true);
   }
 };
 
@@ -370,6 +393,7 @@ const handleAddColumn = async (name: string, type: ColumnType, options?: SelectO
     await addColumn(props.node.attrs.databaseId, name, type, options);
   } catch (err) {
     console.error('Failed to add column:', err);
+    showToast('Не удалось добавить колонку', true);
   }
 };
 
@@ -383,6 +407,7 @@ const handleUpdateColumn = async (
     await updateColumn(props.node.attrs.databaseId, columnId, name, type, options);
   } catch (err) {
     console.error('Failed to update column:', err);
+    showToast('Не удалось обновить колонку', true);
   }
 };
 
@@ -391,11 +416,16 @@ const handleDeleteColumn = async (columnId: string) => {
     await deleteColumn(props.node.attrs.databaseId, columnId);
   } catch (err) {
     console.error('Failed to delete column:', err);
+    showToast('Не удалось удалить колонку', true);
   }
 };
 
 onMounted(() => {
   loadData();
+});
+
+onUnmounted(() => {
+  if (toastTimer) clearTimeout(toastTimer);
 });
 
 watch(() => props.node.attrs.databaseId, () => {
@@ -447,5 +477,35 @@ watch(() => props.node.attrs.databaseId, () => {
 .database-container {
   width: 100%;
   overflow-x: auto;
+}
+
+/* Toast Notification */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #111827;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  z-index: 2000;
+}
+
+.toast-error {
+  background: #dc2626;
+}
+
+.toast-enter-active,
+.toast-leave-active {
+  transition: all 0.3s ease;
+}
+
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(10px);
 }
 </style>

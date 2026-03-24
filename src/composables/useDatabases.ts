@@ -34,8 +34,14 @@ export function useDatabases() {
       // Load views from localStorage if not present
       if (!database.views || database.views.length === 0) {
         const storageKey = `database-views-${id}`;
-        const storedViews = JSON.parse(localStorage.getItem(storageKey) || '[]');
-        database.views = storedViews;
+        try {
+          const storedData = localStorage.getItem(storageKey);
+          const storedViews = storedData ? JSON.parse(storedData) : [];
+          database.views = Array.isArray(storedViews) ? storedViews : [];
+        } catch (e) {
+          console.error('Failed to parse views from localStorage:', e);
+          database.views = [];
+        }
       }
 
       // Update in the list if exists, otherwise add
@@ -135,7 +141,7 @@ export function useDatabases() {
         position,
       });
 
-      database.columns.push(newColumn);
+      database.columns = [...database.columns, newColumn];
       return newColumn;
     } catch (err) {
       console.error('Failed to add column:', err);
@@ -172,7 +178,11 @@ export function useDatabases() {
 
       const columnIndex = database.columns.findIndex(col => col.id === columnId);
       if (columnIndex !== -1) {
-        database.columns[columnIndex] = updatedColumn;
+        database.columns = [
+          ...database.columns.slice(0, columnIndex),
+          updatedColumn,
+          ...database.columns.slice(columnIndex + 1),
+        ];
       }
 
       return updatedColumn;
@@ -300,15 +310,20 @@ export function useDatabases() {
 
         // Save to localStorage
         const storageKey = `database-views-${databaseId}`;
-        const storedViews = JSON.parse(localStorage.getItem(storageKey) || '[]');
-        storedViews.push(newView);
-        localStorage.setItem(storageKey, JSON.stringify(storedViews));
+        try {
+          const storedData = localStorage.getItem(storageKey);
+          const storedViews = storedData ? JSON.parse(storedData) : [];
+          storedViews.push(newView);
+          localStorage.setItem(storageKey, JSON.stringify(storedViews));
+        } catch (e) {
+          console.error('Failed to save view to localStorage:', e);
+        }
       }
 
       if (!database.views) {
         database.views = [];
       }
-      database.views.push(newView);
+      database.views = [...database.views, newView];
 
       return newView;
     } catch (err) {
@@ -335,21 +350,31 @@ export function useDatabases() {
         console.warn('Backend API not available, using localStorage fallback', apiErr);
         // Fallback to localStorage
         const storageKey = `database-views-${databaseId}`;
-        const storedViews = JSON.parse(localStorage.getItem(storageKey) || '[]');
-        const viewIndex = storedViews.findIndex((v: DatabaseView) => v.id === viewId);
+        try {
+          const storedData = localStorage.getItem(storageKey);
+          const storedViews = storedData ? JSON.parse(storedData) : [];
+          const viewIndex = storedViews.findIndex((v: DatabaseView) => v.id === viewId);
 
-        if (viewIndex === -1) {
-          throw new Error('View not found');
+          if (viewIndex === -1) {
+            throw new Error('View not found');
+          }
+
+          updatedView = { ...storedViews[viewIndex], ...view };
+          storedViews[viewIndex] = updatedView;
+          localStorage.setItem(storageKey, JSON.stringify(storedViews));
+        } catch (e) {
+          console.error('Failed to update view in localStorage:', e);
+          throw e;
         }
-
-        updatedView = { ...storedViews[viewIndex], ...view };
-        storedViews[viewIndex] = updatedView;
-        localStorage.setItem(storageKey, JSON.stringify(storedViews));
       }
 
       const viewIndex = database.views?.findIndex(v => v.id === viewId);
       if (viewIndex !== undefined && viewIndex !== -1 && database.views) {
-        database.views[viewIndex] = updatedView;
+        database.views = [
+          ...database.views.slice(0, viewIndex),
+          updatedView,
+          ...database.views.slice(viewIndex + 1),
+        ];
       }
 
       return updatedView;
@@ -375,9 +400,14 @@ export function useDatabases() {
         console.warn('Backend API not available, using localStorage fallback', apiErr);
         // Fallback to localStorage
         const storageKey = `database-views-${databaseId}`;
-        const storedViews = JSON.parse(localStorage.getItem(storageKey) || '[]');
-        const filteredViews = storedViews.filter((v: DatabaseView) => v.id !== viewId);
-        localStorage.setItem(storageKey, JSON.stringify(filteredViews));
+        try {
+          const storedData = localStorage.getItem(storageKey);
+          const storedViews = storedData ? JSON.parse(storedData) : [];
+          const filteredViews = storedViews.filter((v: DatabaseView) => v.id !== viewId);
+          localStorage.setItem(storageKey, JSON.stringify(filteredViews));
+        } catch (e) {
+          console.error('Failed to delete view from localStorage:', e);
+        }
       }
 
       if (database.views) {
