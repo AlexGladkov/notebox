@@ -70,6 +70,7 @@ const removeIcon = () => {
   position: relative;
   display: inline-block;
   margin-bottom: 16px;
+  /* Компенсация внутреннего spacing emoji glyph для выравнивания с заголовком */
   margin-left: -8px;
 }
 
