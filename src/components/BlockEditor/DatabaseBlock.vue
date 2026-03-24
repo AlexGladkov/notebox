@@ -148,7 +148,7 @@ const applyFilter = (records: Record[], filter: DatabaseFilter): Record[] => {
         return value !== null && value !== undefined && value !== '';
       case 'equals':
         // Для Select/MultiSelect колонок нужно сравнивать label
-        if (column && (column.type === 'select' || column.type === 'multiSelect')) {
+        if (column && (column.type === 'SELECT' || column.type === 'MULTI_SELECT')) {
           if (!value) return false;
           const option = column.options?.find(o => o.id === value);
           return option?.label === filter.value;
@@ -156,7 +156,7 @@ const applyFilter = (records: Record[], filter: DatabaseFilter): Record[] => {
         return value === filter.value;
       case 'contains':
         // Для Select/MultiSelect также ищем по label
-        if (column && (column.type === 'select' || column.type === 'multiSelect')) {
+        if (column && (column.type === 'SELECT' || column.type === 'MULTI_SELECT')) {
           if (!value) return false;
           const option = column.options?.find(o => o.id === value);
           return option?.label.toLowerCase().includes(String(filter.value).toLowerCase());

@@ -56,8 +56,22 @@
 
       <div v-if="selectedColumnId && needsValue" class="menu-section">
         <label class="menu-label">Значение</label>
+        <select
+          v-if="selectedColumnType === 'SELECT'"
+          v-model="selectedValue"
+          class="menu-select"
+        >
+          <option value="">Выберите значение</option>
+          <option
+            v-for="option in selectedColumn?.options"
+            :key="option.id"
+            :value="option.label"
+          >
+            {{ option.label }}
+          </option>
+        </select>
         <input
-          v-if="selectedColumnType === 'TEXT' || selectedColumnType === 'EMAIL' || selectedColumnType === 'URL' || selectedColumnType === 'PHONE'"
+          v-else-if="selectedColumnType === 'TEXT' || selectedColumnType === 'EMAIL' || selectedColumnType === 'URL' || selectedColumnType === 'PHONE'"
           v-model="selectedValue"
           type="text"
           class="menu-input"
@@ -156,6 +170,11 @@ const availableOperators = computed(() => {
       { value: 'lt', label: 'Меньше' },
       { value: 'gte', label: 'Больше или равно' },
       { value: 'lte', label: 'Меньше или равно' }
+    );
+  } else if (type === 'SELECT' || type === 'MULTI_SELECT') {
+    operators.unshift(
+      { value: 'equals', label: 'Равно' },
+      { value: 'contains', label: 'Содержит' }
     );
   } else {
     operators.unshift({ value: 'equals', label: 'Равно' });
