@@ -98,6 +98,10 @@ const handleRenameView = () => {
 };
 
 const handleDeleteView = () => {
+  if (props.views.length <= 1) {
+    closeContextMenu();
+    return;
+  }
   if (contextMenu.value.viewId) {
     emit('delete-view', contextMenu.value.viewId);
   }

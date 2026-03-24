@@ -126,8 +126,15 @@ const createOption = () => {
     color: colorPalette[nextColorIndex],
   };
 
-  // Note: This is a workaround for MVP. In production, this should update the column via API
-  // to properly persist the new option and maintain data consistency
+  // Create a new options array instead of mutating props
+  const updatedOptions = [...(props.column.options || []), newOption];
+
+  // Update the column through the proper API
+  // TODO: This should emit an event to update the column via the parent component
+  // For now, we need to emit a column update event
+  console.warn('Creating new option without proper column update - needs parent component support');
+
+  // Temporarily mutate to make it work (should be replaced with proper event emission)
   if (!props.column.options) {
     props.column.options = [];
   }

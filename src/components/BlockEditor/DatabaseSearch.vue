@@ -34,7 +34,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue';
+import { ref, watch, nextTick, onUnmounted } from 'vue';
 
 const props = defineProps<{
   modelValue: string;
@@ -84,6 +84,12 @@ const clear = () => {
   emit('update:modelValue', '');
   searchInput.value?.focus();
 };
+
+onUnmounted(() => {
+  if (debounceTimer) {
+    clearTimeout(debounceTimer);
+  }
+});
 </script>
 
 <style scoped>
