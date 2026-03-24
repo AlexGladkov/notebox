@@ -195,7 +195,7 @@ onUnmounted(() => {
   height: 200px;
   position: relative;
   border-radius: 8px 8px 0 0;
-  overflow: hidden;
+  overflow: visible;
   background-position: center;
   background-size: cover;
 }
