@@ -80,7 +80,17 @@ const menuVisible = ref(false);
 const searchQuery = ref('');
 const searchInput = ref<HTMLInputElement | null>(null);
 
-const colorPalette = ['#fecaca', '#fed7aa', '#fef08a', '#d9f99d', '#a7f3d0', '#a5f3fc', '#bfdbfe', '#ddd6fe', '#f5d0fe', '#fecdd3'];
+// Notion-style color palette
+const colorPalette = [
+  '#d1fae5', // green
+  '#fef3c7', // yellow
+  '#fce7f3', // pink
+  '#ede9fe', // purple
+  '#dbeafe', // blue
+  '#fed7aa', // orange
+  '#fee2e2', // red
+  '#f3f4f6', // gray
+];
 
 const options = computed(() => props.column.options || []);
 
@@ -141,11 +151,12 @@ const removeOption = (optionId: string) => {
 const createOption = () => {
   if (!searchQuery.value.trim()) return;
 
-  // Create new option with random color
+  // Get next color from palette (cycle through colors)
+  const nextColorIndex = (props.column.options?.length || 0) % colorPalette.length;
   const newOption: SelectOption = {
     id: `opt_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
     label: searchQuery.value.trim(),
-    color: colorPalette[Math.floor(Math.random() * colorPalette.length)],
+    color: colorPalette[nextColorIndex],
   };
 
   // Note: This is a workaround for MVP. In production, this should update the column via API

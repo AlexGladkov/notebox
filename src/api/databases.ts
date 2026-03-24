@@ -89,4 +89,17 @@ export const databasesApi = {
   async getRelatedNotes(databaseId: string): Promise<{ id: string; title: string }[]> {
     return apiClient.get<{ id: string; title: string }[]>(`/api/databases/${databaseId}/notes`);
   },
+
+  // View operations
+  async createView(databaseId: string, view: Omit<import('../types/database').DatabaseView, 'id'>): Promise<import('../types/database').DatabaseView> {
+    return apiClient.post<import('../types/database').DatabaseView>(`/api/databases/${databaseId}/views`, view);
+  },
+
+  async updateView(databaseId: string, viewId: string, view: Partial<import('../types/database').DatabaseView>): Promise<import('../types/database').DatabaseView> {
+    return apiClient.put<import('../types/database').DatabaseView>(`/api/databases/${databaseId}/views/${viewId}`, view);
+  },
+
+  async deleteView(databaseId: string, viewId: string): Promise<void> {
+    return apiClient.delete(`/api/databases/${databaseId}/views/${viewId}`);
+  },
 };

@@ -3,6 +3,9 @@
     <table class="database-table">
       <thead>
         <tr>
+          <th class="checkbox-cell">
+            <input type="checkbox" class="row-checkbox" disabled />
+          </th>
           <th
             v-for="column in database.columns"
             :key="column.id"
@@ -26,23 +29,37 @@
           class="data-row"
           @contextmenu.prevent="handleRowContextMenu($event, record.id)"
         >
+          <td class="checkbox-cell">
+            <input type="checkbox" class="row-checkbox" disabled />
+          </td>
           <td
-            v-for="column in database.columns"
+            v-for="(column, index) in database.columns"
             :key="column.id"
             class="data-cell"
           >
-            <DatabaseCell
-              :column="column"
-              :value="record.data[column.id]"
-              :record-id="record.id"
-              @update="handleCellUpdate(record.id, column.id, $event)"
-            />
+            <div class="cell-content">
+              <svg
+                v-if="index === 0"
+                class="record-icon"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <DatabaseCell
+                :column="column"
+                :value="record.data[column.id]"
+                :record-id="record.id"
+                @update="handleCellUpdate(record.id, column.id, $event)"
+              />
+            </div>
           </td>
           <td class="empty-cell"></td>
         </tr>
         <tr v-if="records.length === 0" class="empty-row">
-          <td :colspan="database.columns.length + 1" class="empty-message">
-            Нет записей
+          <td :colspan="database.columns.length + 2" class="empty-message">
+            {{ emptyMessage }}
           </td>
         </tr>
       </tbody>
@@ -76,17 +93,28 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onUnmounted } from 'vue';
+import { ref, computed, onUnmounted } from 'vue';
 import DatabaseColumnHeader from './DatabaseColumnHeader.vue';
 import DatabaseAddColumn from './DatabaseAddColumn.vue';
 import DatabaseAddRow from './DatabaseAddRow.vue';
 import DatabaseCell from './DatabaseCell.vue';
 import type { CustomDatabase, Record, Column, ColumnType, SelectOption } from '../../types';
+import type { DatabaseFilter, DatabaseSort } from '../../types/database';
 
 const props = defineProps<{
   database: CustomDatabase;
   records: Record[];
+  filter?: DatabaseFilter | null;
+  sort?: DatabaseSort | null;
+  searchQuery?: string;
 }>();
+
+const emptyMessage = computed(() => {
+  if (props.filter || props.searchQuery) {
+    return 'Нет записей, соответствующих фильтру';
+  }
+  return 'Нет записей';
+});
 
 const emit = defineEmits<{
   updateRecord: [recordId: string, data: { [columnId: string]: any }];
@@ -214,6 +242,27 @@ onUnmounted(() => {
   border-bottom: 1px solid #e5e7eb;
 }
 
+.checkbox-cell {
+  width: 40px;
+  min-width: 40px;
+  max-width: 40px;
+  padding: 8px;
+  text-align: center;
+  border-right: 1px solid #e5e7eb;
+}
+
+.row-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #3b82f6;
+}
+
+.row-checkbox:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 .column-header-cell,
 .add-column-cell {
   padding: 8px 12px;
@@ -256,6 +305,23 @@ onUnmounted(() => {
   min-width: 150px;
   max-width: 300px;
   vertical-align: middle;
+}
+
+.cell-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.record-icon {
+  width: 16px;
+  height: 16px;
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+.dark .record-icon {
+  color: #6b7280;
 }
 
 .data-cell:last-of-type {

@@ -1,5 +1,6 @@
 import { ref } from 'vue';
 import type { CustomDatabase, Column, Record, ColumnType, SelectOption } from '../types';
+import type { DatabaseView } from '../types/database';
 import { databasesApi } from '../api/databases';
 
 export function useDatabases() {
@@ -271,6 +272,72 @@ export function useDatabases() {
     return databases.value.find(db => db.id === id);
   };
 
+  // Create view
+  const createView = async (databaseId: string, view: Omit<DatabaseView, 'id'>) => {
+    try {
+      const database = databases.value.find(db => db.id === databaseId);
+      if (!database) {
+        throw new Error('Database not found');
+      }
+
+      const newView = await databasesApi.createView(databaseId, view);
+
+      if (!database.views) {
+        database.views = [];
+      }
+      database.views.push(newView);
+
+      return newView;
+    } catch (err) {
+      console.error('Failed to create view:', err);
+      error.value = 'Не удалось создать вьюху';
+      throw err;
+    }
+  };
+
+  // Update view
+  const updateView = async (databaseId: string, viewId: string, view: Partial<DatabaseView>) => {
+    try {
+      const database = databases.value.find(db => db.id === databaseId);
+      if (!database) {
+        throw new Error('Database not found');
+      }
+
+      const updatedView = await databasesApi.updateView(databaseId, viewId, view);
+
+      const viewIndex = database.views?.findIndex(v => v.id === viewId);
+      if (viewIndex !== undefined && viewIndex !== -1 && database.views) {
+        database.views[viewIndex] = updatedView;
+      }
+
+      return updatedView;
+    } catch (err) {
+      console.error('Failed to update view:', err);
+      error.value = 'Не удалось обновить вьюху';
+      throw err;
+    }
+  };
+
+  // Delete view
+  const deleteView = async (databaseId: string, viewId: string) => {
+    try {
+      const database = databases.value.find(db => db.id === databaseId);
+      if (!database) {
+        throw new Error('Database not found');
+      }
+
+      await databasesApi.deleteView(databaseId, viewId);
+
+      if (database.views) {
+        database.views = database.views.filter(v => v.id !== viewId);
+      }
+    } catch (err) {
+      console.error('Failed to delete view:', err);
+      error.value = 'Не удалось удалить вьюху';
+      throw err;
+    }
+  };
+
   return {
     databases,
     records,
@@ -290,5 +357,8 @@ export function useDatabases() {
     deleteRecord,
     getRecordsByDatabaseId,
     getDatabaseById,
+    createView,
+    updateView,
+    deleteView,
   };
 }

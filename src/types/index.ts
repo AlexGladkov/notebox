@@ -82,6 +82,7 @@ export interface CustomDatabase {
   name: string;
   folderId: string | null;
   columns: Column[];
+  views?: import('./database').DatabaseView[];
   createdAt: number;
   updatedAt: number;
 }

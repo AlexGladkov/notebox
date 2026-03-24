@@ -10,9 +10,26 @@
     </div>
 
     <div v-else-if="database" class="database-container">
+      <DatabaseViewTabs
+        :views="views"
+        :current-view-id="currentViewId"
+        @select-view="handleSelectView"
+        @create-view="handleCreateView"
+        @rename-view="handleRenameView"
+        @delete-view="handleDeleteView"
+      />
+      <DatabaseToolbar
+        :columns="database.columns"
+        @filter-change="handleFilterChange"
+        @sort-change="handleSortChange"
+        @search-change="handleSearchChange"
+      />
       <DatabaseTable
         :database="database"
-        :records="databaseRecords"
+        :records="filteredRecords"
+        :filter="currentFilter"
+        :sort="currentSort"
+        :search-query="searchQuery"
         @update-record="handleUpdateRecord"
         @create-record="handleCreateRecord"
         @delete-record="handleDeleteRecord"
@@ -31,9 +48,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
 import { NodeViewWrapper } from '@tiptap/vue-3';
+import DatabaseViewTabs from './DatabaseViewTabs.vue';
+import DatabaseToolbar from './DatabaseToolbar.vue';
 import DatabaseTable from './DatabaseTable.vue';
 import { useDatabases } from '../../composables/useDatabases';
-import type { Column, ColumnType, SelectOption } from '../../types';
+import type { Column, ColumnType, SelectOption, Record } from '../../types';
+import type { DatabaseView, DatabaseFilter, DatabaseSort } from '../../types/database';
 
 const props = defineProps<{
   node: {
@@ -54,10 +74,17 @@ const {
   deleteColumn,
   getDatabaseById,
   getRecordsByDatabaseId,
+  createView,
+  updateView,
+  deleteView,
 } = useDatabases();
 
 const loading = ref(false);
 const error = ref<string | null>(null);
+const currentViewId = ref<string>('');
+const currentFilter = ref<DatabaseFilter | null>(null);
+const currentSort = ref<DatabaseSort | null>(null);
+const searchQuery = ref('');
 
 const database = computed(() => {
   return getDatabaseById(props.node.attrs.databaseId);
@@ -66,6 +93,92 @@ const database = computed(() => {
 const databaseRecords = computed(() => {
   return getRecordsByDatabaseId(props.node.attrs.databaseId);
 });
+
+const views = computed(() => {
+  if (!database.value?.views || database.value.views.length === 0) {
+    // Create default view if no views exist
+    return [{
+      id: 'default',
+      name: 'Все',
+    } as DatabaseView];
+  }
+  return database.value.views;
+});
+
+const currentView = computed(() => {
+  return views.value.find(v => v.id === currentViewId.value) || views.value[0];
+});
+
+const filteredRecords = computed(() => {
+  let records = [...databaseRecords.value];
+
+  // Apply filter
+  if (currentFilter.value) {
+    records = applyFilter(records, currentFilter.value);
+  }
+
+  // Apply search
+  if (searchQuery.value) {
+    records = applySearch(records, searchQuery.value);
+  }
+
+  // Apply sort
+  if (currentSort.value) {
+    records = applySort(records, currentSort.value);
+  }
+
+  return records;
+});
+
+const applyFilter = (records: Record[], filter: DatabaseFilter): Record[] => {
+  return records.filter(record => {
+    const value = record.data[filter.columnId];
+
+    switch (filter.operator) {
+      case 'isEmpty':
+        return value === null || value === undefined || value === '';
+      case 'isNotEmpty':
+        return value !== null && value !== undefined && value !== '';
+      case 'equals':
+        return value === filter.value;
+      case 'contains':
+        return String(value).toLowerCase().includes(String(filter.value).toLowerCase());
+      case 'gt':
+        return Number(value) > Number(filter.value);
+      case 'lt':
+        return Number(value) < Number(filter.value);
+      case 'gte':
+        return Number(value) >= Number(filter.value);
+      case 'lte':
+        return Number(value) <= Number(filter.value);
+      default:
+        return true;
+    }
+  });
+};
+
+const applySearch = (records: Record[], query: string): Record[] => {
+  const lowerQuery = query.toLowerCase();
+  return records.filter(record => {
+    return Object.values(record.data).some(value => {
+      if (value === null || value === undefined) return false;
+      return String(value).toLowerCase().includes(lowerQuery);
+    });
+  });
+};
+
+const applySort = (records: Record[], sort: DatabaseSort): Record[] => {
+  return [...records].sort((a, b) => {
+    const aValue = a.data[sort.columnId];
+    const bValue = b.data[sort.columnId];
+
+    if (aValue === null || aValue === undefined) return 1;
+    if (bValue === null || bValue === undefined) return -1;
+
+    const comparison = aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+    return sort.direction === 'asc' ? comparison : -comparison;
+  });
+};
 
 const loadData = async () => {
   if (!props.node.attrs.databaseId) {
@@ -79,12 +192,117 @@ const loadData = async () => {
 
     await loadDatabase(props.node.attrs.databaseId);
     await loadRecords(props.node.attrs.databaseId);
+
+    // Set initial view
+    if (views.value.length > 0) {
+      currentViewId.value = views.value[0].id;
+      const view = views.value[0];
+      currentFilter.value = view.filter || null;
+      currentSort.value = view.sort || null;
+    }
   } catch (err) {
     console.error('Failed to load database data:', err);
     error.value = err instanceof Error ? err.message : 'Неизвестная ошибка';
   } finally {
     loading.value = false;
   }
+};
+
+const handleSelectView = (viewId: string) => {
+  currentViewId.value = viewId;
+  const view = views.value.find(v => v.id === viewId);
+  if (view) {
+    currentFilter.value = view.filter || null;
+    currentSort.value = view.sort || null;
+  }
+};
+
+const handleCreateView = async () => {
+  const name = prompt('Введите название новой вьюхи:');
+  if (!name) return;
+
+  try {
+    const newView = await createView(props.node.attrs.databaseId, {
+      name,
+      filter: currentFilter.value || undefined,
+      sort: currentSort.value || undefined,
+    });
+    currentViewId.value = newView.id;
+  } catch (err) {
+    console.error('Failed to create view:', err);
+    alert('Не удалось создать вьюху');
+  }
+};
+
+const handleRenameView = async (viewId: string) => {
+  const view = views.value.find(v => v.id === viewId);
+  if (!view) return;
+
+  const name = prompt('Введите новое название:', view.name);
+  if (!name || name === view.name) return;
+
+  try {
+    await updateView(props.node.attrs.databaseId, viewId, { name });
+  } catch (err) {
+    console.error('Failed to rename view:', err);
+    alert('Не удалось переименовать вьюху');
+  }
+};
+
+const handleDeleteView = async (viewId: string) => {
+  if (views.value.length <= 1) {
+    alert('Нельзя удалить последнюю вьюху');
+    return;
+  }
+
+  if (!confirm('Вы уверены, что хотите удалить эту вьюху?')) return;
+
+  try {
+    await deleteView(props.node.attrs.databaseId, viewId);
+
+    // Switch to first view if current was deleted
+    if (currentViewId.value === viewId) {
+      currentViewId.value = views.value[0].id;
+      handleSelectView(views.value[0].id);
+    }
+  } catch (err) {
+    console.error('Failed to delete view:', err);
+    alert('Не удалось удалить вьюху');
+  }
+};
+
+const handleFilterChange = async (filter: DatabaseFilter | null) => {
+  currentFilter.value = filter;
+
+  // Update current view if it's not the default view
+  if (currentViewId.value !== 'default') {
+    try {
+      await updateView(props.node.attrs.databaseId, currentViewId.value, {
+        filter: filter || undefined,
+      });
+    } catch (err) {
+      console.error('Failed to update view filter:', err);
+    }
+  }
+};
+
+const handleSortChange = async (sort: DatabaseSort | null) => {
+  currentSort.value = sort;
+
+  // Update current view if it's not the default view
+  if (currentViewId.value !== 'default') {
+    try {
+      await updateView(props.node.attrs.databaseId, currentViewId.value, {
+        sort: sort || undefined,
+      });
+    } catch (err) {
+      console.error('Failed to update view sort:', err);
+    }
+  }
+};
+
+const handleSearchChange = (query: string) => {
+  searchQuery.value = query;
 };
 
 const handleUpdateRecord = async (recordId: string, data: { [columnId: string]: any }) => {
