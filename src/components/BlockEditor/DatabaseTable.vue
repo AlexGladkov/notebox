@@ -52,6 +52,7 @@
                 :value="record.data[column.id]"
                 :record-id="record.id"
                 @update="handleCellUpdate(record.id, column.id, $event)"
+                @create-option="handleCreateOption(column, $event)"
               />
             </div>
           </td>
@@ -138,6 +139,12 @@ const handleCellUpdate = (recordId: string, columnId: string, value: any) => {
 
   const updatedData = { ...record.data, [columnId]: value };
   emit('updateRecord', recordId, updatedData);
+};
+
+const handleCreateOption = (column: Column, newOption: SelectOption) => {
+  // Add the new option to the column's options array
+  const updatedOptions = [...(column.options || []), newOption];
+  emit('updateColumn', column.id, column.name, column.type, updatedOptions);
 };
 
 const handleAddRow = () => {

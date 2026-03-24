@@ -1,5 +1,6 @@
 import { apiClient } from './client';
 import type { CustomDatabase, Column, Record, ColumnType, SelectOption } from '../types';
+import type { DatabaseView } from '../types/database';
 
 export interface CreateDatabaseRequest {
   name: string;
@@ -91,12 +92,12 @@ export const databasesApi = {
   },
 
   // View operations
-  async createView(databaseId: string, view: Omit<import('../types/database').DatabaseView, 'id'>): Promise<import('../types/database').DatabaseView> {
-    return apiClient.post<import('../types/database').DatabaseView>(`/api/databases/${databaseId}/views`, view);
+  async createView(databaseId: string, view: Omit<DatabaseView, 'id'>): Promise<DatabaseView> {
+    return apiClient.post<DatabaseView>(`/api/databases/${databaseId}/views`, view);
   },
 
-  async updateView(databaseId: string, viewId: string, view: Partial<import('../types/database').DatabaseView>): Promise<import('../types/database').DatabaseView> {
-    return apiClient.put<import('../types/database').DatabaseView>(`/api/databases/${databaseId}/views/${viewId}`, view);
+  async updateView(databaseId: string, viewId: string, view: Partial<DatabaseView>): Promise<DatabaseView> {
+    return apiClient.put<DatabaseView>(`/api/databases/${databaseId}/views/${viewId}`, view);
   },
 
   async deleteView(databaseId: string, viewId: string): Promise<void> {

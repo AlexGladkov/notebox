@@ -75,6 +75,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   update: [value: string[]];
+  createOption: [option: SelectOption];
 }>();
 
 const menuVisible = ref(false);
@@ -151,14 +152,8 @@ const createOption = () => {
     color: colorPalette[nextColorIndex],
   };
 
-  // WORKAROUND: Temporarily mutate props to make it work
-  // TODO: This should be refactored to emit an event to update the column via the parent component
-  // The proper way would be: emit('create-option', newOption) and handle it in DatabaseTable
-  if (!props.column.options) {
-    // Create a new array to avoid direct mutation
-    (props.column as any).options = [];
-  }
-  props.column.options!.push(newOption);
+  // Emit event to parent component to handle the option creation
+  emit('createOption', newOption);
 
   // Add to selection
   const currentValues = [...selectedValues.value, newOption.id];

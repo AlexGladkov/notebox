@@ -5,12 +5,13 @@
     :column="column"
     :record-id="recordId"
     @update="handleUpdate"
+    @create-option="handleCreateOption"
   />
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import type { Column } from '../../types';
+import type { Column, SelectOption } from '../../types';
 
 // Import all cell components
 import TextCell from './cells/TextCell.vue';
@@ -37,6 +38,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   update: [value: any];
+  createOption: [option: SelectOption];
 }>();
 
 const cellComponent = computed(() => {
@@ -78,5 +80,9 @@ const cellComponent = computed(() => {
 
 const handleUpdate = (value: any) => {
   emit('update', value);
+};
+
+const handleCreateOption = (option: SelectOption) => {
+  emit('createOption', option);
 };
 </script>
