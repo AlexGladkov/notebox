@@ -139,7 +139,6 @@ const filteredRecords = computed(() => {
 const applyFilter = (records: Record[], filter: DatabaseFilter): Record[] => {
   return records.filter(record => {
     const value = record.data[filter.columnId];
-    const column = database.value?.columns.find(c => c.id === filter.columnId);
 
     switch (filter.operator) {
       case 'isEmpty':
@@ -147,20 +146,8 @@ const applyFilter = (records: Record[], filter: DatabaseFilter): Record[] => {
       case 'isNotEmpty':
         return value !== null && value !== undefined && value !== '';
       case 'equals':
-        // Для Select/MultiSelect колонок нужно сравнивать label
-        if (column && (column.type === 'select' || column.type === 'multiSelect')) {
-          if (!value) return false;
-          const option = column.options?.find(o => o.id === value);
-          return option?.label === filter.value;
-        }
         return value === filter.value;
       case 'contains':
-        // Для Select/MultiSelect также ищем по label
-        if (column && (column.type === 'select' || column.type === 'multiSelect')) {
-          if (!value) return false;
-          const option = column.options?.find(o => o.id === value);
-          return option?.label.toLowerCase().includes(String(filter.value).toLowerCase());
-        }
         return String(value).toLowerCase().includes(String(filter.value).toLowerCase());
       case 'gt':
         return Number(value) > Number(filter.value);

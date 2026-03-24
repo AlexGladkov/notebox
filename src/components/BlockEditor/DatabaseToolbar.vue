@@ -74,13 +74,27 @@ const handleSearchChange = (query: string) => {
 
 const handleShare = async () => {
   try {
-    await navigator.clipboard.writeText(window.location.href);
+    // Проверяем доступность Clipboard API
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(window.location.href);
+    } else {
+      // Fallback для браузеров без поддержки Clipboard API
+      const textArea = document.createElement('textarea');
+      textArea.value = window.location.href;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+    }
     showToast.value = true;
     setTimeout(() => {
       showToast.value = false;
     }, 2000);
   } catch (err) {
     console.error('Failed to copy URL:', err);
+    alert('Не удалось скопировать ссылку');
   }
 };
 </script>
