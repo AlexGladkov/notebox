@@ -47,7 +47,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
-import { NodeViewWrapper } from '@tiptap/vue-3';
+import { NodeViewWrapper, type NodeViewProps } from '@tiptap/vue-3';
 import DatabaseViewTabs from './DatabaseViewTabs.vue';
 import DatabaseToolbar from './DatabaseToolbar.vue';
 import DatabaseTable from './DatabaseTable.vue';
@@ -55,13 +55,7 @@ import { useDatabases } from '../../composables/useDatabases';
 import type { Column, ColumnType, SelectOption, Record } from '../../types';
 import type { DatabaseView, DatabaseFilter, DatabaseSort } from '../../types/database';
 
-const props = defineProps<{
-  node: {
-    attrs: {
-      databaseId: string;
-    };
-  };
-}>();
+const props = defineProps<NodeViewProps>();
 
 const {
   loadDatabase,
