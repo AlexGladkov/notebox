@@ -39,6 +39,7 @@ const emit = defineEmits<{
 }>();
 
 const menuVisible = ref(false);
+let clickOutsideTimer: ReturnType<typeof setTimeout> | null = null;
 
 const columnTypes = [
   { value: 'TEXT', label: 'Текст', icon: '📝' },
@@ -63,7 +64,7 @@ const toggleMenu = () => {
     menuVisible.value = true;
     document.addEventListener('keydown', handleEscape);
     // Добавляем обработчик клика с задержкой, чтобы текущий клик не закрыл меню сразу
-    setTimeout(() => {
+    clickOutsideTimer = setTimeout(() => {
       document.addEventListener('click', handleClickOutside);
     }, 0);
   } else {
@@ -75,6 +76,10 @@ const closeMenu = () => {
   menuVisible.value = false;
   document.removeEventListener('keydown', handleEscape);
   document.removeEventListener('click', handleClickOutside);
+  if (clickOutsideTimer) {
+    clearTimeout(clickOutsideTimer);
+    clickOutsideTimer = null;
+  }
 };
 
 const addColumn = (type: ColumnType) => {
@@ -120,6 +125,9 @@ onUnmounted(() => {
   // Очистка обработчиков на случай, если компонент размонтируется с открытым меню
   document.removeEventListener('keydown', handleEscape);
   document.removeEventListener('click', handleClickOutside);
+  if (clickOutsideTimer) {
+    clearTimeout(clickOutsideTimer);
+  }
 });
 </script>
 

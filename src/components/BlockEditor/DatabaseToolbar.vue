@@ -38,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onUnmounted } from 'vue';
 import DatabaseFilter from './DatabaseFilter.vue';
 import DatabaseSort from './DatabaseSort.vue';
 import DatabaseSearch from './DatabaseSearch.vue';
@@ -59,6 +59,7 @@ const currentFilter = ref<FilterType | null>(null);
 const currentSort = ref<SortType | null>(null);
 const currentSearch = ref('');
 const showToast = ref(false);
+let toastTimer: ReturnType<typeof setTimeout> | null = null;
 
 const handleFilterChange = (filter: FilterType | null) => {
   emit('filter-change', filter);
@@ -89,7 +90,10 @@ const handleShare = async () => {
       document.body.removeChild(textArea);
     }
     showToast.value = true;
-    setTimeout(() => {
+    if (toastTimer) {
+      clearTimeout(toastTimer);
+    }
+    toastTimer = setTimeout(() => {
       showToast.value = false;
     }, 2000);
   } catch (err) {
@@ -97,6 +101,12 @@ const handleShare = async () => {
     alert('Не удалось скопировать ссылку');
   }
 };
+
+onUnmounted(() => {
+  if (toastTimer) {
+    clearTimeout(toastTimer);
+  }
+});
 </script>
 
 <style scoped>
