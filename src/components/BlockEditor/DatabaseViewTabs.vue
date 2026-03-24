@@ -53,7 +53,7 @@
 import { ref } from 'vue';
 import type { DatabaseView } from '../../types/database';
 
-defineProps<{
+const props = defineProps<{
   views: DatabaseView[];
   currentViewId: string;
 }>();

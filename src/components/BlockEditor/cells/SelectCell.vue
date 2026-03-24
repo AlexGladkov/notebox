@@ -65,17 +65,10 @@ const menuVisible = ref(false);
 const searchQuery = ref('');
 const searchInput = ref<HTMLInputElement | null>(null);
 
-// Notion-style color palette
-const colorPalette = [
-  '#d1fae5', // green
-  '#fef3c7', // yellow
-  '#fce7f3', // pink
-  '#ede9fe', // purple
-  '#dbeafe', // blue
-  '#fed7aa', // orange
-  '#fee2e2', // red
-  '#f3f4f6', // gray
-];
+import { TAG_COLOR_PALETTE } from '../../../types/database';
+
+// Extract light colors for the palette
+const colorPalette = TAG_COLOR_PALETTE.map(c => c.light);
 
 const options = computed(() => props.column.options || []);
 
@@ -126,19 +119,14 @@ const createOption = () => {
     color: colorPalette[nextColorIndex],
   };
 
-  // Create a new options array instead of mutating props
-  const updatedOptions = [...(props.column.options || []), newOption];
-
-  // Update the column through the proper API
-  // TODO: This should emit an event to update the column via the parent component
-  // For now, we need to emit a column update event
-  console.warn('Creating new option without proper column update - needs parent component support');
-
-  // Temporarily mutate to make it work (should be replaced with proper event emission)
+  // WORKAROUND: Temporarily mutate props to make it work
+  // TODO: This should be refactored to emit an event to update the column via the parent component
+  // The proper way would be: emit('create-option', newOption) and handle it in DatabaseTable
   if (!props.column.options) {
-    props.column.options = [];
+    // Create a new array to avoid direct mutation
+    (props.column as any).options = [];
   }
-  props.column.options.push(newOption);
+  props.column.options!.push(newOption);
 
   // Select the new option
   emit('update', newOption.id);
