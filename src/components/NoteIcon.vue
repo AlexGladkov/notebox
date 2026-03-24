@@ -70,6 +70,7 @@ const removeIcon = () => {
   position: relative;
   display: inline-block;
   margin-bottom: 16px;
+  margin-left: -8px;
 }
 
 .note-icon {
