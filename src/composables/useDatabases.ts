@@ -31,6 +31,13 @@ export function useDatabases() {
       error.value = null;
       const database = await databasesApi.getById(id);
 
+      // Load views from localStorage if not present
+      if (!database.views || database.views.length === 0) {
+        const storageKey = `database-views-${id}`;
+        const storedViews = JSON.parse(localStorage.getItem(storageKey) || '[]');
+        database.views = storedViews;
+      }
+
       // Update in the list if exists, otherwise add
       const index = databases.value.findIndex(db => db.id === id);
       if (index !== -1) {
@@ -280,7 +287,23 @@ export function useDatabases() {
         throw new Error('Database not found');
       }
 
-      const newView = await databasesApi.createView(databaseId, view);
+      let newView: DatabaseView;
+
+      try {
+        // Try backend API first
+        newView = await databasesApi.createView(databaseId, view);
+      } catch (apiErr) {
+        console.warn('Backend API not available, using localStorage fallback', apiErr);
+        // Fallback to localStorage
+        const viewId = `view-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        newView = { ...view, id: viewId };
+
+        // Save to localStorage
+        const storageKey = `database-views-${databaseId}`;
+        const storedViews = JSON.parse(localStorage.getItem(storageKey) || '[]');
+        storedViews.push(newView);
+        localStorage.setItem(storageKey, JSON.stringify(storedViews));
+      }
 
       if (!database.views) {
         database.views = [];
@@ -303,7 +326,26 @@ export function useDatabases() {
         throw new Error('Database not found');
       }
 
-      const updatedView = await databasesApi.updateView(databaseId, viewId, view);
+      let updatedView: DatabaseView;
+
+      try {
+        // Try backend API first
+        updatedView = await databasesApi.updateView(databaseId, viewId, view);
+      } catch (apiErr) {
+        console.warn('Backend API not available, using localStorage fallback', apiErr);
+        // Fallback to localStorage
+        const storageKey = `database-views-${databaseId}`;
+        const storedViews = JSON.parse(localStorage.getItem(storageKey) || '[]');
+        const viewIndex = storedViews.findIndex((v: DatabaseView) => v.id === viewId);
+
+        if (viewIndex === -1) {
+          throw new Error('View not found');
+        }
+
+        updatedView = { ...storedViews[viewIndex], ...view };
+        storedViews[viewIndex] = updatedView;
+        localStorage.setItem(storageKey, JSON.stringify(storedViews));
+      }
 
       const viewIndex = database.views?.findIndex(v => v.id === viewId);
       if (viewIndex !== undefined && viewIndex !== -1 && database.views) {
@@ -326,7 +368,17 @@ export function useDatabases() {
         throw new Error('Database not found');
       }
 
-      await databasesApi.deleteView(databaseId, viewId);
+      try {
+        // Try backend API first
+        await databasesApi.deleteView(databaseId, viewId);
+      } catch (apiErr) {
+        console.warn('Backend API not available, using localStorage fallback', apiErr);
+        // Fallback to localStorage
+        const storageKey = `database-views-${databaseId}`;
+        const storedViews = JSON.parse(localStorage.getItem(storageKey) || '[]');
+        const filteredViews = storedViews.filter((v: DatabaseView) => v.id !== viewId);
+        localStorage.setItem(storageKey, JSON.stringify(filteredViews));
+      }
 
       if (database.views) {
         database.views = database.views.filter(v => v.id !== viewId);
