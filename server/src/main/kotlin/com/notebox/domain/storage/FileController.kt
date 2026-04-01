@@ -66,7 +66,7 @@ class FileController(
         }
 
         // Validate magic bytes (file signature)
-        if (!isValidFileType(file.inputStream, extension)) {
+        if (!isValidFileType(file.inputStream.buffered(), extension)) {
             return ResponseEntity.badRequest()
                 .body(errorResponse("FILE_TYPE_MISMATCH", "File content doesn't match extension"))
         }
