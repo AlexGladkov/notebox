@@ -58,6 +58,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import { v4 as uuidv4 } from 'uuid';
 import { filesApi } from '../../../api/files';
 import type { FileCellValue, FileValue } from '../../../types';
 
@@ -138,35 +139,59 @@ const handleFileSelect = async (event: Event) => {
   try {
     // Загружаем все файлы параллельно
     const uploadPromises = validFiles.map(async (file) => {
-      const response = await filesApi.upload(file);
+      try {
+        const response = await filesApi.upload(file);
 
-      // Получаем URL для файла
-      const url = await filesApi.getUrl(response.key);
+        // Получаем URL для файла
+        const url = await filesApi.getUrl(response.key);
 
-      const fileValue: FileCellValue = {
-        id: `file_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
-        fileId: response.fileId,
-        filename: response.filename,
-        url: url,
-        contentType: response.contentType || 'application/octet-stream',
-        size: response.size,
-        key: response.key,
-      };
+        const fileValue: FileCellValue = {
+          id: uuidv4(),
+          fileId: response.fileId,
+          filename: response.filename,
+          url: url,
+          contentType: response.contentType || 'application/octet-stream',
+          size: response.size,
+          key: response.key,
+        };
 
-      return fileValue;
+        return { status: 'fulfilled' as const, value: fileValue, filename: file.name };
+      } catch (error) {
+        console.error(`Failed to upload file ${file.name}:`, error);
+        return { status: 'rejected' as const, reason: error, filename: file.name };
+      }
     });
 
-    const uploadedFiles = await Promise.all(uploadPromises);
+    const results = await Promise.all(uploadPromises);
 
-    // Обновляем значение ячейки
-    const newValue: FileValue = {
-      files: [...files.value, ...uploadedFiles],
-    };
+    // Разделяем успешные и неудачные загрузки
+    const successfulUploads = results
+      .filter((result): result is { status: 'fulfilled'; value: FileCellValue; filename: string } => result.status === 'fulfilled')
+      .map(result => result.value);
 
-    emit('update', newValue);
+    const failedUploads = results
+      .filter((result): result is { status: 'rejected'; reason: unknown; filename: string } => result.status === 'rejected')
+      .map(result => result.filename);
+
+    // Если есть успешные загрузки, обновляем значение ячейки
+    if (successfulUploads.length > 0) {
+      const newValue: FileValue = {
+        files: [...files.value, ...successfulUploads],
+      };
+
+      emit('update', newValue);
+    }
+
+    // Если были ошибки, уведомляем пользователя
+    if (failedUploads.length > 0) {
+      const message = successfulUploads.length > 0
+        ? `Не удалось загрузить ${failedUploads.length} из ${results.length} файлов:\n${failedUploads.join('\n')}`
+        : `Ошибка при загрузке файлов:\n${failedUploads.join('\n')}`;
+      alert(message);
+    }
   } catch (error) {
-    console.error('Failed to upload files:', error);
-    alert('Ошибка при загрузке файлов. Попробуйте снова.');
+    console.error('Unexpected error during file upload:', error);
+    alert('Неожиданная ошибка при загрузке файлов. Попробуйте снова.');
   } finally {
     uploading.value = false;
     // Очищаем input для возможности повторной загрузки тех же файлов
