@@ -92,6 +92,7 @@ const emojisByCategory: Record<string, string[]> = {
 }
 
 // Маппинг emoji → ключевые слова для поиска (на английском и русском)
+// Все ключевые слова хранятся в нижнем регистре для оптимизации поиска
 const emojiKeywords: Record<string, string[]> = {
   // Smileys
   '😀': ['grin', 'smile', 'happy', 'улыбка', 'радость'],
@@ -268,9 +269,11 @@ const filteredEmojis = computed(() => {
       // Поиск по ключевым словам из emojiKeywords
       const keywords = emojiKeywords[emoji]
       if (keywords) {
-        return keywords.some(keyword => keyword.toLowerCase().includes(query))
+        // Ключевые слова уже в нижнем регистре
+        return keywords.some(keyword => keyword.includes(query))
       }
-      return false
+      // Fallback: для emoji без ключевых слов ищем по самому символу
+      return emoji.includes(query)
     })
   }
 
