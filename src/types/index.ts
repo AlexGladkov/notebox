@@ -106,6 +106,22 @@ export interface FileAttachment {
   createdAt: number;
 }
 
+// File cell value structure - массив файлов в ячейке FILE
+export interface FileCellValue {
+  id: string;
+  fileId: string; // ID файла на сервере
+  filename: string;
+  url?: string; // URL для доступа к файлу
+  contentType: string;
+  size: number;
+  key: string; // key для удаления через API
+}
+
+// Структура данных для FILE колонки
+export interface FileValue {
+  files: FileCellValue[];
+}
+
 // API Response types
 export interface ApiResponse<T> {
   data: T | null;

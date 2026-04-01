@@ -36,6 +36,7 @@
         @add-column="handleAddColumn"
         @update-column="handleUpdateColumn"
         @delete-column="handleDeleteColumn"
+        @sort="handleTableSort"
       />
     </div>
 
@@ -418,6 +419,11 @@ const handleDeleteColumn = async (columnId: string) => {
     console.error('Failed to delete column:', err);
     showToast('Не удалось удалить колонку', true);
   }
+};
+
+const handleTableSort = async (columnId: string, direction: 'asc' | 'desc') => {
+  const newSort: DatabaseSort = { columnId, direction };
+  await handleSortChange(newSort);
 };
 
 onMounted(() => {

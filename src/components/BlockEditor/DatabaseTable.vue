@@ -15,6 +15,7 @@
               :column="column"
               @update="handleUpdateColumn"
               @delete="handleDeleteColumn"
+              @sort="handleSort"
             />
           </th>
           <th class="add-column-cell">
@@ -124,6 +125,7 @@ const emit = defineEmits<{
   addColumn: [name: string, type: ColumnType, options?: SelectOption[]];
   updateColumn: [columnId: string, name: string, type: ColumnType, options?: SelectOption[]];
   deleteColumn: [columnId: string];
+  sort: [columnId: string, direction: 'asc' | 'desc'];
 }>();
 
 const contextMenu = ref({
@@ -190,6 +192,10 @@ const handleDeleteColumn = (columnId: string) => {
   if (confirm('Вы уверены, что хотите удалить эту колонку? Все данные в ней будут потеряны.')) {
     emit('deleteColumn', columnId);
   }
+};
+
+const handleSort = (columnId: string, direction: 'asc' | 'desc') => {
+  emit('sort', columnId, direction);
 };
 
 const handleRowContextMenu = (event: MouseEvent, recordId: string) => {

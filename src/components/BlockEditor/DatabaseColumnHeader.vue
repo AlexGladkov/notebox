@@ -26,6 +26,26 @@
 
       <div class="column-menu-divider"></div>
 
+      <div class="column-menu-section-title">Сортировка</div>
+
+      <div
+        class="column-menu-item"
+        @click="handleSort('asc')"
+      >
+        <span class="menu-icon">↑</span>
+        <span>{{ getSortLabel('asc') }}</span>
+      </div>
+
+      <div
+        class="column-menu-item"
+        @click="handleSort('desc')"
+      >
+        <span class="menu-icon">↓</span>
+        <span>{{ getSortLabel('desc') }}</span>
+      </div>
+
+      <div class="column-menu-divider"></div>
+
       <div class="column-menu-section-title">Изменить тип</div>
 
       <div
@@ -67,6 +87,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   update: [columnId: string, name: string, type: ColumnType, options?: any];
   delete: [columnId: string];
+  sort: [columnId: string, direction: 'asc' | 'desc'];
 }>();
 
 const menuVisible = ref(false);
@@ -150,6 +171,25 @@ const changeType = (newType: ColumnType) => {
 const deleteColumn = () => {
   emit('delete', props.column.id);
   closeMenu();
+};
+
+const handleSort = (direction: 'asc' | 'desc') => {
+  emit('sort', props.column.id, direction);
+  closeMenu();
+};
+
+const getSortLabel = (direction: 'asc' | 'desc'): string => {
+  const type = props.column.type;
+
+  if (type === 'TEXT' || type === 'EMAIL' || type === 'URL' || type === 'PHONE') {
+    return direction === 'asc' ? 'Сортировать A→Z' : 'Сортировать Z→A';
+  }
+
+  if (type === 'NUMBER' || type === 'DATE' || type === 'CREATED_TIME' || type === 'LAST_EDITED_TIME') {
+    return direction === 'asc' ? 'Сортировать по возрастанию' : 'Сортировать по убыванию';
+  }
+
+  return direction === 'asc' ? 'Сортировать по возрастанию' : 'Сортировать по убыванию';
 };
 
 const handleEscape = (event: KeyboardEvent) => {
