@@ -14,6 +14,7 @@ data class NoteDto(
     val backdropType: String?,
     val backdropValue: String?,
     val backdropPositionY: Int?,
+    val color: String?,
     val createdAt: Long,
     val updatedAt: Long
 )
@@ -39,7 +40,10 @@ data class CreateNoteRequest(
 
     @field:Min(value = 0, message = "BackdropPositionY must be between 0 and 100")
     @field:Max(value = 100, message = "BackdropPositionY must be between 0 and 100")
-    val backdropPositionY: Int? = 50
+    val backdropPositionY: Int? = 50,
+
+    @field:Size(max = 20, message = "Color must be less than 20 characters")
+    val color: String? = null
 )
 
 data class UpdateNoteRequest(
@@ -63,7 +67,10 @@ data class UpdateNoteRequest(
 
     @field:Min(value = 0, message = "BackdropPositionY must be between 0 and 100")
     @field:Max(value = 100, message = "BackdropPositionY must be between 0 and 100")
-    val backdropPositionY: Int? = 50
+    val backdropPositionY: Int? = 50,
+
+    @field:Size(max = 20, message = "Color must be less than 20 characters")
+    val color: String? = null
 )
 
 data class MoveNoteRequest(

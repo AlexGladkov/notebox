@@ -48,7 +48,8 @@ class NoteController(
                 request.icon,
                 request.backdropType,
                 request.backdropValue,
-                request.backdropPositionY
+                request.backdropPositionY,
+                request.color
             )
             return ResponseEntity.status(HttpStatus.CREATED)
                 .body(successResponse(note.toDto()))
@@ -75,7 +76,8 @@ class NoteController(
             request.icon,
             request.backdropType,
             request.backdropValue,
-            request.backdropPositionY
+            request.backdropPositionY,
+            request.color
         )
             ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(errorResponse("NOT_FOUND", "Note not found"))

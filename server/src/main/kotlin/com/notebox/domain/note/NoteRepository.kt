@@ -32,7 +32,8 @@ class NoteRepository {
         icon: String? = null,
         backdropType: String? = null,
         backdropValue: String? = null,
-        backdropPositionY: Int? = 50
+        backdropPositionY: Int? = 50,
+        color: String? = null
     ): Note = transaction {
         val id = UUID.randomUUID().toString()
         val now = Instant.now()
@@ -46,11 +47,12 @@ class NoteRepository {
             it[NotesTable.backdropType] = backdropType
             it[NotesTable.backdropValue] = backdropValue
             it[NotesTable.backdropPositionY] = backdropPositionY ?: 50
+            it[NotesTable.color] = color
             it[createdAt] = now
             it[updatedAt] = now
         }
 
-        Note(id, title, content, parentId, icon, backdropType, backdropValue, backdropPositionY, now, now)
+        Note(id, title, content, parentId, icon, backdropType, backdropValue, backdropPositionY, color, now, now)
     }
 
     fun update(
@@ -61,7 +63,8 @@ class NoteRepository {
         icon: String? = null,
         backdropType: String? = null,
         backdropValue: String? = null,
-        backdropPositionY: Int? = 50
+        backdropPositionY: Int? = 50,
+        color: String? = null
     ): Note? = transaction {
         val exists = NotesTable.select { NotesTable.id eq id }.any()
         if (!exists) return@transaction null
@@ -75,6 +78,7 @@ class NoteRepository {
             it[NotesTable.backdropType] = backdropType
             it[NotesTable.backdropValue] = backdropValue
             it[NotesTable.backdropPositionY] = backdropPositionY ?: 50
+            it[NotesTable.color] = color
             it[updatedAt] = now
         }
 
@@ -186,6 +190,7 @@ class NoteRepository {
         backdropType = row[NotesTable.backdropType],
         backdropValue = row[NotesTable.backdropValue],
         backdropPositionY = row[NotesTable.backdropPositionY],
+        color = row[NotesTable.color],
         createdAt = row[NotesTable.createdAt],
         updatedAt = row[NotesTable.updatedAt]
     )

@@ -13,6 +13,7 @@ object NotesTable : Table("notes") {
     val backdropType = varchar("backdrop_type", 20).nullable()
     val backdropValue = text("backdrop_value").nullable()
     val backdropPositionY = integer("backdrop_position_y").default(50)
+    val color = varchar("color", 20).nullable()
     val createdAt = timestamp("created_at").default(Instant.now())
     val updatedAt = timestamp("updated_at").default(Instant.now())
 

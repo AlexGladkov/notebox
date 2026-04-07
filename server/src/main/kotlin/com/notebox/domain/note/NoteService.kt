@@ -38,7 +38,8 @@ class NoteService(
         icon: String? = null,
         backdropType: String? = null,
         backdropValue: String? = null,
-        backdropPositionY: Int? = 50
+        backdropPositionY: Int? = 50,
+        color: String? = null
     ): Note {
         // Валидация глубины вложенности
         if (parentId != null) {
@@ -52,7 +53,7 @@ class NoteService(
             }
         }
 
-        return noteRepository.create(title, content, parentId, icon, backdropType, backdropValue, backdropPositionY)
+        return noteRepository.create(title, content, parentId, icon, backdropType, backdropValue, backdropPositionY, color)
     }
 
     fun updateNote(
@@ -63,7 +64,8 @@ class NoteService(
         icon: String? = null,
         backdropType: String? = null,
         backdropValue: String? = null,
-        backdropPositionY: Int? = 50
+        backdropPositionY: Int? = 50,
+        color: String? = null
     ): Note? {
         // Проверка существования заметки
         val existingNote = noteRepository.findById(id)
@@ -95,7 +97,7 @@ class NoteService(
             }
         }
 
-        return noteRepository.update(id, title, content, parentId, icon, backdropType, backdropValue, backdropPositionY)
+        return noteRepository.update(id, title, content, parentId, icon, backdropType, backdropValue, backdropPositionY, color)
     }
 
     fun moveNote(noteId: String, newParentId: String?): Note? {
