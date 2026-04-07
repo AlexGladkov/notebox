@@ -11,13 +11,13 @@
           { 'is-selected': selectedNoteId === note.id },
           { 'has-children': hasChildren(note.id) }
         ]"
-        :style="{ paddingLeft: `${depth * 16 + 14}px` }"
+        :style="{ paddingLeft: `${depth * 16 + (note.color ? 14 : 8)}px` }"
         @click="handleNoteClick(note.id, $event)"
         @mouseenter="hoveredNoteId = note.id"
         @mouseleave="hoveredNoteId = null"
       >
         <div
-          v-if="note.color"
+          v-if="note.color && note.color.trim()"
           class="note-color-indicator"
           :style="{ backgroundColor: note.color }"
         />
