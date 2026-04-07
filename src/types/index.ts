@@ -7,6 +7,7 @@ export interface Note {
   backdropType?: string | null;
   backdropValue?: string | null;
   backdropPositionY?: number;
+  color?: string | null;
   createdAt: number;
   updatedAt: number;
   isBlockFormat?: boolean;

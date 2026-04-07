@@ -11,11 +11,16 @@
           { 'is-selected': selectedNoteId === note.id },
           { 'has-children': hasChildren(note.id) }
         ]"
-        :style="{ paddingLeft: `${depth * 16}px` }"
+        :style="{ paddingLeft: `${depth * 16 + 14}px` }"
         @click="handleNoteClick(note.id, $event)"
         @mouseenter="hoveredNoteId = note.id"
         @mouseleave="hoveredNoteId = null"
       >
+        <div
+          v-if="note.color"
+          class="note-color-indicator"
+          :style="{ backgroundColor: note.color }"
+        />
         <button
           v-if="hasChildren(note.id)"
           @click.stop="toggleExpand(note.id)"
@@ -143,6 +148,16 @@ const handleNoteClick = (noteId: string, event: MouseEvent) => {
 
 .dark .note-item-content.is-selected {
   background-color: rgba(59, 130, 246, 0.2);
+}
+
+.note-color-indicator {
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 3px;
+  border-radius: 2px;
+  flex-shrink: 0;
 }
 
 .expand-button {
