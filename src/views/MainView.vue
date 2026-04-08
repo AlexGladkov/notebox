@@ -336,9 +336,7 @@ async function handleNoteCreated(noteId: string) {
     }
 
     // Expand ancestors to show the new note in the tree
-    if (createdNote.parentId) {
-      expandAllAncestors(createdNote.parentId);
-    }
+    expandAllAncestors(createdNote.id);
   } catch (error) {
     console.error('Failed to fetch created note:', error);
   }
