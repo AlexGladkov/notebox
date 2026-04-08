@@ -124,6 +124,10 @@ class AppleOAuthProvider(
         val email = payloadMap["email"] as? String
             ?: throw RuntimeException("Missing 'email' field in Apple ID token")
 
+        if (email.isBlank()) {
+            throw RuntimeException("Email cannot be empty from Apple OAuth response")
+        }
+
         return OAuthUserInfo(
             id = sub,
             email = email,

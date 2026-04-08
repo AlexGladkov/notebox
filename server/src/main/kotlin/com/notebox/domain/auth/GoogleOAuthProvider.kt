@@ -114,6 +114,10 @@ class GoogleOAuthProvider(
                 throw RuntimeException("Failed to parse Google userinfo response: ${e.message}", e)
             }
 
+            if (userInfo.email.isBlank()) {
+                throw RuntimeException("Email cannot be empty from Google OAuth response")
+            }
+
             OAuthUserInfo(
                 id = userInfo.sub,
                 email = userInfo.email,

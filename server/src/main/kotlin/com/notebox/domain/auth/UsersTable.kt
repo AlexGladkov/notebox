@@ -6,7 +6,7 @@ import java.time.Instant
 
 object UsersTable : Table("users") {
     val id = varchar("id", 36)
-    val email = varchar("email", 255).uniqueIndex()
+    val email = varchar("email", 255).uniqueIndex().check { it neq "" }
     val name = varchar("name", 255)
     val avatarUrl = text("avatar_url").nullable()
     val themePreference = varchar("theme_preference", 10).default("system")

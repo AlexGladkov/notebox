@@ -31,6 +31,8 @@ class UserService(
         name: String,
         avatarUrl: String?
     ): User {
+        require(email.isNotBlank()) { "Email cannot be empty for OAuth user" }
+
         // Check if OAuth account exists
         val existingAccount = oauthAccountRepository.findByProvider(provider, providerUserId)
         if (existingAccount != null) {
