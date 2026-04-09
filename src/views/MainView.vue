@@ -170,7 +170,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive } from 'vue';
+import { ref, computed, reactive, onMounted } from 'vue';
 import { useStorage } from '../composables/useStorage';
 import { useNotes } from '../composables/useNotes';
 import { useSearch } from '../composables/useSearch';
@@ -192,7 +192,12 @@ const { user, logout, isDemoUser } = useAuth();
 const showProfileModal = ref(false);
 
 // Инициализация темы
-const { themeMode, cycleTheme } = useTheme();
+const { themeMode, cycleTheme, initialize } = useTheme();
+
+// Инициализируем тему при монтировании компонента
+onMounted(() => {
+  initialize();
+});
 
 const themeTooltip = computed(() => {
   switch (themeMode.value) {
