@@ -249,55 +249,53 @@ const handleCancel = () => {
   cursor: not-allowed;
 }
 
-@media (prefers-color-scheme: dark) {
-  .section-title {
-    color: #f9fafb;
-  }
+:global(.dark) .section-title {
+  color: #f9fafb;
+}
 
-  .form-label {
-    color: #d1d5db;
-  }
+:global(.dark) .form-label {
+  color: #d1d5db;
+}
 
-  .form-input {
-    background: #1f2937;
-    border-color: #374151;
-    color: #f9fafb;
-  }
+:global(.dark) .form-input {
+  background: #1f2937;
+  border-color: #374151;
+  color: #f9fafb;
+}
 
-  .form-input:focus {
-    border-color: #60a5fa;
-    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
-  }
+:global(.dark) .form-input:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+}
 
-  .form-input:disabled {
-    background: #111827;
-    color: #9ca3af;
-  }
+:global(.dark) .form-input:disabled {
+  background: #111827;
+  color: #9ca3af;
+}
 
-  .help-text {
-    color: #9ca3af;
-  }
+:global(.dark) .help-text {
+  color: #9ca3af;
+}
 
-  .error-banner {
-    background: #7f1d1d;
-    border-color: #991b1b;
-    color: #fecaca;
-  }
+:global(.dark) .error-banner {
+  background: #7f1d1d;
+  border-color: #991b1b;
+  color: #fecaca;
+}
 
-  .success-banner {
-    background: #065f46;
-    border-color: #047857;
-    color: #d1fae5;
-  }
+:global(.dark) .success-banner {
+  background: #065f46;
+  border-color: #047857;
+  color: #d1fae5;
+}
 
-  .btn-cancel {
-    background: #1f2937;
-    color: #d1d5db;
-    border-color: #374151;
-  }
+:global(.dark) .btn-cancel {
+  background: #1f2937;
+  color: #d1d5db;
+  border-color: #374151;
+}
 
-  .btn-cancel:hover:not(:disabled) {
-    background: #374151;
-  }
+:global(.dark) .btn-cancel:hover:not(:disabled) {
+  background: #374151;
 }
 </style>

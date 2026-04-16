@@ -57,16 +57,14 @@ defineEmits<{
   font-weight: 600;
 }
 
-@media (prefers-color-scheme: dark) {
-  .demo-button {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    border-color: #d97706;
-    color: #fef3c7;
-  }
+:global(.dark) .demo-button {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  border-color: #d97706;
+  color: #fef3c7;
+}
 
-  .demo-button:hover {
-    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-    border-color: #f59e0b;
-  }
+:global(.dark) .demo-button:hover {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  border-color: #f59e0b;
 }
 </style>

@@ -207,30 +207,28 @@ watch(() => props.isOpen, (isOpen) => {
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  .modal-container {
-    background: #1f2937;
-  }
+:global(.dark) .modal-container {
+  background: #1f2937;
+}
 
-  .close-button {
-    background: #1f2937;
-    border-color: #374151;
-    color: #9ca3af;
-  }
+:global(.dark) .close-button {
+  background: #1f2937;
+  border-color: #374151;
+  color: #9ca3af;
+}
 
-  .close-button:hover {
-    background: #374151;
-    color: #f9fafb;
-  }
+:global(.dark) .close-button:hover {
+  background: #374151;
+  color: #f9fafb;
+}
 
-  .content-area {
-    background: #1f2937;
-  }
+:global(.dark) .content-area {
+  background: #1f2937;
+}
 
-  @media (max-width: 768px) {
-    .close-button {
-      background: rgba(31, 41, 55, 0.9);
-    }
+@media (max-width: 768px) {
+  :global(.dark) .close-button {
+    background: rgba(31, 41, 55, 0.9);
   }
 }
 </style>

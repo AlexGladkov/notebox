@@ -197,32 +197,30 @@ watch(
 }
 
 /* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .modal-content {
-    background: #1f2937;
-  }
+:global(.dark) .modal-content {
+  background: #1f2937;
+}
 
-  .modal-title {
-    color: #f3f4f6;
-  }
+:global(.dark) .modal-title {
+  color: #f3f4f6;
+}
 
-  .modal-input {
-    background: #374151;
-    border-color: #4b5563;
-    color: #f3f4f6;
-  }
+:global(.dark) .modal-input {
+  background: #374151;
+  border-color: #4b5563;
+  color: #f3f4f6;
+}
 
-  .modal-input:focus {
-    border-color: #3b82f6;
-  }
+:global(.dark) .modal-input:focus {
+  border-color: #3b82f6;
+}
 
-  .btn-secondary {
-    background-color: #374151;
-    color: #e5e7eb;
-  }
+:global(.dark) .btn-secondary {
+  background-color: #374151;
+  color: #e5e7eb;
+}
 
-  .btn-secondary:hover {
-    background-color: #4b5563;
-  }
+:global(.dark) .btn-secondary:hover {
+  background-color: #4b5563;
 }
 </style>

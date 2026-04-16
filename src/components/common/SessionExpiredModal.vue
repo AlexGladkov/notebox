@@ -109,22 +109,20 @@ function handleLogin() {
   transform: translateY(0);
 }
 
-@media (prefers-color-scheme: dark) {
-  .modal-content {
-    background: #1f1f1f;
-  }
+:global(.dark) .modal-content {
+  background: #1f1f1f;
+}
 
-  .modal-title {
-    color: #ffffff;
-  }
+:global(.dark) .modal-title {
+  color: #ffffff;
+}
 
-  .modal-text {
-    color: #9ca3af;
-  }
+:global(.dark) .modal-text {
+  color: #9ca3af;
+}
 
-  .modal-icon {
-    background: #78350f;
-    color: #fbbf24;
-  }
+:global(.dark) .modal-icon {
+  background: #78350f;
+  color: #fbbf24;
 }
 </style>

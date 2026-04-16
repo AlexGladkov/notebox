@@ -85,19 +85,17 @@ const providerName = computed(() => {
   color: #fff;
 }
 
-@media (prefers-color-scheme: dark) {
-  .oauth-button {
-    background: #2d2d2d;
-    border-color: #404040;
-  }
+:global(.dark) .oauth-button {
+  background: #2d2d2d;
+  border-color: #404040;
+}
 
-  .oauth-button:hover {
-    background: #3a3a3a;
-    border-color: #505050;
-  }
+:global(.dark) .oauth-button:hover {
+  background: #3a3a3a;
+  border-color: #505050;
+}
 
-  .oauth-text {
-    color: #e5e5e5;
-  }
+:global(.dark) .oauth-text {
+  color: #e5e5e5;
 }
 </style>

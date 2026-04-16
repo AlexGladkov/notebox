@@ -44,14 +44,12 @@ onMounted(async () => {
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  .loading-screen {
-    background: #1a1a1a;
-  }
+:global(.dark) .loading-screen {
+  background: #1a1a1a;
+}
 
-  .loading-spinner {
-    border-color: #404040;
-    border-top-color: #667eea;
-  }
+:global(.dark) .loading-spinner {
+  border-color: #404040;
+  border-top-color: #667eea;
 }
 </style>

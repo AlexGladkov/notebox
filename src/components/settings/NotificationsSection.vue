@@ -61,21 +61,19 @@
   margin: 0;
 }
 
-@media (prefers-color-scheme: dark) {
-  .section-title {
-    color: #f9fafb;
-  }
+:global(.dark) .section-title {
+  color: #f9fafb;
+}
 
-  .placeholder-icon {
-    color: #4b5563;
-  }
+:global(.dark) .placeholder-icon {
+  color: #4b5563;
+}
 
-  .placeholder-text {
-    color: #9ca3af;
-  }
+:global(.dark) .placeholder-text {
+  color: #9ca3af;
+}
 
-  .placeholder-desc {
-    color: #6b7280;
-  }
+:global(.dark) .placeholder-desc {
+  color: #6b7280;
 }
 </style>

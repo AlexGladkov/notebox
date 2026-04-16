@@ -244,27 +244,25 @@ const removeAvatar = () => {
   margin: 0;
 }
 
-@media (prefers-color-scheme: dark) {
-  .avatar-container {
-    background: #374151;
-    border-color: #4b5563;
-  }
+:global(.dark) .avatar-container {
+  background: #374151;
+  border-color: #4b5563;
+}
 
-  .avatar-placeholder {
-    color: #9ca3af;
-  }
+:global(.dark) .avatar-placeholder {
+  color: #9ca3af;
+}
 
-  .btn-secondary {
-    background: #1f2937;
-    border-color: #7f1d1d;
-  }
+:global(.dark) .btn-secondary {
+  background: #1f2937;
+  border-color: #7f1d1d;
+}
 
-  .btn-secondary:hover:not(:disabled) {
-    background: #374151;
-  }
+:global(.dark) .btn-secondary:hover:not(:disabled) {
+  background: #374151;
+}
 
-  .help-text {
-    color: #9ca3af;
-  }
+:global(.dark) .help-text {
+  color: #9ca3af;
 }
 </style>

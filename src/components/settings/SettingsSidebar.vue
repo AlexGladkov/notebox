@@ -200,45 +200,43 @@ const sections: SettingsSection[] = [
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  .settings-sidebar {
-    background: #111827;
-    border-right-color: #374151;
-  }
+:global(.dark) .settings-sidebar {
+  background: #111827;
+  border-right-color: #374151;
+}
 
-  .sidebar-header {
-    border-bottom-color: #374151;
-  }
+:global(.dark) .sidebar-header {
+  border-bottom-color: #374151;
+}
 
-  .sidebar-title {
-    color: #f9fafb;
-  }
+:global(.dark) .sidebar-title {
+  color: #f9fafb;
+}
 
-  .nav-item {
-    color: #9ca3af;
-  }
+:global(.dark) .nav-item {
+  color: #9ca3af;
+}
 
-  .nav-item:hover {
-    background: #1f2937;
-    color: #f9fafb;
-  }
+:global(.dark) .nav-item:hover {
+  background: #1f2937;
+  color: #f9fafb;
+}
 
-  .nav-item.active {
-    background: #1e3a8a;
-    color: #60a5fa;
-  }
+:global(.dark) .nav-item.active {
+  background: #1e3a8a;
+  color: #60a5fa;
+}
 
-  .nav-divider {
-    background: #374151;
-  }
+:global(.dark) .nav-divider {
+  background: #374151;
+}
 
-  .logout-item {
-    color: #f87171;
-  }
+:global(.dark) .logout-item {
+  color: #f87171;
+}
 
-  .logout-item:hover {
-    background: #7f1d1d;
-    color: #fecaca;
-  }
+:global(.dark) .logout-item:hover {
+  background: #7f1d1d;
+  color: #fecaca;
 }
 </style>

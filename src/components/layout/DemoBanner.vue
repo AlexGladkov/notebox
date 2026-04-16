@@ -83,25 +83,23 @@ const handleLogout = async () => {
   transform: translateY(0);
 }
 
-@media (prefers-color-scheme: dark) {
-  .demo-banner {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    border-bottom-color: #d97706;
-  }
+:global(.dark) .demo-banner {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  border-bottom-color: #d97706;
+}
 
-  .demo-banner-icon,
-  .demo-banner-text {
-    color: #fef3c7;
-  }
+:global(.dark) .demo-banner-icon,
+:global(.dark) .demo-banner-text {
+  color: #fef3c7;
+}
 
-  .demo-banner-logout {
-    background: rgba(254, 243, 199, 0.1);
-    border-color: #fef3c7;
-    color: #fef3c7;
-  }
+:global(.dark) .demo-banner-logout {
+  background: rgba(254, 243, 199, 0.1);
+  border-color: #fef3c7;
+  color: #fef3c7;
+}
 
-  .demo-banner-logout:hover {
-    background: rgba(254, 243, 199, 0.2);
-  }
+:global(.dark) .demo-banner-logout:hover {
+  background: rgba(254, 243, 199, 0.2);
 }
 </style>

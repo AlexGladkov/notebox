@@ -122,17 +122,15 @@ async function handleDemoLogin() {
   font-size: 14px;
 }
 
-@media (prefers-color-scheme: dark) {
-  .login-card {
-    background: #1f1f1f;
-  }
+:global(.dark) .login-card {
+  background: #1f1f1f;
+}
 
-  .login-title {
-    color: #ffffff;
-  }
+:global(.dark) .login-title {
+  color: #ffffff;
+}
 
-  .login-subtitle {
-    color: #9ca3af;
-  }
+:global(.dark) .login-subtitle {
+  color: #9ca3af;
 }
 </style>
