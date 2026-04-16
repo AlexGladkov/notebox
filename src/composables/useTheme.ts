@@ -99,8 +99,9 @@ export function useTheme() {
       applyTheme();
     });
 
-    // Сохраняем выбор пользователя
+    // Применяем тему при любом изменении режима (включая случаи когда effectiveTheme не меняется)
     watch(themeMode, () => {
+      applyTheme();
       saveTheme();
     });
 
