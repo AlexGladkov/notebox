@@ -206,28 +206,31 @@ watch(() => props.isOpen, (isOpen) => {
     backdrop-filter: blur(8px);
   }
 }
+</style>
 
-:global(.dark) .modal-container {
+<style>
+/* Dark theme styles - unscoped to work with .dark class */
+.dark .modal-container {
   background: #1f2937;
 }
 
-:global(.dark) .close-button {
+.dark .close-button {
   background: #1f2937;
   border-color: #374151;
   color: #9ca3af;
 }
 
-:global(.dark) .close-button:hover {
+.dark .close-button:hover {
   background: #374151;
   color: #f9fafb;
 }
 
-:global(.dark) .content-area {
+.dark .content-area {
   background: #1f2937;
 }
 
 @media (max-width: 768px) {
-  :global(.dark) .close-button {
+  .dark .close-button {
     background: rgba(31, 41, 55, 0.9);
   }
 }

@@ -244,25 +244,29 @@ const removeAvatar = () => {
   margin: 0;
 }
 
-:global(.dark) .avatar-container {
+
+
+
+
+</style>
+
+<style>
+/* Dark theme styles - unscoped */
+.dark .avatar-container {
   background: #374151;
   border-color: #4b5563;
 }
-
-:global(.dark) .avatar-placeholder {
+.dark .avatar-placeholder {
   color: #9ca3af;
 }
-
-:global(.dark) .btn-secondary {
+.dark .btn-secondary {
   background: #1f2937;
   border-color: #7f1d1d;
 }
-
-:global(.dark) .btn-secondary:hover:not(:disabled) {
+.dark .btn-secondary:hover:not(:disabled) {
   background: #374151;
 }
-
-:global(.dark) .help-text {
+.dark .help-text {
   color: #9ca3af;
 }
 </style>

@@ -228,52 +228,56 @@ const selectTheme = async (theme: ThemeMode) => {
   font-size: 14px;
 }
 
-:global(.dark) .section-title {
+
+
+
+
+
+
+
+
+
+
+</style>
+
+<style>
+/* Dark theme styles - unscoped */
+.dark .section-title {
   color: #f9fafb;
 }
-
-:global(.dark) .form-label {
+.dark .form-label {
   color: #d1d5db;
 }
-
-:global(.dark) .theme-card {
+.dark .theme-card {
   background: #1f2937;
   border-color: #374151;
 }
-
-:global(.dark) .theme-card:hover {
+.dark .theme-card:hover {
   border-color: #4b5563;
   background: #374151;
 }
-
-:global(.dark) .theme-card.active {
+.dark .theme-card.active {
   border-color: #60a5fa;
   background: #1e3a8a;
 }
-
-:global(.dark) .theme-icon {
+.dark .theme-icon {
   background: #374151;
   color: #9ca3af;
 }
-
-:global(.dark) .theme-card.active .theme-icon {
+.dark .theme-card.active .theme-icon {
   background: #1e40af;
   color: #60a5fa;
 }
-
-:global(.dark) .theme-name {
+.dark .theme-name {
   color: #f9fafb;
 }
-
-:global(.dark) .theme-desc {
+.dark .theme-desc {
   color: #9ca3af;
 }
-
-:global(.dark) .check-icon {
+.dark .check-icon {
   color: #60a5fa;
 }
-
-:global(.dark) .error-banner {
+.dark .error-banner {
   background: #7f1d1d;
   border-color: #991b1b;
   color: #fecaca;

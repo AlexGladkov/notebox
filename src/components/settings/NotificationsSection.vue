@@ -61,19 +61,23 @@
   margin: 0;
 }
 
-:global(.dark) .section-title {
+
+
+
+</style>
+
+<style>
+/* Dark theme styles - unscoped */
+.dark .section-title {
   color: #f9fafb;
 }
-
-:global(.dark) .placeholder-icon {
+.dark .placeholder-icon {
   color: #4b5563;
 }
-
-:global(.dark) .placeholder-text {
+.dark .placeholder-text {
   color: #9ca3af;
 }
-
-:global(.dark) .placeholder-desc {
+.dark .placeholder-desc {
   color: #6b7280;
 }
 </style>

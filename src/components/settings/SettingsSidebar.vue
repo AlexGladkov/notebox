@@ -199,43 +199,46 @@ const sections: SettingsSection[] = [
     margin: 0 8px;
   }
 }
+</style>
 
-:global(.dark) .settings-sidebar {
+<style>
+/* Dark theme styles - unscoped */
+.dark .settings-sidebar {
   background: #111827;
   border-right-color: #374151;
 }
 
-:global(.dark) .sidebar-header {
+.dark .sidebar-header {
   border-bottom-color: #374151;
 }
 
-:global(.dark) .sidebar-title {
+.dark .sidebar-title {
   color: #f9fafb;
 }
 
-:global(.dark) .nav-item {
+.dark .nav-item {
   color: #9ca3af;
 }
 
-:global(.dark) .nav-item:hover {
+.dark .nav-item:hover {
   background: #1f2937;
   color: #f9fafb;
 }
 
-:global(.dark) .nav-item.active {
+.dark .nav-item.active {
   background: #1e3a8a;
   color: #60a5fa;
 }
 
-:global(.dark) .nav-divider {
+.dark .nav-divider {
   background: #374151;
 }
 
-:global(.dark) .logout-item {
+.dark .logout-item {
   color: #f87171;
 }
 
-:global(.dark) .logout-item:hover {
+.dark .logout-item:hover {
   background: #7f1d1d;
   color: #fecaca;
 }

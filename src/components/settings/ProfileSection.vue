@@ -249,53 +249,57 @@ const handleCancel = () => {
   cursor: not-allowed;
 }
 
-:global(.dark) .section-title {
+
+
+
+
+
+
+
+
+
+</style>
+
+<style>
+/* Dark theme styles - unscoped */
+.dark .section-title {
   color: #f9fafb;
 }
-
-:global(.dark) .form-label {
+.dark .form-label {
   color: #d1d5db;
 }
-
-:global(.dark) .form-input {
+.dark .form-input {
   background: #1f2937;
   border-color: #374151;
   color: #f9fafb;
 }
-
-:global(.dark) .form-input:focus {
+.dark .form-input:focus {
   border-color: #60a5fa;
   box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
 }
-
-:global(.dark) .form-input:disabled {
+.dark .form-input:disabled {
   background: #111827;
   color: #9ca3af;
 }
-
-:global(.dark) .help-text {
+.dark .help-text {
   color: #9ca3af;
 }
-
-:global(.dark) .error-banner {
+.dark .error-banner {
   background: #7f1d1d;
   border-color: #991b1b;
   color: #fecaca;
 }
-
-:global(.dark) .success-banner {
+.dark .success-banner {
   background: #065f46;
   border-color: #047857;
   color: #d1fae5;
 }
-
-:global(.dark) .btn-cancel {
+.dark .btn-cancel {
   background: #1f2937;
   color: #d1d5db;
   border-color: #374151;
 }
-
-:global(.dark) .btn-cancel:hover:not(:disabled) {
+.dark .btn-cancel:hover:not(:disabled) {
   background: #374151;
 }
 </style>
