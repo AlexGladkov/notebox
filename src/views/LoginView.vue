@@ -122,15 +122,24 @@ async function handleDemoLogin() {
   font-size: 14px;
 }
 
-:global(.dark) .login-card {
+</style>
+
+<style>
+/* Dark theme styles (unscoped) */
+.dark .login-card {
   background: #1f1f1f;
 }
 
-:global(.dark) .login-title {
+.dark .login-title {
   color: #ffffff;
 }
 
-:global(.dark) .login-subtitle {
+.dark .login-subtitle {
   color: #9ca3af;
+}
+
+.dark .error-message {
+  background: #3f1f1f;
+  color: #ff6b6b;
 }
 </style>
