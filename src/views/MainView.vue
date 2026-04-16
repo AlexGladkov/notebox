@@ -191,13 +191,8 @@ import DemoBanner from '../components/layout/DemoBanner.vue';
 const { user, logout, isDemoUser } = useAuth();
 const showProfileModal = ref(false);
 
-// Инициализация темы
-const { themeMode, cycleTheme, initialize } = useTheme();
-
-// Инициализируем тему при монтировании компонента
-onMounted(() => {
-  initialize();
-});
+// Переключатель темы
+const { themeMode, cycleTheme } = useTheme();
 
 const themeTooltip = computed(() => {
   switch (themeMode.value) {
