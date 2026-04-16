@@ -94,14 +94,13 @@ export function useTheme() {
     initSystemThemeListener();
     applyTheme();
 
-    // Следим за изменениями темы и применяем их
-    watch([effectiveTheme], () => {
+    // Следим за изменениями эффективной темы и применяем их
+    watch(effectiveTheme, () => {
       applyTheme();
     });
 
-    // Применяем тему при любом изменении режима (включая случаи когда effectiveTheme не меняется)
+    // Сохраняем тему при изменении режима
     watch(themeMode, () => {
-      applyTheme();
       saveTheme();
     });
 
