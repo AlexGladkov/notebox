@@ -235,9 +235,6 @@ const selectTheme = async (theme: ThemeMode) => {
 
 
 
-
-
-
 </style>
 
 <style>
