@@ -131,7 +131,6 @@ export function calculateLayout(
   }
 
   const nodes = initializeNodePositions(nodeIds, cfg.width, cfg.height);
-  const edgeSet = new Set(edges.map(e => `${e.source}-${e.target}`));
 
   // Создаем граф смежности для быстрого поиска соседей
   const adjacency = new Map<string, Set<string>>();
@@ -157,6 +156,8 @@ export function calculateLayout(
     });
 
     // Применяем силы отталкивания между всеми парами узлов
+    // NOTE: O(n²) алгоритм - для графов >500 узлов рекомендуется использовать
+    // Barnes-Hut quadtree оптимизацию для достижения O(n log n)
     for (let i = 0; i < nodeArray.length; i++) {
       for (let j = i + 1; j < nodeArray.length; j++) {
         const node1 = nodeArray[i];

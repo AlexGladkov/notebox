@@ -88,7 +88,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { notesApi } from '../api';
 import type { Note } from '../types';
@@ -100,10 +100,11 @@ const router = useRouter();
 const notes = ref<Note[]>([]);
 const canvasRef = ref<InstanceType<typeof GraphCanvas> | null>(null);
 
-// Определяем темную тему
-const isDarkMode = computed(() => {
-  return document.documentElement.classList.contains('dark');
-});
+// Определяем темную тему с реактивным отслеживанием
+const isDarkMode = ref(document.documentElement.classList.contains('dark'));
+
+// Наблюдаем за изменениями темы
+let themeObserver: MutationObserver | null = null;
 
 // Используем composable для графа
 const layoutWidth = ref(1200);
@@ -117,11 +118,7 @@ async function loadNotes() {
   try {
     const allNotes = await notesApi.getAll();
     notes.value = allNotes;
-
-    // Пересчитываем layout после загрузки
-    setTimeout(() => {
-      recalculateLayout();
-    }, 100);
+    recalculateLayout();
   } catch (err) {
     console.error('Failed to load notes:', err);
   }
@@ -203,5 +200,21 @@ function getConnectionsWord(count: number): string {
 
 onMounted(() => {
   loadNotes();
+
+  // Наблюдаем за изменениями класса 'dark' на documentElement
+  themeObserver = new MutationObserver(() => {
+    isDarkMode.value = document.documentElement.classList.contains('dark');
+  });
+
+  themeObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['class'],
+  });
+});
+
+onUnmounted(() => {
+  if (themeObserver) {
+    themeObserver.disconnect();
+  }
 });
 </script>

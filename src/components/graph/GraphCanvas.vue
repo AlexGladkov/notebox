@@ -118,8 +118,10 @@ function render() {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
+  const rect = canvas.getBoundingClientRect();
+
   // Очищаем canvas
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, rect.width, rect.height);
 
   // Сохраняем состояние контекста
   ctx.save();
@@ -130,10 +132,16 @@ function render() {
 
   const edgeColors = props.isDarkMode ? EDGE_COLORS_DARK : EDGE_COLORS;
 
+  // Создаем Map для быстрого доступа к узлам
+  const nodeMap = new Map<string, GraphNode>();
+  props.graphData.nodes.forEach(node => {
+    nodeMap.set(node.id, node);
+  });
+
   // Рисуем рёбра
   props.graphData.edges.forEach(edge => {
-    const sourceNode = props.graphData.nodes.find(n => n.id === edge.source);
-    const targetNode = props.graphData.nodes.find(n => n.id === edge.target);
+    const sourceNode = nodeMap.get(edge.source);
+    const targetNode = nodeMap.get(edge.target);
 
     if (!sourceNode || !targetNode) return;
 

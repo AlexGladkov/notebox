@@ -2,19 +2,17 @@
  * Извлекает ID страниц из HTML-контента заметки
  * Ищет ссылки формата <a href="/notes/{noteId}">
  */
-export function extractNoteLinks(content: string): string[] {
-  if (!content) return [];
+export function extractNoteLinks(content: string | null | undefined): string[] {
+  if (!content || typeof content !== 'string') return [];
 
   const linkPattern = /href="\/notes\/([a-f0-9-]+)"/g;
-  const links: string[] = [];
+  const linkSet = new Set<string>();
   let match;
 
   while ((match = linkPattern.exec(content)) !== null) {
     const noteId = match[1];
-    if (!links.includes(noteId)) {
-      links.push(noteId);
-    }
+    linkSet.add(noteId);
   }
 
-  return links;
+  return Array.from(linkSet);
 }
