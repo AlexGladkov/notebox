@@ -174,7 +174,10 @@ class DatabaseRepository {
         RecordsTable.deleteWhere { RecordsTable.id eq id } > 0
     }
 
-    // Cleanup operations
+    /**
+     * Удаляет ВСЕ базы данных, колонки и записи в системе.
+     * ВНИМАНИЕ: Используется только для сброса демо-данных!
+     */
     fun deleteAllDatabases(): Int = transaction {
         // Удаляем в правильном порядке: записи -> колонки -> базы данных
         RecordsTable.deleteAll()

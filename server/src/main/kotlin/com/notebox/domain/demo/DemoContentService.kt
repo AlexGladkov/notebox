@@ -24,6 +24,13 @@ class DemoContentService(
 
     /**
      * Очищает все демо-данные (заметки и базы данных)
+     *
+     * ВНИМАНИЕ: Этот метод удаляет ВСЕ заметки и базы данных в системе!
+     * Это безопасно только если:
+     * - Система используется исключительно в демо-режиме, ИЛИ
+     * - Система является однопользовательской (self-hosted)
+     *
+     * Если в системе есть обычные пользователи через OAuth, этот метод удалит их данные!
      */
     fun clearDemoData() {
         logger.info("Clearing demo data...")
@@ -177,7 +184,7 @@ class DemoContentService(
             )
 
             logger.info("Demo content created successfully: " +
-                    "${5} notes, ${1} database with ${4} records")
+                    "5 notes, 1 database with 4 records")
         } catch (e: Exception) {
             logger.error("Error creating demo content", e)
             // В случае ошибки откатываемся к пустому состоянию

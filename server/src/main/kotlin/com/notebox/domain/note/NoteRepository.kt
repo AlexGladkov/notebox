@@ -181,6 +181,10 @@ class NoteRepository {
         children.size
     }
 
+    /**
+     * Удаляет ВСЕ заметки в системе.
+     * ВНИМАНИЕ: Используется только для сброса демо-данных!
+     */
     fun deleteAll(): Int = transaction {
         NotesTable.deleteAll()
     }
