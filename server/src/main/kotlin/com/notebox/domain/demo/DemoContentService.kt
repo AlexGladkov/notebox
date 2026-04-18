@@ -1,5 +1,6 @@
 package com.notebox.domain.demo
 
+import com.notebox.domain.auth.UserRepository
 import com.notebox.domain.database.DatabaseRepository
 import com.notebox.domain.database.DatabaseService
 import com.notebox.domain.note.NoteRepository
@@ -18,23 +19,39 @@ class DemoContentService(
     private val noteService: NoteService,
     private val noteRepository: NoteRepository,
     private val databaseService: DatabaseService,
-    private val databaseRepository: DatabaseRepository
+    private val databaseRepository: DatabaseRepository,
+    private val userRepository: UserRepository
 ) {
     private val logger = LoggerFactory.getLogger(DemoContentService::class.java)
+
+    companion object {
+        private const val DEMO_EMAIL = "demo@notebox.app"
+    }
 
     /**
      * Очищает все демо-данные (заметки и базы данных)
      *
-     * ВНИМАНИЕ: Этот метод удаляет ВСЕ заметки и базы данных в системе!
-     * Это безопасно только если:
-     * - Система используется исключительно в демо-режиме, ИЛИ
-     * - Система является однопользовательской (self-hosted)
-     *
-     * Если в системе есть обычные пользователи через OAuth, этот метод удалит их данные!
+     * ВАЖНО: Этот метод удаляет ВСЕ заметки и базы данных в системе.
+     * Безопасность обеспечивается проверкой: в системе должен быть только демо-пользователь.
+     * Если есть другие пользователи - выбрасывается исключение.
      */
     fun clearDemoData() {
         logger.info("Clearing demo data...")
         try {
+            // ПРОВЕРКА БЕЗОПАСНОСТИ: убедиться, что в системе только демо-пользователь
+            val allUsers = userRepository.findAll()
+            val nonDemoUsers = allUsers.filter { it.email != DEMO_EMAIL }
+
+            if (nonDemoUsers.isNotEmpty()) {
+                val errorMsg = "SECURITY: Cannot clear demo data - system has ${nonDemoUsers.size} non-demo user(s). " +
+                        "Demo mode should only be used in isolated environments without real users."
+                logger.error(errorMsg)
+                logger.error("Non-demo users: ${nonDemoUsers.map { it.email }}")
+                throw IllegalStateException(errorMsg)
+            }
+
+            logger.info("Safety check passed: only demo user exists in system")
+
             // Удаляем в правильном порядке: сначала базы данных (с каскадным удалением), потом заметки
             databaseRepository.deleteAllDatabases()
             noteRepository.deleteAll()
@@ -188,7 +205,13 @@ class DemoContentService(
         } catch (e: Exception) {
             logger.error("Error creating demo content", e)
             // В случае ошибки откатываемся к пустому состоянию
-            clearDemoData()
+            try {
+                logger.warn("Rolling back: clearing partially created demo data")
+                clearDemoData()
+            } catch (cleanupError: Exception) {
+                logger.error("Failed to cleanup after demo content creation error", cleanupError)
+                // Подавляем ошибку очистки, чтобы не скрыть исходную ошибку
+            }
             throw e
         }
     }
