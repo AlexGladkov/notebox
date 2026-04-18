@@ -71,8 +71,32 @@
           </div>
         </div>
 
-        <!-- Переключатель темы -->
-        <div class="p-4 border-t border-gray-200 dark:border-gray-700">
+        <!-- Кнопки управления -->
+        <div class="p-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+          <!-- Кнопка графа -->
+          <button
+            @click="openGraph"
+            class="w-full flex items-center gap-3 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            title="Граф связей страниц"
+            aria-label="Открыть граф связей"
+          >
+            <svg
+              class="w-5 h-5 text-gray-600 dark:text-gray-300"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+              />
+            </svg>
+            <span class="text-sm text-gray-700 dark:text-gray-300">Граф связей</span>
+          </button>
+
+          <!-- Переключатель темы -->
           <button
             @click="cycleTheme"
             class="w-full flex items-center gap-3 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
@@ -171,6 +195,7 @@
 
 <script setup lang="ts">
 import { ref, computed, reactive, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { useStorage } from '../composables/useStorage';
 import { useNotes } from '../composables/useNotes';
 import { useSearch } from '../composables/useSearch';
@@ -187,12 +212,20 @@ import UserProfile from '../components/auth/UserProfile.vue';
 import SettingsModal from '../components/settings/SettingsModal.vue';
 import DemoBanner from '../components/layout/DemoBanner.vue';
 
+// Router
+const router = useRouter();
+
 // Auth
 const { user, logout, isDemoUser } = useAuth();
 const showProfileModal = ref(false);
 
 // Переключатель темы
 const { themeMode, cycleTheme } = useTheme();
+
+// Функция открытия графа
+const openGraph = () => {
+  router.push('/graph');
+};
 
 const themeTooltip = computed(() => {
   switch (themeMode.value) {
