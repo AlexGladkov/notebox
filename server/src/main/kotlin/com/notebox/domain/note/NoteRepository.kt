@@ -181,6 +181,10 @@ class NoteRepository {
         children.size
     }
 
+    fun deleteAll(): Int = transaction {
+        NotesTable.deleteAll()
+    }
+
     private fun toNote(row: ResultRow) = Note(
         id = row[NotesTable.id],
         title = row[NotesTable.title],

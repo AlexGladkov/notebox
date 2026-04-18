@@ -1,5 +1,6 @@
 package com.notebox.domain.auth
 
+import com.notebox.domain.demo.DemoContentService
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
@@ -7,6 +8,7 @@ import org.springframework.stereotype.Service
 class DemoAuthProvider(
     private val userService: UserService,
     private val sessionService: SessionService,
+    private val demoContentService: DemoContentService,
     @Value("\${demo.mode.enabled}") private val demoModeEnabled: Boolean
 ) {
     companion object {
@@ -26,6 +28,12 @@ class DemoAuthProvider(
         // Get or create demo user
         val demoUser = userService.findByEmail(DEMO_EMAIL)
             ?: userService.createUser(DEMO_EMAIL, DEMO_NAME, null)
+
+        // Сбросить демо-данные к начальному состоянию
+        demoContentService.clearDemoData()
+
+        // Создать свежий демо-контент
+        demoContentService.createDemoContent()
 
         // Create session for demo user
         val session = sessionService.createSession(demoUser.id)

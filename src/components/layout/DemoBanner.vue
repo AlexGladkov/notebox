@@ -9,7 +9,7 @@
         </svg>
       </div>
       <span class="demo-banner-text">
-        Демо-режим — данные общие для всех
+        Демо-режим — данные сбрасываются при каждом входе
       </span>
       <button class="demo-banner-logout" @click="handleLogout">
         Выйти

@@ -174,6 +174,14 @@ class DatabaseRepository {
         RecordsTable.deleteWhere { RecordsTable.id eq id } > 0
     }
 
+    // Cleanup operations
+    fun deleteAllDatabases(): Int = transaction {
+        // Удаляем в правильном порядке: записи -> колонки -> базы данных
+        RecordsTable.deleteAll()
+        ColumnsTable.deleteAll()
+        CustomDatabasesTable.deleteAll()
+    }
+
     // Helper methods
     private fun toDatabase(row: ResultRow) = CustomDatabase(
         id = row[CustomDatabasesTable.id],
