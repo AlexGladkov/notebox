@@ -4,14 +4,12 @@
 
     <div class="theme-selector">
       <label class="form-label">Тема</label>
-      <div class="theme-options">
-        <button
-          type="button"
-          @click="selectTheme('light')"
-          :class="['theme-card', { active: currentTheme === 'light' }]"
-        >
-          <div class="theme-icon">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+      <!-- Toggle Switch -->
+      <div class="theme-toggle-container">
+        <div class="theme-toggle">
+          <div class="theme-label">
+            <svg class="icon sun-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -19,25 +17,23 @@
                 d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
               />
             </svg>
+            <span>Светлая</span>
           </div>
-          <div class="theme-info">
-            <div class="theme-name">Светлая</div>
-            <div class="theme-desc">Светлая тема</div>
-          </div>
-          <div v-if="currentTheme === 'light'" class="check-icon">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-            </svg>
-          </div>
-        </button>
 
-        <button
-          type="button"
-          @click="selectTheme('dark')"
-          :class="['theme-card', { active: currentTheme === 'dark' }]"
-        >
-          <div class="theme-icon">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button
+            type="button"
+            role="switch"
+            :aria-checked="effectiveTheme === 'dark'"
+            :aria-label="`Переключить на ${effectiveTheme === 'dark' ? 'светлую' : 'тёмную'} тему`"
+            :disabled="currentTheme === 'system'"
+            @click="toggleTheme"
+            :class="['toggle-track', { dark: effectiveTheme === 'dark', disabled: currentTheme === 'system' }]"
+          >
+            <span class="toggle-thumb"></span>
+          </button>
+
+          <div class="theme-label">
+            <svg class="icon moon-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -45,44 +41,25 @@
                 d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
               />
             </svg>
+            <span>Тёмная</span>
           </div>
-          <div class="theme-info">
-            <div class="theme-name">Тёмная</div>
-            <div class="theme-desc">Тёмная тема</div>
-          </div>
-          <div v-if="currentTheme === 'dark'" class="check-icon">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-            </svg>
-          </div>
-        </button>
-
-        <button
-          type="button"
-          @click="selectTheme('system')"
-          :class="['theme-card', { active: currentTheme === 'system' }]"
-        >
-          <div class="theme-icon">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-              />
-            </svg>
-          </div>
-          <div class="theme-info">
-            <div class="theme-name">Системная</div>
-            <div class="theme-desc">Следовать системным настройкам</div>
-          </div>
-          <div v-if="currentTheme === 'system'" class="check-icon">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-            </svg>
-          </div>
-        </button>
+        </div>
       </div>
+
+      <!-- System Theme Checkbox -->
+      <label class="system-theme-option">
+        <input
+          type="checkbox"
+          :checked="currentTheme === 'system'"
+          @change="toggleSystemTheme"
+          class="system-checkbox"
+        />
+        <span class="checkbox-custom"></span>
+        <div class="option-text">
+          <span class="option-label">Использовать системные настройки</span>
+          <span class="option-desc">Автоматически светлая днём, тёмная ночью</span>
+        </div>
+      </label>
     </div>
 
     <div v-if="error" class="error-banner">
@@ -96,17 +73,41 @@ import { ref, watch, onMounted } from 'vue';
 import { useTheme, type ThemeMode } from '../../composables/useTheme';
 import { authStore } from '../../stores/authStore';
 
-const { themeMode, setTheme } = useTheme();
+const { themeMode, effectiveTheme, setTheme } = useTheme();
 const currentTheme = ref<ThemeMode>(themeMode.value);
 const error = ref<string | null>(null);
+const lastManualTheme = ref<'light' | 'dark'>('light');
 
 onMounted(() => {
   currentTheme.value = themeMode.value;
+  if (themeMode.value !== 'system') {
+    lastManualTheme.value = themeMode.value as 'light' | 'dark';
+  }
 });
 
 watch(themeMode, (newTheme) => {
   currentTheme.value = newTheme;
+  if (newTheme !== 'system') {
+    lastManualTheme.value = newTheme as 'light' | 'dark';
+  }
 });
+
+const toggleTheme = () => {
+  if (currentTheme.value === 'system') return;
+
+  const newTheme = effectiveTheme.value === 'dark' ? 'light' : 'dark';
+  selectTheme(newTheme);
+};
+
+const toggleSystemTheme = (event: Event) => {
+  const isChecked = (event.target as HTMLInputElement).checked;
+
+  if (isChecked) {
+    selectTheme('system');
+  } else {
+    selectTheme(lastManualTheme.value);
+  }
+};
 
 const selectTheme = async (theme: ThemeMode) => {
   if (currentTheme.value === theme) return;
@@ -152,71 +153,152 @@ const selectTheme = async (theme: ThemeMode) => {
   margin-bottom: 12px;
 }
 
-.theme-options {
+/* Toggle Switch Container */
+.theme-toggle-container {
+  margin-bottom: 16px;
+}
+
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: #f3f4f6;
+  border-radius: 12px;
+}
+
+.theme-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  min-width: 90px;
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.sun-icon {
+  color: #f59e0b;
+}
+
+.moon-icon {
+  color: #6366f1;
+}
+
+/* Toggle Track */
+.toggle-track {
+  position: relative;
+  width: 56px;
+  height: 28px;
+  background: #d1d5db;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.toggle-track:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.toggle-track.dark {
+  background: #3b82f6;
+}
+
+.toggle-track.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Toggle Thumb */
+.toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 24px;
+  height: 24px;
+  background: white;
+  border-radius: 12px;
+  transition: transform 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-track.dark .toggle-thumb {
+  transform: translateX(28px);
+}
+
+/* System Theme Checkbox */
+.system-theme-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.system-checkbox {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.checkbox-custom {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #d1d5db;
+  border-radius: 4px;
+  background: white;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.system-checkbox:checked + .checkbox-custom {
+  background: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.system-checkbox:checked + .checkbox-custom::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 6px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.system-checkbox:focus + .checkbox-custom {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.option-text {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 2px;
 }
 
-.theme-card {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px;
-  background: white;
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-align: left;
-}
-
-.theme-card:hover {
-  border-color: #d1d5db;
-  background: #f9fafb;
-}
-
-.theme-card.active {
-  border-color: #3b82f6;
-  background: #eff6ff;
-}
-
-.theme-icon {
-  flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f3f4f6;
-  border-radius: 8px;
-  color: #6b7280;
-}
-
-.theme-card.active .theme-icon {
-  background: #dbeafe;
-  color: #3b82f6;
-}
-
-.theme-info {
-  flex: 1;
-}
-
-.theme-name {
-  font-size: 15px;
-  font-weight: 600;
+.option-label {
+  font-size: 14px;
+  font-weight: 500;
   color: #111827;
-  margin-bottom: 2px;
 }
 
-.theme-desc {
+.option-desc {
   font-size: 13px;
   color: #6b7280;
-}
-
-.check-icon {
-  flex-shrink: 0;
-  color: #3b82f6;
 }
 
 .error-banner {
@@ -242,38 +324,45 @@ const selectTheme = async (theme: ThemeMode) => {
 .dark .section-title {
   color: #f9fafb;
 }
+
 .dark .form-label {
   color: #d1d5db;
 }
-.dark .theme-card {
-  background: #1f2937;
-  border-color: #374151;
+
+.dark .theme-toggle {
+  background: #374151;
 }
-.dark .theme-card:hover {
+
+.dark .theme-label {
+  color: #d1d5db;
+}
+
+.dark .toggle-track {
+  background: #4b5563;
+}
+
+.dark .toggle-track.dark {
+  background: #60a5fa;
+}
+
+.dark .checkbox-custom {
+  background: #374151;
   border-color: #4b5563;
-  background: #374151;
 }
-.dark .theme-card.active {
+
+.dark .system-checkbox:checked + .checkbox-custom {
+  background: #60a5fa;
   border-color: #60a5fa;
-  background: #1e3a8a;
 }
-.dark .theme-icon {
-  background: #374151;
-  color: #9ca3af;
-}
-.dark .theme-card.active .theme-icon {
-  background: #1e40af;
-  color: #60a5fa;
-}
-.dark .theme-name {
+
+.dark .option-label {
   color: #f9fafb;
 }
-.dark .theme-desc {
+
+.dark .option-desc {
   color: #9ca3af;
 }
-.dark .check-icon {
-  color: #60a5fa;
-}
+
 .dark .error-banner {
   background: #7f1d1d;
   border-color: #991b1b;
