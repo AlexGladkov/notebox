@@ -76,20 +76,13 @@ import { authStore } from '../../stores/authStore';
 const { themeMode, effectiveTheme, setTheme } = useTheme();
 const currentTheme = ref<ThemeMode>(themeMode.value);
 const error = ref<string | null>(null);
-const lastManualTheme = ref<'light' | 'dark'>('light');
 
 onMounted(() => {
   currentTheme.value = themeMode.value;
-  if (themeMode.value !== 'system') {
-    lastManualTheme.value = themeMode.value as 'light' | 'dark';
-  }
 });
 
 watch(themeMode, (newTheme) => {
   currentTheme.value = newTheme;
-  if (newTheme !== 'system') {
-    lastManualTheme.value = newTheme as 'light' | 'dark';
-  }
 });
 
 const toggleTheme = () => {
@@ -105,7 +98,8 @@ const toggleSystemTheme = (event: Event) => {
   if (isChecked) {
     selectTheme('system');
   } else {
-    selectTheme(lastManualTheme.value);
+    // При отключении системной темы переключаемся на текущую эффективную тему
+    selectTheme(effectiveTheme.value);
   }
 };
 
