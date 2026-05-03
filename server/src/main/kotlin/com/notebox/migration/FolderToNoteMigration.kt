@@ -89,16 +89,19 @@ class FolderToNoteMigration {
     fun migrate(): Boolean = transaction {
         logger.info("Начало миграции папок в страницы...")
 
-        // Проверяем, существует ли колонка folderId
+        // Проверяем, существует ли колонка folderId через information_schema
         val hasFolderIdColumn = try {
-            LegacyNotesTable.select { LegacyNotesTable.folderId eq "test" }
-            true
+            val result = exec("SELECT column_name FROM information_schema.columns WHERE table_name = 'notes' AND column_name = 'folder_id'") { rs ->
+                rs.next()
+            }
+            result == true
         } catch (e: Exception) {
+            logger.error("Ошибка при проверке наличия колонки folder_id: ${e.message}")
             false
         }
 
         if (!hasFolderIdColumn) {
-            logger.info("Миграция уже выполнена (колонка folderId отсутствует)")
+            logger.info("Миграция уже выполнена (колонка folder_id отсутствует)")
             return@transaction false
         }
 

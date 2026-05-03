@@ -43,7 +43,9 @@ class DatabaseInitializer(
         // Выполняем миграцию папок в страницы
         try {
             logger.info("Запуск миграции папок в страницы...")
-            folderToNoteMigration.fullMigration()
+            // Временно отключено для тестирования
+            // folderToNoteMigration.fullMigration()
+            logger.info("Миграция пропущена (отключена для тестирования)")
         } catch (e: Exception) {
             logger.warn("Миграция не выполнена или уже была выполнена ранее: ${e.message}")
         }
