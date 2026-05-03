@@ -69,6 +69,16 @@
               Создайте первую страницу
             </div>
           </div>
+
+          <!-- Фильтр по тегам -->
+          <div v-if="tags.length > 0" class="px-3 py-2 border-t border-gray-200 dark:border-gray-700">
+            <TagFilter
+              :tags="tags"
+              :selected-tag-ids="selectedTagIds"
+              @toggle-tag="toggleTagFilter"
+              @clear-filter="clearTagFilter"
+            />
+          </div>
         </div>
 
         <!-- Кнопки управления -->
@@ -168,9 +178,13 @@
         <div class="flex-1 overflow-hidden">
           <NoteEditor
             :note="currentNote"
+            :available-tags="tags"
             @update-note="handleUpdateNote"
             @note-created="handleNoteCreated"
             @navigate-to-note="handleSelectNote"
+            @add-tag="handleAddTag"
+            @remove-tag="handleRemoveTag"
+            @create-tag="handleCreateTag"
           />
         </div>
       </div>
@@ -202,6 +216,7 @@ import { useSearch } from '../composables/useSearch';
 import { useTheme } from '../composables/useTheme';
 import { useTabs } from '../composables/useTabs';
 import { useAuth } from '../composables/useAuth';
+import { useTags } from '../composables/useTags';
 import { notesApi } from '../api/notes';
 import SearchBar from '../components/SearchBar.vue';
 import NoteTree from '../components/NoteTree.vue';
@@ -211,6 +226,7 @@ import ConfirmDialog from '../components/ConfirmDialog.vue';
 import UserProfile from '../components/auth/UserProfile.vue';
 import SettingsModal from '../components/settings/SettingsModal.vue';
 import DemoBanner from '../components/layout/DemoBanner.vue';
+import TagFilter from '../components/TagFilter.vue';
 
 // Router
 const router = useRouter();
@@ -253,6 +269,15 @@ const {
   expandAllAncestors,
 } = useNotes(notes);
 
+// Теги
+const {
+  tags,
+  loadTags,
+  createTag,
+  setNoteTags,
+  findOrCreateTag,
+} = useTags();
+
 // Система вкладок
 const {
   tabs,
@@ -271,6 +296,9 @@ const {
 const searchQuery = ref('');
 const { searchResults } = useSearch(notes, searchQuery);
 
+// Фильтр по тегам
+const selectedTagIds = ref<string[]>([]);
+
 const confirmDialog = reactive({
   show: false,
   title: '',
@@ -281,10 +309,19 @@ const confirmDialog = reactive({
 const activeNoteId = computed(() => activeTabId.value);
 const currentNote = computed(() => getActiveNote());
 
-const rootNotes = computed(() =>
-  notes.value.filter(n => !n.parentId)
-    .sort((a, b) => a.title.localeCompare(b.title))
-);
+const rootNotes = computed(() => {
+  let filtered = notes.value.filter(n => !n.parentId);
+
+  // Фильтрация по тегам (OR логика - показать заметки с любым из выбранных тегов)
+  if (selectedTagIds.value.length > 0) {
+    filtered = filtered.filter(note => {
+      if (!note.tags || note.tags.length === 0) return false;
+      return note.tags.some(tag => selectedTagIds.value.includes(tag.id));
+    });
+  }
+
+  return filtered.sort((a, b) => a.title.localeCompare(b.title));
+});
 
 function handleSelectNote(noteId: string, forceNewTab = false) {
   const note = getNoteById(noteId);
@@ -374,6 +411,86 @@ async function handleNoteCreated(noteId: string) {
     console.error('Failed to fetch created note:', error);
   }
 }
+
+async function handleAddTag(tagId: string) {
+  if (!currentNote.value) return;
+
+  try {
+    const currentTagIds = currentNote.value.tags?.map(t => t.id) || [];
+    const newTagIds = [...currentTagIds, tagId];
+    await setNoteTags(currentNote.value.id, newTagIds);
+
+    // Обновляем локальную копию заметки
+    const updatedNote = await notesApi.getById(currentNote.value.id);
+    const index = notes.value.findIndex(n => n.id === currentNote.value!.id);
+    if (index !== -1) {
+      notes.value[index] = updatedNote;
+    }
+  } catch (error) {
+    console.error('Не удалось добавить тег:', error);
+  }
+}
+
+async function handleRemoveTag(tagId: string) {
+  if (!currentNote.value) return;
+
+  try {
+    const currentTagIds = currentNote.value.tags?.map(t => t.id) || [];
+    const newTagIds = currentTagIds.filter(id => id !== tagId);
+    await setNoteTags(currentNote.value.id, newTagIds);
+
+    // Обновляем локальную копию заметки
+    const updatedNote = await notesApi.getById(currentNote.value.id);
+    const index = notes.value.findIndex(n => n.id === currentNote.value!.id);
+    if (index !== -1) {
+      notes.value[index] = updatedNote;
+    }
+  } catch (error) {
+    console.error('Не удалось удалить тег:', error);
+  }
+}
+
+async function handleCreateTag(name: string) {
+  if (!currentNote.value) return;
+
+  try {
+    const newTag = await findOrCreateTag(name);
+    const currentTagIds = currentNote.value.tags?.map(t => t.id) || [];
+    const newTagIds = [...currentTagIds, newTag.id];
+    await setNoteTags(currentNote.value.id, newTagIds);
+
+    // Обновляем локальную копию заметки
+    const updatedNote = await notesApi.getById(currentNote.value.id);
+    const index = notes.value.findIndex(n => n.id === currentNote.value!.id);
+    if (index !== -1) {
+      notes.value[index] = updatedNote;
+    }
+  } catch (error) {
+    console.error('Не удалось создать тег:', error);
+  }
+}
+
+function toggleTagFilter(tagId: string) {
+  const index = selectedTagIds.value.indexOf(tagId);
+  if (index > -1) {
+    selectedTagIds.value.splice(index, 1);
+  } else {
+    selectedTagIds.value.push(tagId);
+  }
+}
+
+function clearTagFilter() {
+  selectedTagIds.value = [];
+}
+
+// Загрузка тегов при монтировании
+onMounted(async () => {
+  try {
+    await loadTags();
+  } catch (error) {
+    console.error('Failed to load tags:', error);
+  }
+});
 </script>
 
 <style scoped>

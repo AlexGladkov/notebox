@@ -1,5 +1,8 @@
 package com.notebox.domain.note
 
+import com.notebox.domain.tag.NoteTagsTable
+import com.notebox.domain.tag.Tag
+import com.notebox.domain.tag.TagsTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -191,6 +194,41 @@ class NoteRepository {
      */
     fun deleteAll(): Int = transaction {
         NotesTable.deleteAll()
+    }
+
+    fun findTagsByNoteId(noteId: String): List<Tag> = transaction {
+        (TagsTable innerJoin NoteTagsTable)
+            .select { NoteTagsTable.noteId eq noteId }
+            .map { row ->
+                Tag(
+                    id = row[TagsTable.id],
+                    userId = row[TagsTable.userId],
+                    name = row[TagsTable.name],
+                    color = row[TagsTable.color],
+                    createdAt = row[TagsTable.createdAt]
+                )
+            }
+    }
+
+    fun findTagsForNotes(noteIds: List<String>): Map<String, List<Tag>> = transaction {
+        if (noteIds.isEmpty()) return@transaction emptyMap()
+
+        val tagsForNotes = (TagsTable innerJoin NoteTagsTable)
+            .select { NoteTagsTable.noteId inList noteIds }
+            .groupBy { it[NoteTagsTable.noteId] }
+            .mapValues { (_, rows) ->
+                rows.map { row ->
+                    Tag(
+                        id = row[TagsTable.id],
+                        userId = row[TagsTable.userId],
+                        name = row[TagsTable.name],
+                        color = row[TagsTable.color],
+                        createdAt = row[TagsTable.createdAt]
+                    )
+                }
+            }
+
+        tagsForNotes
     }
 
     private fun toNote(row: ResultRow) = Note(

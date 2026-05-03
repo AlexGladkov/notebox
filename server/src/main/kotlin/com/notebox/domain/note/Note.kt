@@ -1,6 +1,7 @@
 package com.notebox.domain.note
 
 import com.notebox.dto.NoteDto
+import com.notebox.dto.TagDto
 import java.time.Instant
 
 data class Note(
@@ -16,7 +17,7 @@ data class Note(
     val createdAt: Instant,
     val updatedAt: Instant
 ) {
-    fun toDto() = NoteDto(
+    fun toDto(tags: List<TagDto>? = null) = NoteDto(
         id = id,
         title = title,
         content = content,
@@ -27,6 +28,7 @@ data class Note(
         backdropPositionY = backdropPositionY ?: 50,
         color = color,
         createdAt = createdAt.toEpochMilli(),
-        updatedAt = updatedAt.toEpochMilli()
+        updatedAt = updatedAt.toEpochMilli(),
+        tags = tags
     )
 }

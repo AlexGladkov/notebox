@@ -1,3 +1,9 @@
+export interface Tag {
+  id: string;
+  name: string;
+  color: string;
+}
+
 export interface Note {
   id: string;
   title: string;
@@ -11,6 +17,7 @@ export interface Note {
   createdAt: number;
   updatedAt: number;
   isBlockFormat?: boolean;
+  tags?: Tag[];
 }
 
 export interface NoteWithChildren extends Note {

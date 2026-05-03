@@ -16,7 +16,8 @@ data class NoteDto(
     val backdropPositionY: Int?,
     val color: String?,
     val createdAt: Long,
-    val updatedAt: Long
+    val updatedAt: Long,
+    val tags: List<TagDto>? = null
 )
 
 data class CreateNoteRequest(

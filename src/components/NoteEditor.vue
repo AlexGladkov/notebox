@@ -35,6 +35,15 @@
       <div class="text-sm text-gray-500 dark:text-gray-400 mt-2">
         Изменено: {{ formatDate(note.updatedAt) }}
       </div>
+
+      <!-- Теги заметки -->
+      <NoteTags
+        :selected-tag-ids="note.tags?.map(t => t.id) || []"
+        :available-tags="availableTags"
+        @add-tag="handleAddTag"
+        @remove-tag="handleRemoveTag"
+        @create-tag="handleCreateTag"
+      />
     </div>
 
     <div class="flex-1 overflow-visible">
@@ -55,14 +64,16 @@
 
 <script setup lang="ts">
 import { ref, watch, onBeforeUnmount } from 'vue';
-import type { Note } from '../types';
+import type { Note, Tag } from '../types';
 import EmptyState from './EmptyState.vue';
 import BlockEditor from './BlockEditor.vue';
 import NoteCover from './NoteCover.vue';
 import NoteIcon from './NoteIcon.vue';
+import NoteTags from './NoteTags.vue';
 
 const props = defineProps<{
   note: Note | undefined;
+  availableTags: Tag[];
 }>();
 
 const emit = defineEmits<{
@@ -76,6 +87,9 @@ const emit = defineEmits<{
   }];
   noteCreated: [noteId: string];
   navigateToNote: [noteId: string];
+  addTag: [tagId: string];
+  removeTag: [tagId: string];
+  createTag: [name: string];
 }>();
 
 const localTitle = ref('');
@@ -152,6 +166,18 @@ const handleNoteCreated = (noteId: string) => {
 
 const handleNavigateToNote = (noteId: string) => {
   emit('navigateToNote', noteId);
+};
+
+const handleAddTag = (tagId: string) => {
+  emit('addTag', tagId);
+};
+
+const handleRemoveTag = (tagId: string) => {
+  emit('removeTag', tagId);
+};
+
+const handleCreateTag = (name: string) => {
+  emit('createTag', name);
 };
 
 // Cleanup debounce таймера при размонтировании

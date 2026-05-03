@@ -10,19 +10,36 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/api/notes")
 class NoteController(
-    private val noteService: NoteService
+    private val noteService: NoteService,
+    private val noteRepository: NoteRepository
 ) {
 
     @GetMapping
     fun getAllNotes(): ResponseEntity<ApiResponse<List<NoteDto>>> {
-        val notes = noteService.getAllNotes().map { it.toDto() }
-        return ResponseEntity.ok(successResponse(notes))
+        val notes = noteService.getAllNotes()
+        val noteIds = notes.map { it.id }
+        val tagsMap = noteRepository.findTagsForNotes(noteIds)
+
+        val notesWithTags = notes.map { note ->
+            val tags = tagsMap[note.id]?.map { it.toDto() } ?: emptyList()
+            note.toDto(tags)
+        }
+
+        return ResponseEntity.ok(successResponse(notesWithTags))
     }
 
     @GetMapping("/root")
     fun getRootNotes(): ResponseEntity<ApiResponse<List<NoteDto>>> {
-        val notes = noteService.getRootNotes().map { it.toDto() }
-        return ResponseEntity.ok(successResponse(notes))
+        val notes = noteService.getRootNotes()
+        val noteIds = notes.map { it.id }
+        val tagsMap = noteRepository.findTagsForNotes(noteIds)
+
+        val notesWithTags = notes.map { note ->
+            val tags = tagsMap[note.id]?.map { it.toDto() } ?: emptyList()
+            note.toDto(tags)
+        }
+
+        return ResponseEntity.ok(successResponse(notesWithTags))
     }
 
     @GetMapping("/{id}")
@@ -32,7 +49,8 @@ class NoteController(
             ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(errorResponse("NOT_FOUND", "Note not found"))
 
-        return ResponseEntity.ok(successResponse(note.toDto()))
+        val tags = noteRepository.findTagsByNoteId(id).map { it.toDto() }
+        return ResponseEntity.ok(successResponse(note.toDto(tags)))
     }
 
     @PostMapping
@@ -51,8 +69,9 @@ class NoteController(
                 request.backdropPositionY,
                 request.color
             )
+            val tags = noteRepository.findTagsByNoteId(note.id).map { it.toDto() }
             return ResponseEntity.status(HttpStatus.CREATED)
-                .body(successResponse(note.toDto()))
+                .body(successResponse(note.toDto(tags)))
         } catch (e: IllegalArgumentException) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(errorResponse("VALIDATION_ERROR", e.message ?: "Invalid request"))
@@ -82,7 +101,8 @@ class NoteController(
             ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(errorResponse("NOT_FOUND", "Note not found"))
 
-        return ResponseEntity.ok(successResponse(note.toDto()))
+        val tags = noteRepository.findTagsByNoteId(id).map { it.toDto() }
+        return ResponseEntity.ok(successResponse(note.toDto(tags)))
     }
 
     @DeleteMapping("/{id}")
@@ -99,15 +119,31 @@ class NoteController(
     @GetMapping("/{id}/children")
     fun getChildren(@PathVariable id: String): ResponseEntity<ApiResponse<List<NoteDto>>> {
         ValidationUtils.validateUUID(id, "id")
-        val children = noteService.getChildren(id).map { it.toDto() }
-        return ResponseEntity.ok(successResponse(children))
+        val children = noteService.getChildren(id)
+        val noteIds = children.map { it.id }
+        val tagsMap = noteRepository.findTagsForNotes(noteIds)
+
+        val childrenWithTags = children.map { note ->
+            val tags = tagsMap[note.id]?.map { it.toDto() } ?: emptyList()
+            note.toDto(tags)
+        }
+
+        return ResponseEntity.ok(successResponse(childrenWithTags))
     }
 
     @GetMapping("/{id}/path")
     fun getPath(@PathVariable id: String): ResponseEntity<ApiResponse<List<NoteDto>>> {
         ValidationUtils.validateUUID(id, "id")
-        val path = noteService.getAncestorPath(id).map { it.toDto() }
-        return ResponseEntity.ok(successResponse(path))
+        val path = noteService.getAncestorPath(id)
+        val noteIds = path.map { it.id }
+        val tagsMap = noteRepository.findTagsForNotes(noteIds)
+
+        val pathWithTags = path.map { note ->
+            val tags = tagsMap[note.id]?.map { it.toDto() } ?: emptyList()
+            note.toDto(tags)
+        }
+
+        return ResponseEntity.ok(successResponse(pathWithTags))
     }
 
     @PutMapping("/{id}/move")
@@ -123,7 +159,8 @@ class NoteController(
             val note = noteService.moveNote(id, request.parentId)
                 ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(errorResponse("NOT_FOUND", "Note not found"))
-            return ResponseEntity.ok(successResponse(note.toDto()))
+            val tags = noteRepository.findTagsByNoteId(id).map { it.toDto() }
+            return ResponseEntity.ok(successResponse(note.toDto(tags)))
         } catch (e: IllegalArgumentException) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(errorResponse("VALIDATION_ERROR", e.message ?: "Invalid request"))

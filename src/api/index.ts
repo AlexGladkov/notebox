@@ -3,6 +3,7 @@ export { foldersApi } from './folders';
 export { notesApi } from './notes';
 export { databasesApi } from './databases';
 export { filesApi } from './files';
+export { tagsApi } from './tags';
 
 export type {
   CreateFolderRequest,
@@ -27,3 +28,9 @@ export type {
   UploadFileResponse,
   GetFileUrlResponse,
 } from './files';
+
+export type {
+  CreateTagRequest,
+  UpdateTagRequest,
+  SetNoteTagsRequest,
+} from './tags';

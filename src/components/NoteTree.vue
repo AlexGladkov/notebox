@@ -41,6 +41,20 @@
         <span v-if="note.icon" class="note-icon">{{ note.icon }}</span>
         <span class="note-title">{{ note.title || 'Без названия' }}</span>
 
+        <!-- Теги -->
+        <div v-if="note.tags && note.tags.length > 0" class="note-tags">
+          <span
+            v-for="tag in note.tags.slice(0, 2)"
+            :key="tag.id"
+            class="note-tag"
+            :style="{ backgroundColor: tag.color }"
+            :title="tag.name"
+          >
+            {{ tag.name }}
+          </span>
+          <span v-if="note.tags.length > 2" class="more-tags">+{{ note.tags.length - 2 }}</span>
+        </div>
+
         <button
           v-if="hoveredNoteId === note.id"
           @click.stop="$emit('createSubpage', note.id)"
@@ -199,7 +213,6 @@ const handleNoteClick = (noteId: string, event: MouseEvent) => {
 }
 
 .note-title {
-  flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -210,6 +223,40 @@ const handleNoteClick = (noteId: string, event: MouseEvent) => {
 
 .dark .note-title {
   color: #d1d5db;
+}
+
+.note-tags {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 6px;
+  flex-shrink: 0;
+}
+
+.note-tag {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  color: #374151;
+  max-width: 60px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dark .note-tag {
+  color: #e5e7eb;
+}
+
+.more-tags {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.dark .more-tags {
+  color: #9ca3af;
 }
 
 .add-subpage-button {
