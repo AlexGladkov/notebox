@@ -1,5 +1,6 @@
 package com.notebox.domain.note
 
+import com.notebox.dto.NoteDto
 import org.springframework.stereotype.Service
 
 @Service
@@ -149,5 +150,55 @@ class NoteService(
         if (children.isEmpty()) return 0
 
         return 1 + (children.maxOfOrNull { calculateMaxDescendantDepth(it.id) } ?: 0)
+    }
+
+    fun getAllNotesWithTags(): List<NoteDto> {
+        val notes = noteRepository.findAll()
+        val noteIds = notes.map { it.id }
+        val tagsMap = noteRepository.findTagsForNotes(noteIds)
+
+        return notes.map { note ->
+            val tags = tagsMap[note.id]?.map { it.toDto() } ?: emptyList()
+            note.toDto(tags)
+        }
+    }
+
+    fun getRootNotesWithTags(): List<NoteDto> {
+        val notes = noteRepository.findRootNotes()
+        val noteIds = notes.map { it.id }
+        val tagsMap = noteRepository.findTagsForNotes(noteIds)
+
+        return notes.map { note ->
+            val tags = tagsMap[note.id]?.map { it.toDto() } ?: emptyList()
+            note.toDto(tags)
+        }
+    }
+
+    fun getNoteByIdWithTags(id: String): NoteDto? {
+        val note = noteRepository.findById(id) ?: return null
+        val tags = noteRepository.findTagsByNoteId(id).map { it.toDto() }
+        return note.toDto(tags)
+    }
+
+    fun getChildrenWithTags(parentId: String): List<NoteDto> {
+        val children = noteRepository.findByParentId(parentId)
+        val noteIds = children.map { it.id }
+        val tagsMap = noteRepository.findTagsForNotes(noteIds)
+
+        return children.map { note ->
+            val tags = tagsMap[note.id]?.map { it.toDto() } ?: emptyList()
+            note.toDto(tags)
+        }
+    }
+
+    fun getAncestorPathWithTags(noteId: String): List<NoteDto> {
+        val path = noteRepository.getAncestorPath(noteId)
+        val noteIds = path.map { it.id }
+        val tagsMap = noteRepository.findTagsForNotes(noteIds)
+
+        return path.map { note ->
+            val tags = tagsMap[note.id]?.map { it.toDto() } ?: emptyList()
+            note.toDto(tags)
+        }
     }
 }

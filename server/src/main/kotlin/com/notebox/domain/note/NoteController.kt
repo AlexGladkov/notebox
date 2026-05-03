@@ -10,47 +10,29 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/api/notes")
 class NoteController(
-    private val noteService: NoteService,
-    private val noteRepository: NoteRepository
+    private val noteService: NoteService
 ) {
 
     @GetMapping
     fun getAllNotes(): ResponseEntity<ApiResponse<List<NoteDto>>> {
-        val notes = noteService.getAllNotes()
-        val noteIds = notes.map { it.id }
-        val tagsMap = noteRepository.findTagsForNotes(noteIds)
-
-        val notesWithTags = notes.map { note ->
-            val tags = tagsMap[note.id]?.map { it.toDto() } ?: emptyList()
-            note.toDto(tags)
-        }
-
-        return ResponseEntity.ok(successResponse(notesWithTags))
+        val notes = noteService.getAllNotesWithTags()
+        return ResponseEntity.ok(successResponse(notes))
     }
 
     @GetMapping("/root")
     fun getRootNotes(): ResponseEntity<ApiResponse<List<NoteDto>>> {
-        val notes = noteService.getRootNotes()
-        val noteIds = notes.map { it.id }
-        val tagsMap = noteRepository.findTagsForNotes(noteIds)
-
-        val notesWithTags = notes.map { note ->
-            val tags = tagsMap[note.id]?.map { it.toDto() } ?: emptyList()
-            note.toDto(tags)
-        }
-
-        return ResponseEntity.ok(successResponse(notesWithTags))
+        val notes = noteService.getRootNotesWithTags()
+        return ResponseEntity.ok(successResponse(notes))
     }
 
     @GetMapping("/{id}")
     fun getNoteById(@PathVariable id: String): ResponseEntity<ApiResponse<NoteDto>> {
         ValidationUtils.validateUUID(id, "id")
-        val note = noteService.getNoteById(id)
+        val noteDto = noteService.getNoteByIdWithTags(id)
             ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(errorResponse("NOT_FOUND", "Note not found"))
 
-        val tags = noteRepository.findTagsByNoteId(id).map { it.toDto() }
-        return ResponseEntity.ok(successResponse(note.toDto(tags)))
+        return ResponseEntity.ok(successResponse(noteDto))
     }
 
     @PostMapping
@@ -69,9 +51,11 @@ class NoteController(
                 request.backdropPositionY,
                 request.color
             )
-            val tags = noteRepository.findTagsByNoteId(note.id).map { it.toDto() }
+            val noteDto = noteService.getNoteByIdWithTags(note.id)
+                ?: return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorResponse("INTERNAL_ERROR", "Failed to retrieve created note"))
             return ResponseEntity.status(HttpStatus.CREATED)
-                .body(successResponse(note.toDto(tags)))
+                .body(successResponse(noteDto))
         } catch (e: IllegalArgumentException) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(errorResponse("VALIDATION_ERROR", e.message ?: "Invalid request"))
@@ -87,7 +71,7 @@ class NoteController(
         if (request.parentId != null) {
             ValidationUtils.validateUUID(request.parentId, "parentId")
         }
-        val note = noteService.updateNote(
+        noteService.updateNote(
             id,
             request.title,
             request.content,
@@ -101,8 +85,10 @@ class NoteController(
             ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(errorResponse("NOT_FOUND", "Note not found"))
 
-        val tags = noteRepository.findTagsByNoteId(id).map { it.toDto() }
-        return ResponseEntity.ok(successResponse(note.toDto(tags)))
+        val noteDto = noteService.getNoteByIdWithTags(id)
+            ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(errorResponse("NOT_FOUND", "Note not found"))
+        return ResponseEntity.ok(successResponse(noteDto))
     }
 
     @DeleteMapping("/{id}")
@@ -119,31 +105,15 @@ class NoteController(
     @GetMapping("/{id}/children")
     fun getChildren(@PathVariable id: String): ResponseEntity<ApiResponse<List<NoteDto>>> {
         ValidationUtils.validateUUID(id, "id")
-        val children = noteService.getChildren(id)
-        val noteIds = children.map { it.id }
-        val tagsMap = noteRepository.findTagsForNotes(noteIds)
-
-        val childrenWithTags = children.map { note ->
-            val tags = tagsMap[note.id]?.map { it.toDto() } ?: emptyList()
-            note.toDto(tags)
-        }
-
-        return ResponseEntity.ok(successResponse(childrenWithTags))
+        val children = noteService.getChildrenWithTags(id)
+        return ResponseEntity.ok(successResponse(children))
     }
 
     @GetMapping("/{id}/path")
     fun getPath(@PathVariable id: String): ResponseEntity<ApiResponse<List<NoteDto>>> {
         ValidationUtils.validateUUID(id, "id")
-        val path = noteService.getAncestorPath(id)
-        val noteIds = path.map { it.id }
-        val tagsMap = noteRepository.findTagsForNotes(noteIds)
-
-        val pathWithTags = path.map { note ->
-            val tags = tagsMap[note.id]?.map { it.toDto() } ?: emptyList()
-            note.toDto(tags)
-        }
-
-        return ResponseEntity.ok(successResponse(pathWithTags))
+        val path = noteService.getAncestorPathWithTags(id)
+        return ResponseEntity.ok(successResponse(path))
     }
 
     @PutMapping("/{id}/move")
@@ -156,11 +126,13 @@ class NoteController(
             ValidationUtils.validateUUID(request.parentId, "parentId")
         }
         try {
-            val note = noteService.moveNote(id, request.parentId)
+            noteService.moveNote(id, request.parentId)
                 ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(errorResponse("NOT_FOUND", "Note not found"))
-            val tags = noteRepository.findTagsByNoteId(id).map { it.toDto() }
-            return ResponseEntity.ok(successResponse(note.toDto(tags)))
+            val noteDto = noteService.getNoteByIdWithTags(id)
+                ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(errorResponse("NOT_FOUND", "Note not found"))
+            return ResponseEntity.ok(successResponse(noteDto))
         } catch (e: IllegalArgumentException) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(errorResponse("VALIDATION_ERROR", e.message ?: "Invalid request"))

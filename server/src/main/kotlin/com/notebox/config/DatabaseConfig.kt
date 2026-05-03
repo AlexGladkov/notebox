@@ -5,6 +5,8 @@ import com.notebox.domain.database.CustomDatabasesTable
 import com.notebox.domain.database.FilesTable
 import com.notebox.domain.database.RecordsTable
 import com.notebox.domain.note.NotesTable
+import com.notebox.domain.tag.TagsTable
+import com.notebox.domain.tag.NoteTagsTable
 import com.notebox.migration.FolderToNoteMigration
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -32,7 +34,9 @@ class DatabaseInitializer(
                 CustomDatabasesTable,
                 ColumnsTable,
                 RecordsTable,
-                FilesTable
+                FilesTable,
+                TagsTable,
+                NoteTagsTable
             )
         }
 

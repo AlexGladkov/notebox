@@ -79,7 +79,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, watch } from 'vue';
+import { ref, computed, nextTick } from 'vue';
 import type { Tag } from '../types';
 
 const props = defineProps<{
@@ -165,11 +165,6 @@ const createAndAddTag = () => {
 
   searchQuery.value = '';
 };
-
-// Закрываем меню при изменении заметки
-watch(() => props.selectedTagIds, () => {
-  // Не закрываем меню автоматически, позволяем пользователю выбрать несколько тегов
-});
 </script>
 
 <style scoped>
