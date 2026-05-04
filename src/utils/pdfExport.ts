@@ -74,11 +74,11 @@ function renderNode(node: any): string {
             text = `<code class="inline-code">${text}</code>`;
             break;
           case 'highlight':
-            const color = mark.attrs?.color || '#ffeb3b';
+            const color = sanitizeColor(mark.attrs?.color || '#ffeb3b');
             text = `<mark style="background-color: ${color};">${text}</mark>`;
             break;
           case 'link':
-            const href = mark.attrs?.href || '#';
+            const href = escapeHtml(mark.attrs?.href || '#');
             text = `<a href="${href}">${text}</a> (${href})`;
             break;
         }
@@ -124,7 +124,8 @@ function renderNode(node: any): string {
 
     case 'codeBlock':
       const language = node.attrs?.language || '';
-      return `<pre><code class="code-block">${escapeHtml(content)}</code></pre>`;
+      const codeText = extractTextContent(node);
+      return `<pre><code class="code-block">${escapeHtml(codeText)}</code></pre>`;
 
     case 'callout':
       const calloutType = node.attrs?.type || 'info';
@@ -149,6 +150,32 @@ function escapeHtml(text: string): string {
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
+}
+
+/**
+ * Извлекает чистый текст из узла (для блоков кода)
+ */
+function extractTextContent(node: any): string {
+  if (!node) return '';
+
+  if (node.type === 'text') {
+    return node.text || '';
+  }
+
+  if (node.content && Array.isArray(node.content)) {
+    return node.content.map(extractTextContent).join('');
+  }
+
+  return '';
+}
+
+/**
+ * Валидирует и нормализует цвет для безопасного использования в стилях
+ */
+function sanitizeColor(color: string): string {
+  // Разрешаем только hex цвета (#xxx или #xxxxxx), rgb/rgba и именованные цвета
+  const validColorPattern = /^(#[0-9a-fA-F]{3,6}|rgb\([\d,\s]+\)|rgba\([\d,\s.]+\)|[a-z]+)$/;
+  return validColorPattern.test(color) ? color : '#ffeb3b';
 }
 
 /**
@@ -369,11 +396,14 @@ export async function exportNoteToPdf(options: PdfExportOptions): Promise<void> 
   if (tags && tags.length > 0) {
     tagsHtml = `
       <div class="pdf-tags">
-        ${tags.map(tag => `
-          <span class="pdf-tag" style="background-color: ${tag.color}20; color: ${tag.color};">
+        ${tags.map(tag => {
+          const safeColor = sanitizeColor(tag.color);
+          return `
+          <span class="pdf-tag" style="background-color: ${safeColor}20; color: ${safeColor};">
             ${escapeHtml(tag.name)}
           </span>
-        `).join('')}
+        `;
+        }).join('')}
       </div>
     `;
   }

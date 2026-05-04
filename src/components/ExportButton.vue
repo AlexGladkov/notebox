@@ -130,7 +130,9 @@ const showNotification = (message: string, isError = false) => {
   setTimeout(() => {
     notification.style.animation = 'slideOut 0.3s ease';
     setTimeout(() => {
-      document.body.removeChild(notification);
+      if (notification.parentNode) {
+        document.body.removeChild(notification);
+      }
     }, 300);
   }, 3000);
 };
