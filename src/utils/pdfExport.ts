@@ -504,7 +504,9 @@ export async function exportNoteToPdf(options: PdfExportOptions): Promise<void> 
     };
 
     // Генерация и скачивание PDF с таймаутом 60 секунд
-    const pdfPromise = html2pdf().set(opt).from(tempDiv).save();
+    const pdfPromise = new Promise<void>((resolve, reject) => {
+      html2pdf().set(opt).from(tempDiv).save().then(resolve).catch(reject);
+    });
     await withTimeout(pdfPromise, 60000);
   } finally {
     // Очистка временного элемента
