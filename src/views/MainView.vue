@@ -1,6 +1,10 @@
 <template>
   <div class="flex flex-col h-screen bg-white dark:bg-gray-900">
     <DemoBanner v-if="isDemoUser" />
+    <!-- Индикатор синхронизации -->
+    <div class="sync-status-bar">
+      <SyncStatusIndicator />
+    </div>
     <div class="flex flex-1 overflow-hidden">
       <!-- Единая левая панель с деревом страниц -->
       <div class="flex flex-col bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 h-full" style="width: 288px;">
@@ -208,7 +212,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted } from 'vue';
+import { ref, computed, reactive, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStorage } from '../composables/useStorage';
 import { useNotes } from '../composables/useNotes';
@@ -218,6 +222,7 @@ import { useTabs } from '../composables/useTabs';
 import { useAuth } from '../composables/useAuth';
 import { useTags } from '../composables/useTags';
 import { notesApi } from '../api/notes';
+import { initNetworkStatus, destroyNetworkStatus } from '../services/offline/networkStatus';
 import SearchBar from '../components/SearchBar.vue';
 import NoteTree from '../components/NoteTree.vue';
 import NoteEditor from '../components/NoteEditor.vue';
@@ -227,6 +232,7 @@ import UserProfile from '../components/auth/UserProfile.vue';
 import SettingsModal from '../components/settings/SettingsModal.vue';
 import DemoBanner from '../components/layout/DemoBanner.vue';
 import TagFilter from '../components/TagFilter.vue';
+import SyncStatusIndicator from '../components/SyncStatusIndicator.vue';
 
 // Router
 const router = useRouter();
@@ -485,14 +491,33 @@ function clearTagFilter() {
 
 // Загрузка тегов при монтировании
 onMounted(async () => {
+  initNetworkStatus();
   try {
     await loadTags();
   } catch (error) {
     console.error('Failed to load tags:', error);
   }
 });
+
+onUnmounted(() => {
+  destroyNetworkStatus();
+});
 </script>
 
 <style scoped>
 /* Стили уже определены в Tailwind классах */
+
+.sync-status-bar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 4px 12px;
+  background-color: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.dark .sync-status-bar {
+  background-color: #1f2937;
+  border-bottom-color: #374151;
+}
 </style>
