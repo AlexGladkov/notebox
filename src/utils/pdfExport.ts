@@ -1,4 +1,5 @@
 import html2pdf from 'html2pdf.js';
+import type { Html2PdfOptions } from 'html2pdf.js';
 import type { Tag } from '../types';
 
 export interface PdfExportOptions {
@@ -128,7 +129,6 @@ function renderNode(node: any): string {
       return `<blockquote>${content}</blockquote>`;
 
     case 'codeBlock':
-      const language = node.attrs?.language || '';
       const codeText = extractTextContent(node);
       return `<pre><code class="code-block">${escapeHtml(codeText)}</code></pre>`;
 
@@ -495,7 +495,7 @@ export async function exportNoteToPdf(options: PdfExportOptions): Promise<void> 
     const filename = transliterate(title) || 'note';
 
     // Конфигурация html2pdf
-    const opt = {
+    const opt: Html2PdfOptions = {
       margin: 20, // mm
       filename: `${filename}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },

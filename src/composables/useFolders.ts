@@ -1,6 +1,6 @@
 import { computed, type Ref } from 'vue';
 import type { Folder } from '../types';
-import { foldersApi, ApiError } from '../api';
+import { foldersApi } from '../api';
 
 export function useFolders(folders: Ref<Folder[]>) {
   const createFolder = async (name: string, parentId: string | null = null) => {

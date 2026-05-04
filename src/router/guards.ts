@@ -3,7 +3,7 @@ import { authStore } from '../stores/authStore';
 
 export async function authGuard(
   to: RouteLocationNormalized,
-  from: RouteLocationNormalized,
+  _from: RouteLocationNormalized,
   next: NavigationGuardNext
 ) {
   // Wait for auth check if not initialized
