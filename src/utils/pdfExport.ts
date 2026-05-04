@@ -137,7 +137,7 @@ function renderNode(node: any): string {
     case 'horizontalRule':
       return '<hr>';
 
-    case 'databaseBlock':
+    case 'database':
       const dbName = node.attrs?.databaseName || 'База данных';
       return `<div class="database-placeholder">[База данных: ${escapeHtml(dbName)}]</div>`;
 
