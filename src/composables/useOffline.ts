@@ -1,4 +1,4 @@
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onUnmounted } from 'vue';
 import { offlineStore } from '../services/offline/offlineStore';
 import { syncQueue } from '../services/offline/syncQueue';
 import { syncService } from '../services/offline/syncService';
@@ -20,16 +20,20 @@ export function useOffline() {
   const hasError = computed(() => syncState.value.status === 'error');
 
   async function updateSyncState() {
-    const pendingCount = await syncQueue.getPendingCount();
-    const lastSyncTime = await indexedDbService.getMetadata('lastSyncTime');
-    const { status, lastError } = syncService.getStatus();
+    try {
+      const pendingCount = await syncQueue.getPendingCount();
+      const lastSyncTime = await indexedDbService.getMetadata('lastSyncTime');
+      const { status, lastError } = syncService.getStatus();
 
-    syncState.value = {
-      status: status.value,
-      pendingCount,
-      lastSyncTime,
-      lastError: lastError.value,
-    };
+      syncState.value = {
+        status: status.value,
+        pendingCount,
+        lastSyncTime,
+        lastError: lastError.value,
+      };
+    } catch (error) {
+      console.error('Failed to update sync state:', error);
+    }
   }
 
   async function sync() {
@@ -81,11 +85,9 @@ export function useOffline() {
   }, 5000);
 
   // Cleanup при размонтировании
-  if (typeof window !== 'undefined') {
-    window.addEventListener('beforeunload', () => {
-      clearInterval(intervalId);
-    });
-  }
+  onUnmounted(() => {
+    clearInterval(intervalId);
+  });
 
   return {
     syncState,

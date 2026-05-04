@@ -114,7 +114,7 @@ class IndexedDbService {
       const store = transaction.objectStore(STORE_NOTES);
 
       let completed = 0;
-      const errors: any[] = [];
+      const errors: DOMException[] = [];
 
       notes.forEach(note => {
         const request = store.put(note);
@@ -129,7 +129,9 @@ class IndexedDbService {
           }
         };
         request.onerror = () => {
-          errors.push(request.error);
+          if (request.error) {
+            errors.push(request.error);
+          }
           completed++;
           if (completed === notes.length) {
             reject(errors[0]);

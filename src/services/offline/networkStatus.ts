@@ -13,7 +13,9 @@ async function checkConnectivity(): Promise<boolean> {
       cache: 'no-cache',
       credentials: 'include',
     });
-    return response.ok;
+    // Считаем соединение активным если получен любой ответ от сервера
+    // (включая 401/403 - это означает что сервер доступен)
+    return response.ok || response.status === 401 || response.status === 403;
   } catch {
     return false;
   }

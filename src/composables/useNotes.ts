@@ -61,7 +61,7 @@ export function useNotes(notes: Ref<Note[]>) {
         icon: updates.icon !== undefined ? updates.icon : note.icon,
         backdropType: updates.backdropType !== undefined ? updates.backdropType : note.backdropType,
         backdropValue: updates.backdropValue !== undefined ? updates.backdropValue : note.backdropValue,
-        backdropPositionY: updates.backdropPositionY ?? note.backdropPositionY ?? 50,
+        backdropPositionY: updates.backdropPositionY !== undefined ? updates.backdropPositionY : (note.backdropPositionY ?? 50),
       });
 
       const index = notes.value.findIndex(n => n.id === id);

@@ -101,7 +101,7 @@ class OfflineStore {
       icon: request.icon !== undefined ? request.icon : currentNote.icon,
       backdropType: request.backdropType !== undefined ? request.backdropType : currentNote.backdropType,
       backdropValue: request.backdropValue !== undefined ? request.backdropValue : currentNote.backdropValue,
-      backdropPositionY: request.backdropPositionY ?? currentNote.backdropPositionY,
+      backdropPositionY: request.backdropPositionY !== undefined ? request.backdropPositionY : currentNote.backdropPositionY,
       updatedAt: Date.now(),
     };
 
