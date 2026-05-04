@@ -9,9 +9,10 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { onMounted, onUnmounted } from 'vue';
 import { useAuth } from './composables/useAuth';
 import { useTheme } from './composables/useTheme';
+import { initNetworkStatus, destroyNetworkStatus } from './services/offline/networkStatus';
 import SessionExpiredModal from './components/common/SessionExpiredModal.vue';
 
 const { isLoading, sessionExpired, checkAuth } = useAuth();
@@ -20,7 +21,13 @@ const { initialize: initializeTheme } = useTheme();
 onMounted(async () => {
   // Инициализируем тему до проверки авторизации
   initializeTheme();
+  // Инициализируем отслеживание состояния сети
+  initNetworkStatus();
   await checkAuth();
+});
+
+onUnmounted(() => {
+  destroyNetworkStatus();
 });
 </script>
 

@@ -212,7 +212,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted, onUnmounted } from 'vue';
+import { ref, computed, reactive, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStorage } from '../composables/useStorage';
 import { useNotes } from '../composables/useNotes';
@@ -222,7 +222,6 @@ import { useTabs } from '../composables/useTabs';
 import { useAuth } from '../composables/useAuth';
 import { useTags } from '../composables/useTags';
 import { notesApi } from '../api/notes';
-import { initNetworkStatus, destroyNetworkStatus } from '../services/offline/networkStatus';
 import SearchBar from '../components/SearchBar.vue';
 import NoteTree from '../components/NoteTree.vue';
 import NoteEditor from '../components/NoteEditor.vue';
@@ -491,16 +490,11 @@ function clearTagFilter() {
 
 // Загрузка тегов при монтировании
 onMounted(async () => {
-  initNetworkStatus();
   try {
     await loadTags();
   } catch (error) {
     console.error('Failed to load tags:', error);
   }
-});
-
-onUnmounted(() => {
-  destroyNetworkStatus();
 });
 </script>
 
