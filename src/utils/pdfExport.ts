@@ -38,17 +38,17 @@ export function transliterate(text: string): string {
  * Конвертирует TipTap JSON в HTML для PDF
  */
 export function convertTipTapToHtml(jsonString: string): string {
-  try {
-    // Обрабатываем пустую строку или отсутствие контента
-    if (!jsonString || jsonString.trim() === '') {
-      return '<p><em>Пустая заметка</em></p>';
-    }
+  // Обрабатываем пустую строку или отсутствие контента
+  if (!jsonString || jsonString.trim() === '') {
+    return '<p><em>Пустая заметка</em></p>';
+  }
 
+  try {
     const doc = JSON.parse(jsonString);
     return renderNode(doc);
   } catch (e) {
     console.error('Error parsing TipTap JSON:', e);
-    return '<p>Ошибка при конвертации контента</p>';
+    throw new Error('Ошибка при конвертации контента заметки');
   }
 }
 
@@ -412,11 +412,15 @@ export function generatePdfStyles(): string {
  * Создает Promise с таймаутом
  */
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout>;
+
+  const timeoutPromise = new Promise<T>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error('Превышено время ожидания экспорта')), timeoutMs);
+  });
+
   return Promise.race([
-    promise,
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error('Превышено время ожидания экспорта')), timeoutMs)
-    )
+    promise.finally(() => clearTimeout(timeoutId)),
+    timeoutPromise
   ]);
 }
 

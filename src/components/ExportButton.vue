@@ -77,7 +77,7 @@ const handleExport = async () => {
     if (error instanceof Error) {
       if (error.message.includes('Превышено время ожидания')) {
         errorMessage = 'Заметка слишком большая. Попробуйте экспортировать меньшую часть.';
-      } else if (error.message.includes('конвертации контента')) {
+      } else if (error.message.includes('конвертации контента заметки')) {
         errorMessage = 'Ошибка при обработке контента заметки';
       }
     }
