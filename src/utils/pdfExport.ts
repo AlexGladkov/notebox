@@ -146,6 +146,18 @@ function renderNode(node: any): string {
       const dbName = node.attrs?.databaseName || 'База данных';
       return `<div class="database-placeholder">[База данных: ${escapeHtml(dbName)}]</div>`;
 
+    case 'image':
+      const src = node.attrs?.src || '';
+      const alt = node.attrs?.alt || '';
+      const title = node.attrs?.title || '';
+
+      if (!src) return '';
+
+      return `<div class="image-container">
+        <img src="${escapeHtml(src)}" alt="${escapeHtml(alt)}" title="${escapeHtml(title)}" class="note-image" />
+        ${alt ? `<p class="image-caption">${escapeHtml(alt)}</p>` : ''}
+      </div>`;
+
     default:
       return content;
   }
@@ -369,12 +381,43 @@ export function generatePdfStyles(): string {
         font-style: italic;
       }
 
+      .image-container {
+        margin: 16px 0;
+        text-align: center;
+      }
+
+      .note-image {
+        max-width: 100%;
+        height: auto;
+        border-radius: 4px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .image-caption {
+        margin-top: 8px;
+        font-size: 10pt;
+        color: #666;
+        font-style: italic;
+      }
+
       strong { font-weight: 700; }
       em { font-style: italic; }
       u { text-decoration: underline; }
       s { text-decoration: line-through; }
     </style>
   `;
+}
+
+/**
+ * Создает Promise с таймаутом
+ */
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error('Превышено время ожидания экспорта')), timeoutMs)
+    )
+  ]);
 }
 
 /**
@@ -456,8 +499,9 @@ export async function exportNoteToPdf(options: PdfExportOptions): Promise<void> 
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
-    // Генерация и скачивание PDF
-    await html2pdf().set(opt).from(tempDiv).save();
+    // Генерация и скачивание PDF с таймаутом 60 секунд
+    const pdfPromise = html2pdf().set(opt).from(tempDiv).save();
+    await withTimeout(pdfPromise, 60000);
   } finally {
     // Очистка временного элемента
     document.body.removeChild(tempDiv);

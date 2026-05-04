@@ -70,7 +70,19 @@ const handleExport = async () => {
     showNotification('PDF успешно экспортирован');
   } catch (error) {
     console.error('Ошибка при экспорте PDF:', error);
-    showNotification('Ошибка при экспорте PDF', true);
+
+    // Определяем тип ошибки и показываем подходящее сообщение
+    let errorMessage = 'Ошибка при экспорте PDF';
+
+    if (error instanceof Error) {
+      if (error.message.includes('Превышено время ожидания')) {
+        errorMessage = 'Заметка слишком большая. Попробуйте экспортировать меньшую часть.';
+      } else if (error.message.includes('конвертации контента')) {
+        errorMessage = 'Ошибка при обработке контента заметки';
+      }
+    }
+
+    showNotification(errorMessage, true);
   } finally {
     isExporting.value = false;
   }
