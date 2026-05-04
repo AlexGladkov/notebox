@@ -177,3 +177,25 @@ defineExpose({
   line-height: 1.4;
 }
 </style>
+
+<style>
+/* Dark theme */
+.dark .slash-command-menu {
+  background: #1f2937;
+  border-color: #374151;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.dark .command-item:hover,
+.dark .command-item.active {
+  background-color: #374151;
+}
+
+.dark .command-title {
+  color: #f9fafb;
+}
+
+.dark .command-description {
+  color: #9ca3af;
+}
+</style>

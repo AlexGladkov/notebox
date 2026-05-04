@@ -91,3 +91,20 @@ onUnmounted(() => {
   color: #374151;
 }
 </style>
+
+<style>
+/* Dark theme */
+.dark .block-menu {
+  background: #1f2937;
+  border-color: #374151;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.dark .menu-item:hover {
+  background-color: #374151;
+}
+
+.dark .menu-label {
+  color: #d1d5db;
+}
+</style>

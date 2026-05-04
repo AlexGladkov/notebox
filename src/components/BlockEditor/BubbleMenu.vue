@@ -207,3 +207,29 @@ const setLink = () => {
   margin: 0 4px;
 }
 </style>
+
+<style>
+/* Dark theme */
+.dark .bubble-menu {
+  background: #1f2937;
+  border-color: #374151;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.dark .menu-button {
+  color: #d1d5db;
+}
+
+.dark .menu-button:hover {
+  background-color: #374151;
+}
+
+.dark .menu-button.is-active {
+  background-color: #1e3a5f;
+  color: #60a5fa;
+}
+
+.dark .menu-divider {
+  background-color: #4b5563;
+}
+</style>
