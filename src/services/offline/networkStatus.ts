@@ -7,9 +7,11 @@ let checkInterval: ReturnType<typeof setInterval> | null = null;
 
 async function checkConnectivity(): Promise<boolean> {
   try {
-    const response = await fetch('/api/health', {
+    // Проверяем соединение через существующий API endpoint
+    const response = await fetch('/api/notes', {
       method: 'HEAD',
       cache: 'no-cache',
+      credentials: 'include',
     });
     return response.ok;
   } catch {

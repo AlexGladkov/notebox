@@ -16,6 +16,11 @@ class IndexedDbService {
     if (this.db) return;
     if (this.initPromise) return this.initPromise;
 
+    // Проверяем поддержку IndexedDB
+    if (typeof indexedDB === 'undefined') {
+      throw new Error('IndexedDB is not supported in this browser');
+    }
+
     this.initPromise = new Promise((resolve, reject) => {
       const request = indexedDB.open(DB_NAME, DB_VERSION);
 

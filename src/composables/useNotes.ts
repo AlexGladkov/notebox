@@ -1,6 +1,7 @@
 import { computed, ref, type Ref } from 'vue';
 import type { Note } from '../types';
 import { offlineStore } from '../services/offline/offlineStore';
+import { indexedDbService } from '../services/offline/indexedDb';
 import { notesApi } from '../api';
 
 export function useNotes(notes: Ref<Note[]>) {
@@ -75,22 +76,24 @@ export function useNotes(notes: Ref<Note[]>) {
 
   const deleteNote = async (id: string, cascadeDelete: boolean = true) => {
     try {
-      // Используем offlineStore для удаления
-      await offlineStore.deleteNote(id);
-
       if (cascadeDelete) {
-        // Удалить заметку и всех её потомков
+        // Получаем всех потомков для удаления из UI
         const descendants = getAllDescendants(id);
         const idsToRemove = new Set([id, ...descendants.map(n => n.id)]);
 
-        // Удаляем потомков из offlineStore
+        // Удаляем только главную заметку через offlineStore (с cascadeDelete в syncQueue)
+        // Сервер автоматически удалит потомков при синхронизации
+        await offlineStore.deleteNote(id);
+
+        // Удаляем потомков только из локального IndexedDB (не добавляя в syncQueue)
         for (const descendant of descendants) {
-          await offlineStore.deleteNote(descendant.id);
+          await indexedDbService.deleteNote(descendant.id);
         }
 
         notes.value = notes.value.filter(n => !idsToRemove.has(n.id));
       } else {
         // Удалить только саму заметку
+        await offlineStore.deleteNote(id);
         notes.value = notes.value.filter(n => n.id !== id);
       }
     } catch (err) {

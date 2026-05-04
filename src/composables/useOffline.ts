@@ -72,13 +72,20 @@ export function useOffline() {
     }
   });
 
+  // Инициализация
+  updateSyncState();
+
   // Периодическое обновление состояния синхронизации
-  setInterval(() => {
+  const intervalId = setInterval(() => {
     updateSyncState();
   }, 5000);
 
-  // Инициализация
-  updateSyncState();
+  // Cleanup при размонтировании
+  if (typeof window !== 'undefined') {
+    window.addEventListener('beforeunload', () => {
+      clearInterval(intervalId);
+    });
+  }
 
   return {
     syncState,

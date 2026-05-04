@@ -88,7 +88,7 @@ class SyncService {
       await indexedDbService.saveNote(serverNote);
     } catch (error: any) {
       // Если заметка уже существует на сервере, пытаемся обновить
-      if (error?.response?.status === 409 || error?.message?.includes('already exists')) {
+      if (error?.status === 409 || error?.message?.includes('already exists')) {
         await this.syncUpdate(item);
       } else {
         throw error;
@@ -129,7 +129,7 @@ class SyncService {
       await indexedDbService.saveNote(updatedNote);
     } catch (error: any) {
       // Если заметка не найдена на сервере, создаём её
-      if (error?.response?.status === 404 || error?.message?.includes('not found')) {
+      if (error?.status === 404 || error?.message?.includes('not found')) {
         await this.syncCreate(item);
       } else {
         throw error;
@@ -143,7 +143,7 @@ class SyncService {
       await indexedDbService.deleteNote(item.noteId);
     } catch (error: any) {
       // Если заметка уже удалена на сервере, игнорируем ошибку
-      if (error?.response?.status === 404 || error?.message?.includes('not found')) {
+      if (error?.status === 404 || error?.message?.includes('not found')) {
         await indexedDbService.deleteNote(item.noteId);
       } else {
         throw error;
@@ -165,7 +165,7 @@ class SyncService {
       await indexedDbService.saveNote(updatedNote);
     } catch (error: any) {
       // Если заметка не найдена, создаём её
-      if (error?.response?.status === 404 || error?.message?.includes('not found')) {
+      if (error?.status === 404 || error?.message?.includes('not found')) {
         await this.syncCreate(item);
       } else {
         throw error;
