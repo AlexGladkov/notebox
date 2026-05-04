@@ -39,6 +39,11 @@ export function transliterate(text: string): string {
  */
 export function convertTipTapToHtml(jsonString: string): string {
   try {
+    // Обрабатываем пустую строку или отсутствие контента
+    if (!jsonString || jsonString.trim() === '') {
+      return '<p><em>Пустая заметка</em></p>';
+    }
+
     const doc = JSON.parse(jsonString);
     return renderNode(doc);
   } catch (e) {
