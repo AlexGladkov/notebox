@@ -185,12 +185,12 @@ export function useTabs(getNoteById: (id: string) => Note | undefined) {
 
   /**
    * Удаляет все вкладки, относящиеся к папкам из списка (при удалении папки)
-   * @param folderIds - Массив ID папок
+   * @param folderIds - Массив ID папок (заметок-папок)
    */
   const removeTabsByFolderIds = (folderIds: string[]): void => {
     const tabsToClose = tabs.value.filter(tab => {
       const note = getNoteById(tab.noteId);
-      return note && folderIds.includes(note.folderId);
+      return note && note.parentId && folderIds.includes(note.parentId);
     });
 
     tabsToClose.forEach(tab => closeTab(tab.id));

@@ -1,5 +1,5 @@
 import { ref } from 'vue';
-import type { CustomDatabase, Column, Record, ColumnType, SelectOption } from '../types';
+import type { CustomDatabase, Record, ColumnType, SelectOption } from '../types';
 import type { DatabaseView } from '../types/database';
 import { databasesApi } from '../api/databases';
 
