@@ -32,8 +32,11 @@
         placeholder="Название заметки..."
         class="w-full text-2xl font-semibold outline-none border-none focus:ring-0 bg-transparent text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
       />
-      <div class="text-sm text-gray-500 dark:text-gray-400 mt-2">
-        Изменено: {{ formatDate(note.updatedAt) }}
+      <div class="flex items-center justify-between mt-2">
+        <div class="text-sm text-gray-500 dark:text-gray-400">
+          Изменено: {{ formatDate(note.updatedAt) }}
+        </div>
+        <ExportButton :note="note" />
       </div>
 
       <!-- Теги заметки -->
@@ -70,6 +73,7 @@ import BlockEditor from './BlockEditor.vue';
 import NoteCover from './NoteCover.vue';
 import NoteIcon from './NoteIcon.vue';
 import NoteTags from './NoteTags.vue';
+import ExportButton from './ExportButton.vue';
 
 const props = defineProps<{
   note: Note | undefined;

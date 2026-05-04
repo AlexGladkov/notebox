@@ -24,7 +24,8 @@
     "@tiptap/extension-floating-menu": "^2.1.0",
     "@tiptap/extension-text-style": "^2.1.0",
     "@tiptap/extension-color": "^2.1.0",
-    "@tiptap/pm": "^2.1.0"
+    "@tiptap/pm": "^2.1.0",
+    "html2pdf.js": "^0.10.1"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.0",
