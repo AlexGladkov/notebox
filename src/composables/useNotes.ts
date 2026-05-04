@@ -1,6 +1,7 @@
 import { computed, ref, type Ref } from 'vue';
 import type { Note } from '../types';
-import { notesApi, ApiError } from '../api';
+import { offlineStore } from '../services/offline/offlineStore';
+import { notesApi } from '../api';
 
 export function useNotes(notes: Ref<Note[]>) {
   const expandedNotes = ref<Set<string>>(new Set());
@@ -30,7 +31,8 @@ export function useNotes(notes: Ref<Note[]>) {
 
   const createNote = async (title: string, parentId?: string | null) => {
     try {
-      const newNote = await notesApi.create({
+      // Используем offlineStore, который автоматически управляет синхронизацией
+      const newNote = await offlineStore.createNote({
         title,
         content: '',
         parentId,
@@ -50,7 +52,8 @@ export function useNotes(notes: Ref<Note[]>) {
     }
 
     try {
-      const updatedNote = await notesApi.update(id, {
+      // Используем offlineStore для обновления
+      const updatedNote = await offlineStore.updateNote(id, {
         title: updates.title ?? note.title,
         content: updates.content ?? note.content,
         parentId: updates.parentId !== undefined ? updates.parentId : note.parentId,
@@ -72,12 +75,19 @@ export function useNotes(notes: Ref<Note[]>) {
 
   const deleteNote = async (id: string, cascadeDelete: boolean = true) => {
     try {
-      await notesApi.delete(id, cascadeDelete);
+      // Используем offlineStore для удаления
+      await offlineStore.deleteNote(id);
 
       if (cascadeDelete) {
         // Удалить заметку и всех её потомков
         const descendants = getAllDescendants(id);
         const idsToRemove = new Set([id, ...descendants.map(n => n.id)]);
+
+        // Удаляем потомков из offlineStore
+        for (const descendant of descendants) {
+          await offlineStore.deleteNote(descendant.id);
+        }
+
         notes.value = notes.value.filter(n => !idsToRemove.has(n.id));
       } else {
         // Удалить только саму заметку
@@ -138,7 +148,8 @@ export function useNotes(notes: Ref<Note[]>) {
 
   const moveNote = async (noteId: string, targetParentId: string | null) => {
     try {
-      const updatedNote = await notesApi.move(noteId, { parentId: targetParentId });
+      // Используем offlineStore для перемещения
+      const updatedNote = await offlineStore.moveNote(noteId, targetParentId);
       const index = notes.value.findIndex(n => n.id === noteId);
       if (index !== -1) {
         notes.value[index] = updatedNote;

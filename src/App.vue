@@ -1,5 +1,10 @@
 <template>
   <div class="flex flex-col h-screen bg-white dark:bg-gray-900">
+    <!-- Индикатор синхронизации -->
+    <div class="sync-status-bar">
+      <SyncStatusIndicator />
+    </div>
+
     <div class="flex flex-1 overflow-hidden">
       <!-- Единая левая панель с деревом страниц -->
       <UnifiedSidebar
@@ -50,20 +55,31 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive } from 'vue';
+import { ref, computed, reactive, onMounted, onUnmounted } from 'vue';
 import { useStorage } from './composables/useStorage';
 import { useNotes } from './composables/useNotes';
 import { useSearch } from './composables/useSearch';
 import { useTheme } from './composables/useTheme';
 import { useTabs } from './composables/useTabs';
+import { initNetworkStatus, destroyNetworkStatus } from './services/offline/networkStatus';
 import UnifiedSidebar from './components/UnifiedSidebar.vue';
 import NoteEditor from './components/NoteEditor.vue';
 import TabBar from './components/TabBar.vue';
 import ConfirmDialog from './components/ConfirmDialog.vue';
+import SyncStatusIndicator from './components/SyncStatusIndicator.vue';
 
 // Инициализация темы
 const { initialize: initializeTheme } = useTheme();
 initializeTheme();
+
+// Инициализация отслеживания состояния сети
+onMounted(() => {
+  initNetworkStatus();
+});
+
+onUnmounted(() => {
+  destroyNetworkStatus();
+});
 
 const { notes } = useStorage();
 const {
@@ -230,3 +246,19 @@ const cancelConfirm = () => {
   confirmDialog.action = null;
 };
 </script>
+
+<style scoped>
+.sync-status-bar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 4px 12px;
+  background-color: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.dark .sync-status-bar {
+  background-color: #1f2937;
+  border-bottom-color: #374151;
+}
+</style>
