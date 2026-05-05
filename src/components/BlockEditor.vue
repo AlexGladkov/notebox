@@ -75,6 +75,7 @@ import CreateNestedNoteModal from './BlockEditor/CreateNestedNoteModal.vue';
 import type { SlashCommand as SlashCommandType, BlockMenuAction } from '../types/editor';
 import { notesApi } from '../api/notes';
 import { useDatabases } from '../composables/useDatabases';
+import { useAI } from '../composables/useAI';
 
 const props = defineProps<{
   modelValue: string;
@@ -103,12 +104,80 @@ const currentBlockPos = ref<number | null>(null);
 // Database composable for creating databases
 const { createDatabase } = useDatabases();
 
+// AI composable for AI operations
+const { loading: aiLoading, error: aiError, summarize, expand } = useAI();
+
+// AI command handlers
+const handleSummarize = async (editor: any) => {
+  const { state } = editor;
+  const { from, to } = state.selection;
+
+  // Get selected text or entire document
+  let textToSummarize = '';
+  if (from !== to) {
+    // User has selected text
+    textToSummarize = state.doc.textBetween(from, to, ' ');
+  } else {
+    // No selection - use entire document
+    textToSummarize = state.doc.textContent;
+  }
+
+  const result = await summarize(textToSummarize);
+
+  if (result) {
+    // Replace selection or insert at cursor
+    if (from !== to) {
+      editor.chain().focus().deleteRange({ from, to }).insertContent(result).run();
+    } else {
+      editor.chain().focus().insertContent(result).run();
+    }
+  } else if (aiError.value) {
+    alert(aiError.value);
+  }
+};
+
+const handleExpand = async (editor: any) => {
+  const { state } = editor;
+  const { from, to } = state.selection;
+
+  // Get selected text or current paragraph
+  let textToExpand = '';
+  if (from !== to) {
+    // User has selected text
+    textToExpand = state.doc.textBetween(from, to, ' ');
+  } else {
+    // No selection - try to get current paragraph/block
+    const $pos = state.doc.resolve(from);
+    const start = $pos.start($pos.depth);
+    const end = $pos.end($pos.depth);
+    textToExpand = state.doc.textBetween(start, end, ' ');
+  }
+
+  const result = await expand(textToExpand);
+
+  if (result) {
+    // Replace selection or current paragraph
+    if (from !== to) {
+      editor.chain().focus().deleteRange({ from, to }).insertContent(result).run();
+    } else {
+      const $pos = state.doc.resolve(from);
+      const start = $pos.start($pos.depth);
+      const end = $pos.end($pos.depth);
+      editor.chain().focus().deleteRange({ from: start, to: end }).insertContent(result).run();
+    }
+  } else if (aiError.value) {
+    alert(aiError.value);
+  }
+};
+
 const slashCommands = computed<SlashCommandType[]>(() => [
+  // Базовые блоки
   {
     id: 'h1',
     title: 'Заголовок 1',
     description: 'Большой заголовок раздела',
     icon: 'H1',
+    category: 'Базовые блоки',
     keywords: ['heading', 'h1', 'заголовок'],
     command: (editor) => {
       editor.chain().focus().deleteRange({ from: editor.state.selection.from - slashQuery.value.length - 1, to: editor.state.selection.to }).setHeading({ level: 1 }).run();
@@ -119,6 +188,7 @@ const slashCommands = computed<SlashCommandType[]>(() => [
     title: 'Заголовок 2',
     description: 'Средний заголовок',
     icon: 'H2',
+    category: 'Базовые блоки',
     keywords: ['heading', 'h2', 'заголовок'],
     command: (editor) => {
       editor.chain().focus().deleteRange({ from: editor.state.selection.from - slashQuery.value.length - 1, to: editor.state.selection.to }).setHeading({ level: 2 }).run();
@@ -129,16 +199,20 @@ const slashCommands = computed<SlashCommandType[]>(() => [
     title: 'Заголовок 3',
     description: 'Маленький заголовок',
     icon: 'H3',
+    category: 'Базовые блоки',
     keywords: ['heading', 'h3', 'заголовок'],
     command: (editor) => {
       editor.chain().focus().deleteRange({ from: editor.state.selection.from - slashQuery.value.length - 1, to: editor.state.selection.to }).setHeading({ level: 3 }).run();
     },
   },
+
+  // Списки
   {
     id: 'bullet-list',
     title: 'Маркированный список',
     description: 'Создать простой список',
     icon: '•',
+    category: 'Списки',
     keywords: ['list', 'bullet', 'список'],
     command: (editor) => {
       editor.chain().focus().deleteRange({ from: editor.state.selection.from - slashQuery.value.length - 1, to: editor.state.selection.to }).toggleBulletList().run();
@@ -149,6 +223,7 @@ const slashCommands = computed<SlashCommandType[]>(() => [
     title: 'Нумерованный список',
     description: 'Создать нумерованный список',
     icon: '1.',
+    category: 'Списки',
     keywords: ['list', 'numbered', 'ordered', 'список'],
     command: (editor) => {
       editor.chain().focus().deleteRange({ from: editor.state.selection.from - slashQuery.value.length - 1, to: editor.state.selection.to }).toggleOrderedList().run();
@@ -159,16 +234,20 @@ const slashCommands = computed<SlashCommandType[]>(() => [
     title: 'Список задач',
     description: 'Создать чекбокс список',
     icon: '☑',
+    category: 'Списки',
     keywords: ['todo', 'checkbox', 'task', 'задачи'],
     command: (editor) => {
       editor.chain().focus().deleteRange({ from: editor.state.selection.from - slashQuery.value.length - 1, to: editor.state.selection.to }).toggleTaskList().run();
     },
   },
+
+  // Форматирование
   {
     id: 'blockquote',
     title: 'Цитата',
     description: 'Добавить цитату',
     icon: '❝',
+    category: 'Форматирование',
     keywords: ['quote', 'blockquote', 'цитата'],
     command: (editor) => {
       editor.chain().focus().deleteRange({ from: editor.state.selection.from - slashQuery.value.length - 1, to: editor.state.selection.to }).toggleBlockquote().run();
@@ -179,6 +258,7 @@ const slashCommands = computed<SlashCommandType[]>(() => [
     title: 'Блок кода',
     description: 'Добавить блок кода',
     icon: '</>',
+    category: 'Форматирование',
     keywords: ['code', 'codeblock', 'код'],
     command: (editor) => {
       editor.chain().focus().deleteRange({ from: editor.state.selection.from - slashQuery.value.length - 1, to: editor.state.selection.to }).toggleCodeBlock().run();
@@ -189,16 +269,20 @@ const slashCommands = computed<SlashCommandType[]>(() => [
     title: 'Разделитель',
     description: 'Добавить горизонтальную линию',
     icon: '—',
+    category: 'Форматирование',
     keywords: ['divider', 'hr', 'separator', 'разделитель'],
     command: (editor) => {
       editor.chain().focus().deleteRange({ from: editor.state.selection.from - slashQuery.value.length - 1, to: editor.state.selection.to }).setHorizontalRule().run();
     },
   },
+
+  // Выноски
   {
     id: 'callout-info',
     title: 'Информация',
     description: 'Синяя выноска с информацией',
     icon: 'ℹ️',
+    category: 'Выноски',
     keywords: ['callout', 'info', 'информация'],
     command: (editor) => {
       editor.chain().focus().deleteRange({ from: editor.state.selection.from - slashQuery.value.length - 1, to: editor.state.selection.to }).setCallout({ type: 'info' }).run();
@@ -209,6 +293,7 @@ const slashCommands = computed<SlashCommandType[]>(() => [
     title: 'Предупреждение',
     description: 'Желтая выноска с предупреждением',
     icon: '⚠️',
+    category: 'Выноски',
     keywords: ['callout', 'warning', 'предупреждение'],
     command: (editor) => {
       editor.chain().focus().deleteRange({ from: editor.state.selection.from - slashQuery.value.length - 1, to: editor.state.selection.to }).setCallout({ type: 'warning' }).run();
@@ -219,6 +304,7 @@ const slashCommands = computed<SlashCommandType[]>(() => [
     title: 'Ошибка',
     description: 'Красная выноска с ошибкой',
     icon: '❌',
+    category: 'Выноски',
     keywords: ['callout', 'error', 'ошибка'],
     command: (editor) => {
       editor.chain().focus().deleteRange({ from: editor.state.selection.from - slashQuery.value.length - 1, to: editor.state.selection.to }).setCallout({ type: 'error' }).run();
@@ -229,16 +315,20 @@ const slashCommands = computed<SlashCommandType[]>(() => [
     title: 'Успех',
     description: 'Зеленая выноска с успехом',
     icon: '✅',
+    category: 'Выноски',
     keywords: ['callout', 'success', 'tip', 'успех'],
     command: (editor) => {
       editor.chain().focus().deleteRange({ from: editor.state.selection.from - slashQuery.value.length - 1, to: editor.state.selection.to }).setCallout({ type: 'success' }).run();
     },
   },
+
+  // Вставки
   {
     id: 'nested',
     title: 'Вложенная заметка',
     description: 'Создать дочернюю заметку',
     icon: '📄',
+    category: 'Вставки',
     keywords: ['nested', 'child', 'subpage', 'вложенная', 'дочерняя'],
     command: (editor) => {
       // Delete slash command from text
@@ -252,6 +342,7 @@ const slashCommands = computed<SlashCommandType[]>(() => [
     title: 'База данных',
     description: 'Встроить табличную базу данных',
     icon: '📊',
+    category: 'Вставки',
     keywords: ['database', 'table', 'data', 'база', 'таблица', 'данные'],
     command: async (editor) => {
       // Delete slash command from text
@@ -266,6 +357,36 @@ const slashCommands = computed<SlashCommandType[]>(() => [
       } catch (error) {
         console.error('Failed to create database:', error);
       }
+    },
+  },
+
+  // AI действия
+  {
+    id: 'summarize',
+    title: 'Суммаризировать',
+    description: 'Создать краткое содержание текста',
+    icon: '📝',
+    category: 'AI действия',
+    keywords: ['summarize', 'sum', 'summary', 'суммаризация', 'кратко'],
+    loading: aiLoading.value,
+    command: async (editor) => {
+      // Delete slash command from text
+      editor.chain().focus().deleteRange({ from: editor.state.selection.from - slashQuery.value.length - 1, to: editor.state.selection.to }).run();
+      await handleSummarize(editor);
+    },
+  },
+  {
+    id: 'expand',
+    title: 'Расширить текст',
+    description: 'Дополнить и расширить выбранный текст',
+    icon: '✨',
+    category: 'AI действия',
+    keywords: ['expand', 'exp', 'elaborate', 'расширить', 'дополнить'],
+    loading: aiLoading.value,
+    command: async (editor) => {
+      // Delete slash command from text
+      editor.chain().focus().deleteRange({ from: editor.state.selection.from - slashQuery.value.length - 1, to: editor.state.selection.to }).run();
+      await handleExpand(editor);
     },
   },
 ]);

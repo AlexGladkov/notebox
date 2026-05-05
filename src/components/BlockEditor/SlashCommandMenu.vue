@@ -4,19 +4,36 @@
     class="slash-command-menu"
     :style="{ top: position.top + 'px', left: position.left + 'px' }"
   >
-    <div
-      v-for="(command, index) in filteredCommands"
-      :key="command.id"
-      :class="['command-item', { active: index === selectedIndex }]"
-      @click="selectCommand(command)"
-      @mouseenter="selectedIndex = index"
-    >
-      <span class="command-icon">{{ command.icon }}</span>
-      <div class="command-info">
-        <div class="command-title">{{ command.title }}</div>
-        <div class="command-description">{{ command.description }}</div>
+    <template v-for="(group, groupIndex) in groupedCommands" :key="group.category">
+      <!-- Category header -->
+      <div v-if="group.category" class="category-header">
+        {{ group.category }}
       </div>
-    </div>
+
+      <!-- Commands in this category -->
+      <div
+        v-for="command in group.commands"
+        :key="command.id"
+        :class="['command-item', {
+          active: getCommandGlobalIndex(command) === selectedIndex,
+          loading: command.loading
+        }]"
+        @click="selectCommand(command)"
+        @mouseenter="selectedIndex = getCommandGlobalIndex(command)"
+      >
+        <span class="command-icon">
+          <span v-if="command.loading" class="loading-spinner">⏳</span>
+          <span v-else>{{ command.icon }}</span>
+        </span>
+        <div class="command-info">
+          <div class="command-title">{{ command.title }}</div>
+          <div class="command-description">{{ command.description }}</div>
+        </div>
+      </div>
+
+      <!-- Divider between categories (not after last category) -->
+      <div v-if="groupIndex < groupedCommands.length - 1" class="category-divider"></div>
+    </template>
   </div>
 </template>
 
@@ -55,6 +72,59 @@ const filteredCommands = computed(() => {
     return matchesTitle || matchesDescription || matchesKeywords;
   });
 });
+
+// Group commands by category
+interface CommandGroup {
+  category: string;
+  commands: SlashCommand[];
+}
+
+const groupedCommands = computed<CommandGroup[]>(() => {
+  const groups = new Map<string, SlashCommand[]>();
+
+  // Define category order
+  const categoryOrder = [
+    'Базовые блоки',
+    'Списки',
+    'Форматирование',
+    'Выноски',
+    'Вставки',
+    'AI действия',
+  ];
+
+  // Group commands by category
+  filteredCommands.value.forEach((cmd) => {
+    const category = cmd.category || 'Другое';
+    if (!groups.has(category)) {
+      groups.set(category, []);
+    }
+    groups.get(category)!.push(cmd);
+  });
+
+  // Convert to ordered array
+  const result: CommandGroup[] = [];
+  categoryOrder.forEach((category) => {
+    if (groups.has(category)) {
+      result.push({
+        category,
+        commands: groups.get(category)!,
+      });
+      groups.delete(category);
+    }
+  });
+
+  // Add remaining categories (if any)
+  groups.forEach((commands, category) => {
+    result.push({ category, commands });
+  });
+
+  return result;
+});
+
+// Get global index of a command (for navigation)
+const getCommandGlobalIndex = (command: SlashCommand): number => {
+  return filteredCommands.value.findIndex((cmd) => cmd.id === command.id);
+};
 
 const selectCommand = (command: SlashCommand) => {
   command.command(props.editor);
@@ -176,6 +246,40 @@ defineExpose({
   color: #6b7280;
   line-height: 1.4;
 }
+
+.category-header {
+  padding: 8px 12px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #9ca3af;
+}
+
+.category-divider {
+  height: 1px;
+  background-color: #e5e7eb;
+  margin: 4px 0;
+}
+
+.command-item.loading {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.loading-spinner {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
 </style>
 
 <style>
@@ -197,5 +301,13 @@ defineExpose({
 
 .dark .command-description {
   color: #9ca3af;
+}
+
+.dark .category-header {
+  color: #6b7280;
+}
+
+.dark .category-divider {
+  background-color: #374151;
 }
 </style>
