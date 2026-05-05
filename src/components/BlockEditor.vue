@@ -51,7 +51,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onBeforeUnmount, computed } from 'vue';
-import { useEditor, EditorContent } from '@tiptap/vue-3';
+import { useEditor, EditorContent, type Editor } from '@tiptap/vue-3';
 import StarterKit from '@tiptap/starter-kit';
 import Highlight from '@tiptap/extension-highlight';
 import Underline from '@tiptap/extension-underline';
@@ -108,7 +108,7 @@ const { createDatabase } = useDatabases();
 const { loading: aiLoading, error: aiError, summarize, expand } = useAI();
 
 // AI command handlers
-const handleSummarize = async (editor: any) => {
+const handleSummarize = async (editor: Editor) => {
   const { state } = editor;
   const { from, to } = state.selection;
 
@@ -122,6 +122,11 @@ const handleSummarize = async (editor: any) => {
     textToSummarize = state.doc.textContent;
   }
 
+  if (!textToSummarize.trim()) {
+    console.warn('No text to summarize');
+    return;
+  }
+
   const result = await summarize(textToSummarize);
 
   if (result) {
@@ -132,11 +137,11 @@ const handleSummarize = async (editor: any) => {
       editor.chain().focus().insertContent(result).run();
     }
   } else if (aiError.value) {
-    alert(aiError.value);
+    console.error('AI summarize error:', aiError.value);
   }
 };
 
-const handleExpand = async (editor: any) => {
+const handleExpand = async (editor: Editor) => {
   const { state } = editor;
   const { from, to } = state.selection;
 
@@ -153,6 +158,11 @@ const handleExpand = async (editor: any) => {
     textToExpand = state.doc.textBetween(start, end, ' ');
   }
 
+  if (!textToExpand.trim()) {
+    console.warn('No text to expand');
+    return;
+  }
+
   const result = await expand(textToExpand);
 
   if (result) {
@@ -166,7 +176,7 @@ const handleExpand = async (editor: any) => {
       editor.chain().focus().deleteRange({ from: start, to: end }).insertContent(result).run();
     }
   } else if (aiError.value) {
-    alert(aiError.value);
+    console.error('AI expand error:', aiError.value);
   }
 };
 
@@ -368,7 +378,6 @@ const slashCommands = computed<SlashCommandType[]>(() => [
     icon: '📝',
     category: 'AI действия',
     keywords: ['summarize', 'sum', 'summary', 'суммаризация', 'кратко'],
-    loading: aiLoading.value,
     command: async (editor) => {
       // Delete slash command from text
       editor.chain().focus().deleteRange({ from: editor.state.selection.from - slashQuery.value.length - 1, to: editor.state.selection.to }).run();
@@ -382,7 +391,6 @@ const slashCommands = computed<SlashCommandType[]>(() => [
     icon: '✨',
     category: 'AI действия',
     keywords: ['expand', 'exp', 'elaborate', 'расширить', 'дополнить'],
-    loading: aiLoading.value,
     command: async (editor) => {
       // Delete slash command from text
       editor.chain().focus().deleteRange({ from: editor.state.selection.from - slashQuery.value.length - 1, to: editor.state.selection.to }).run();

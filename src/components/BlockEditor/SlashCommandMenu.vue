@@ -15,16 +15,12 @@
         v-for="command in group.commands"
         :key="command.id"
         :class="['command-item', {
-          active: getCommandGlobalIndex(command) === selectedIndex,
-          loading: command.loading
+          active: getCommandGlobalIndex(command) === selectedIndex
         }]"
         @click="selectCommand(command)"
         @mouseenter="selectedIndex = getCommandGlobalIndex(command)"
       >
-        <span class="command-icon">
-          <span v-if="command.loading" class="loading-spinner">⏳</span>
-          <span v-else>{{ command.icon }}</span>
-        </span>
+        <span class="command-icon">{{ command.icon }}</span>
         <div class="command-info">
           <div class="command-title">{{ command.title }}</div>
           <div class="command-description">{{ command.description }}</div>
@@ -260,25 +256,6 @@ defineExpose({
   height: 1px;
   background-color: #e5e7eb;
   margin: 4px 0;
-}
-
-.command-item.loading {
-  opacity: 0.6;
-  cursor: wait;
-}
-
-.loading-spinner {
-  display: inline-block;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
 }
 </style>
 

@@ -20,7 +20,6 @@ export interface SlashCommand {
   command: (editor: Editor) => void;
   keywords?: string[];
   category?: string;
-  loading?: boolean;
 }
 
 export interface BlockMenuAction {
