@@ -349,7 +349,7 @@ const slashCommands = computed<SlashCommandType[]>(() => [
     category: 'Вставки',
     keywords: ['template', 'шаблон', 'образец'],
     command: (editor) => {
-      // Delete slash command from text
+      // Удалить slash-команду из текста
       editor.chain().focus().deleteRange({ from: editor.state.selection.from - slashQuery.value.length - 1, to: editor.state.selection.to }).run();
       // Show template gallery modal
       templateGalleryVisible.value = true;
@@ -363,7 +363,7 @@ const slashCommands = computed<SlashCommandType[]>(() => [
     category: 'Вставки',
     keywords: ['nested', 'child', 'subpage', 'вложенная', 'дочерняя'],
     command: (editor) => {
-      // Delete slash command from text
+      // Удалить slash-команду из текста
       editor.chain().focus().deleteRange({ from: editor.state.selection.from - slashQuery.value.length - 1, to: editor.state.selection.to }).run();
       // Show modal to create nested note
       nestedNoteModalVisible.value = true;
@@ -377,7 +377,7 @@ const slashCommands = computed<SlashCommandType[]>(() => [
     category: 'Вставки',
     keywords: ['database', 'table', 'data', 'база', 'таблица', 'данные'],
     command: async (editor) => {
-      // Delete slash command from text
+      // Удалить slash-команду из текста
       editor.chain().focus().deleteRange({ from: editor.state.selection.from - slashQuery.value.length - 1, to: editor.state.selection.to }).run();
 
       // Create new database
@@ -401,7 +401,7 @@ const slashCommands = computed<SlashCommandType[]>(() => [
     category: 'AI действия',
     keywords: ['summarize', 'sum', 'summary', 'суммаризация', 'кратко'],
     command: async (editor) => {
-      // Delete slash command from text
+      // Удалить slash-команду из текста
       editor.chain().focus().deleteRange({ from: editor.state.selection.from - slashQuery.value.length - 1, to: editor.state.selection.to }).run();
       await handleSummarize(editor);
     },
@@ -414,7 +414,7 @@ const slashCommands = computed<SlashCommandType[]>(() => [
     category: 'AI действия',
     keywords: ['expand', 'exp', 'elaborate', 'расширить', 'дополнить'],
     command: async (editor) => {
-      // Delete slash command from text
+      // Удалить slash-команду из текста
       editor.chain().focus().deleteRange({ from: editor.state.selection.from - slashQuery.value.length - 1, to: editor.state.selection.to }).run();
       await handleExpand(editor);
     },

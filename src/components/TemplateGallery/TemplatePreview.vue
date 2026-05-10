@@ -4,7 +4,12 @@
       <span class="preview-icon">{{ template.icon }}</span>
       <h3 class="preview-title">{{ template.title }}</h3>
     </div>
-    <div class="preview-content" v-html="previewHtml"></div>
+    <div class="preview-content">
+      <div v-for="(section, index) in previewSections" :key="index" class="preview-section">
+        <h2 v-if="section.tag === 'h2'">{{ section.text }}</h2>
+        <h3 v-else>{{ section.text }}</h3>
+      </div>
+    </div>
   </div>
   <div v-else class="template-preview-empty">
     <p>Выберите шаблон для предпросмотра</p>
@@ -19,30 +24,30 @@ const props = defineProps<{
   template: Template | null;
 }>();
 
-const previewHtml = computed(() => {
-  if (!props.template) return '';
+interface PreviewSection {
+  tag: 'h2' | 'h3';
+  text: string;
+}
+
+const previewSections = computed<PreviewSection[]>(() => {
+  if (!props.template) return [];
 
   const content = props.template.content;
-  const tempDiv = document.createElement('div');
-  tempDiv.innerHTML = content;
 
-  const headers = tempDiv.querySelectorAll('h2, h3');
-  const preview: string[] = [];
+  // Безопасный парсинг: используем DOMParser вместо innerHTML
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(content, 'text/html');
+
+  const headers = doc.querySelectorAll('h2, h3');
+  const sections: PreviewSection[] = [];
 
   headers.forEach(header => {
-    const tagName = header.tagName.toLowerCase();
-    const textContent = header.textContent || '';
-    const escapedText = textContent
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
-
-    preview.push(`<div class="preview-section"><${tagName}>${escapedText}</${tagName}></div>`);
+    const tag = header.tagName.toLowerCase() as 'h2' | 'h3';
+    const text = header.textContent || '';
+    sections.push({ tag, text });
   });
 
-  return preview.join('');
+  return sections;
 });
 </script>
 

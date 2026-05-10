@@ -2,7 +2,6 @@ import { ref } from 'vue';
 import { templates } from '../data/templates';
 import { aiApi } from '../api/ai';
 import type { Template, TemplateCategory } from '../types/template';
-import type { Note } from '../types';
 
 export function useTemplates() {
   const loading = ref(false);

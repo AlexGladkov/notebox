@@ -69,6 +69,7 @@ import { useSearch } from './composables/useSearch';
 import { useTheme } from './composables/useTheme';
 import { useTabs } from './composables/useTabs';
 import { initNetworkStatus, destroyNetworkStatus } from './services/offline/networkStatus';
+import { notesApi } from './api/notes';
 import UnifiedSidebar from './components/UnifiedSidebar.vue';
 import NoteEditor from './components/NoteEditor.vue';
 import TabBar from './components/TabBar.vue';
@@ -243,6 +244,17 @@ const handleCreateFromTemplate = async (data: { title: string; content: string; 
       content: data.content,
       icon: data.icon,
     });
+
+    // Получить обновленную заметку для синхронизации состояния
+    const updatedNote = await notesApi.getById(newNote.id);
+
+    // Обновить заметку в локальном состоянии
+    const noteIndex = notes.value.findIndex(n => n.id === newNote.id);
+    if (noteIndex !== -1) {
+      notes.value[noteIndex] = updatedNote;
+    } else {
+      notes.value.unshift(updatedNote);
+    }
 
     openTab(newNote.id);
   } catch (error) {
