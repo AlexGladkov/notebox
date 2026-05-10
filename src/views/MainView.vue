@@ -208,6 +208,9 @@
       :user="user"
       @close="showProfileModal = false"
     />
+
+    <!-- Quick Capture FAB -->
+    <QuickCaptureButton />
   </div>
 </template>
 
@@ -232,6 +235,7 @@ import SettingsModal from '../components/settings/SettingsModal.vue';
 import DemoBanner from '../components/layout/DemoBanner.vue';
 import TagFilter from '../components/TagFilter.vue';
 import SyncStatusIndicator from '../components/SyncStatusIndicator.vue';
+import QuickCaptureButton from '../components/QuickCapture/QuickCaptureButton.vue';
 
 // Router
 const router = useRouter();
