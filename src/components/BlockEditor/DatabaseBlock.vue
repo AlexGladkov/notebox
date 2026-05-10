@@ -483,6 +483,9 @@ const handleImport = async (importData: ImportData) => {
           newCol.name,
           newCol.type
         );
+        if (!column) {
+          throw new Error(`Не удалось создать колонку: ${newCol.name}`);
+        }
         createdColumns.push(column);
       }
 
@@ -495,12 +498,85 @@ const handleImport = async (importData: ImportData) => {
       }
     }
 
-    // Преобразуем записи с учётом новых колонок
+    // Обрабатываем SELECT поля - создаём недостающие опции
+    const selectColumnsToUpdate = new Map<string, { column: Column; newOptions: Set<string> }>();
+
+    for (const record of importData.records) {
+      for (const [tempColumnId, value] of Object.entries(record)) {
+        const actualColumnId = columnIdMap.get(tempColumnId) || tempColumnId;
+        const column = database.value.columns.find(c => c.id === actualColumnId);
+
+        if (column && (column.type === 'SELECT' || column.type === 'MULTI_SELECT')) {
+          // Проверяем, есть ли строковые значения (не ID)
+          const values = column.type === 'MULTI_SELECT' && Array.isArray(value) ? value : [value];
+
+          for (const val of values) {
+            if (typeof val === 'string' && val) {
+              // Это строка, а не ID - нужно создать опцию
+              const existingOption = column.options?.find(opt => opt.id === val || opt.label.toLowerCase() === val.toLowerCase());
+              if (!existingOption) {
+                // Добавляем в список новых опций для этой колонки
+                if (!selectColumnsToUpdate.has(actualColumnId)) {
+                  selectColumnsToUpdate.set(actualColumnId, { column, newOptions: new Set() });
+                }
+                selectColumnsToUpdate.get(actualColumnId)!.newOptions.add(val);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Создаём новые опции для SELECT колонок
+    const optionIdMap = new Map<string, string>(); // Map label -> новый ID опции
+    for (const [columnId, { column, newOptions }] of selectColumnsToUpdate.entries()) {
+      const colors = ['blue', 'green', 'red', 'yellow', 'purple', 'pink', 'orange'];
+      const updatedOptions = [...(column.options || [])];
+
+      for (const label of newOptions) {
+        const newOptionId = `opt-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const color = colors[updatedOptions.length % colors.length];
+        updatedOptions.push({ id: newOptionId, label, color });
+        optionIdMap.set(`${columnId}:${label}`, newOptionId);
+      }
+
+      // Обновляем колонку с новыми опциями
+      await updateColumn(
+        props.node.attrs.databaseId,
+        columnId,
+        column.name,
+        column.type,
+        updatedOptions
+      );
+    }
+
+    // Преобразуем записи с учётом новых колонок и опций
     const recordsToImport = importData.records.map(record => {
       const transformedRecord: { [columnId: string]: any } = {};
-      for (const [key, value] of Object.entries(record)) {
-        const actualColumnId = columnIdMap.get(key) || key;
-        transformedRecord[actualColumnId] = value;
+      for (const [tempColumnId, value] of Object.entries(record)) {
+        const actualColumnId = columnIdMap.get(tempColumnId) || tempColumnId;
+        const column = database.value.columns.find(c => c.id === actualColumnId);
+
+        let transformedValue = value;
+
+        // Преобразуем строковые значения SELECT полей в ID опций
+        if (column && (column.type === 'SELECT' || column.type === 'MULTI_SELECT')) {
+          if (column.type === 'SELECT' && typeof value === 'string') {
+            // Ищем опцию по label или берём ID из карты новых опций
+            const existingOption = column.options?.find(opt => opt.label.toLowerCase() === value.toLowerCase());
+            transformedValue = existingOption?.id || optionIdMap.get(`${actualColumnId}:${value}`) || value;
+          } else if (column.type === 'MULTI_SELECT' && Array.isArray(value)) {
+            transformedValue = value.map(val => {
+              if (typeof val === 'string') {
+                const existingOption = column.options?.find(opt => opt.label.toLowerCase() === val.toLowerCase());
+                return existingOption?.id || optionIdMap.get(`${actualColumnId}:${val}`) || val;
+              }
+              return val;
+            });
+          }
+        }
+
+        transformedRecord[actualColumnId] = transformedValue;
       }
       return transformedRecord;
     });

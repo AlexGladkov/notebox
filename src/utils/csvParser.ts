@@ -220,7 +220,13 @@ export function detectColumnTypes(headers: string[], rows: string[][]): ColumnTy
 
 /**
  * Преобразует значение CSV в формат, подходящий для типа колонки
+ * Возвращает объект с результатом и, если нужно, новые опции для SELECT полей
  */
+export interface ConvertResult {
+  value: any;
+  newOptions?: Array<{ label: string; color: string }>;
+}
+
 export function convertCsvValue(value: string, type: ColumnType, options?: any[]): any {
   if (!value || value === '') {
     return null;
@@ -231,7 +237,10 @@ export function convertCsvValue(value: string, type: ColumnType, options?: any[]
     case 'MULTI_SELECT':
       // Для SELECT полей ищем опцию по label и возвращаем её id
       if (!options || options.length === 0) {
-        return null;
+        // Если options пустой, возвращаем label как есть - будет обработано позже
+        return type === 'MULTI_SELECT'
+          ? value.split(',').map(v => v.trim()).filter(v => v)
+          : value;
       }
 
       if (type === 'SELECT') {
@@ -239,7 +248,8 @@ export function convertCsvValue(value: string, type: ColumnType, options?: any[]
         const option = options.find(opt =>
           opt.label && opt.label.toLowerCase() === value.toLowerCase()
         );
-        return option ? option.id : null;
+        // Если не нашли опцию, возвращаем label как есть - будет обработано позже
+        return option ? option.id : value;
       } else {
         // Для MULTI_SELECT разбиваем по запятой и ищем каждую опцию
         const values = value.split(',').map(v => v.trim()).filter(v => v);
@@ -248,9 +258,10 @@ export function convertCsvValue(value: string, type: ColumnType, options?: any[]
             const option = options.find(opt =>
               opt.label && opt.label.toLowerCase() === v.toLowerCase()
             );
-            return option ? option.id : null;
+            // Если не нашли опцию, возвращаем label как есть
+            return option ? option.id : v;
           })
-          .filter(id => id !== null);
+          .filter(Boolean);
         return selectedIds.length > 0 ? selectedIds : null;
       }
 

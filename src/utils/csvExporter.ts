@@ -91,7 +91,9 @@ function formatCsvValue(value: any, column: Column, delimiter: string): string {
     case 'FILE':
       // Файлы экспортируем как список имён через запятую
       if (Array.isArray(value)) {
-        const filenames = value.map(file => file.filename || '').filter(Boolean);
+        const filenames = value
+          .map(file => (typeof file === 'object' && file !== null ? file.filename : null))
+          .filter(Boolean);
         return escapeCsvValue(filenames.join(', '), delimiter);
       }
       return '';
