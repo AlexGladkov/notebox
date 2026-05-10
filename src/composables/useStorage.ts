@@ -17,7 +17,22 @@ export function useStorage() {
       error.value = null;
 
       // Сначала загружаем из кэша для быстрого отображения
-      const cachedNotes = await offlineStore.loadFromCache();
+      let cachedNotes = await offlineStore.loadFromCache();
+
+      // Миграция: удаляем дубликаты Inbox (оставляем только самую свежую)
+      const inboxNotes = cachedNotes.filter(n => n.title === '📥 Inbox' && !n.parentId);
+      if (inboxNotes.length > 1) {
+        console.warn(`Found ${inboxNotes.length} Inbox duplicates, cleaning up...`);
+        // Сортируем по дате обновления (самая свежая первая)
+        inboxNotes.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+        const keepInbox = inboxNotes[0];
+        const removeIds = inboxNotes.slice(1).map(n => n.id);
+
+        // Удаляем дубликаты из кэша
+        cachedNotes = cachedNotes.filter(n => !removeIds.includes(n.id));
+        await offlineStore.saveToCache(cachedNotes);
+      }
+
       if (cachedNotes.length > 0) {
         notes.value = cachedNotes;
         loading.value = false;

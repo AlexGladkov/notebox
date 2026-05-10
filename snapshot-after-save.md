@@ -1,0 +1,51 @@
+- generic [ref=e28]:
+  - generic [ref=e30]:
+    - img [ref=e32]
+    - generic [ref=e34]: Демо-режим — данные сбрасываются при каждом входе
+    - button "Выйти" [ref=e35] [cursor=pointer]
+  - generic [ref=e38]:
+    - generic "Онлайн" [ref=e39]:
+      - img [ref=e40]
+    - 'generic "Несинхронизированных изменений: 2. Нажмите для синхронизации." [ref=e123] [cursor=pointer]':
+      - img [ref=e124]
+      - generic [ref=e127]: "2"
+  - generic [ref=e44]:
+    - generic [ref=e45]:
+      - button "DU Demo User" [ref=e47] [cursor=pointer]:
+        - generic [ref=e49]: DU
+        - generic [ref=e51]: Demo User
+      - generic [ref=e53]:
+        - textbox "Поиск заметок..." [ref=e54]
+        - img [ref=e55]
+      - generic [ref=e58]:
+        - generic [ref=e59]:
+          - generic [ref=e60]: Страницы
+          - button "Создать страницу" [ref=e61] [cursor=pointer]:
+            - img [ref=e62]
+        - generic [ref=e64]:
+          - generic [ref=e66] [cursor=pointer]:
+            - generic [ref=e68]: 💡
+            - generic [ref=e69]: Идеи для проектов
+          - generic [ref=e71] [cursor=pointer]:
+            - generic [ref=e73]: 🏠
+            - generic [ref=e74]: Мой Dashboard
+          - generic [ref=e76] [cursor=pointer]:
+            - button [ref=e77]:
+              - img [ref=e78]
+            - generic [ref=e80]: 📝
+            - generic [ref=e81]: Рабочие заметки
+          - generic [ref=e83] [cursor=pointer]:
+            - generic [ref=e85]: 🎯
+            - generic [ref=e86]: Цели на месяц
+      - generic [ref=e87]:
+        - button "Открыть граф связей" [ref=e88] [cursor=pointer]:
+          - img [ref=e89]
+          - generic [ref=e91]: Граф связей
+        - button "Переключить тему" [ref=e92] [cursor=pointer]:
+          - img [ref=e93]
+          - generic [ref=e95]: Системная тема
+    - generic [ref=e99]:
+      - img [ref=e100]
+      - paragraph [ref=e102]: Выберите заметку для редактирования
+  - button "Быстрый захват" [ref=e104] [cursor=pointer]:
+    - img [ref=e105]

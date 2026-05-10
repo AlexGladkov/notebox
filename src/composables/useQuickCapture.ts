@@ -29,22 +29,38 @@ export function useQuickCapture() {
   const lastError = ref<string | null>(null);
 
   async function getOrCreateInbox() {
+    // Сначала ищем в реактивном массиве (быстро)
     let inbox = notes.value.find(n => n.title === INBOX_TITLE && !n.parentId);
 
-    if (!inbox) {
-      try {
-        inbox = await createNote(INBOX_TITLE, null);
-        await updateNote(inbox.id, {
-          content: INBOX_CONTENT,
-          icon: '📥',
-        });
-      } catch (error) {
-        console.error('Failed to create Inbox:', error);
-        throw new Error('Не удалось создать Inbox');
-      }
+    if (inbox) {
+      return inbox;
     }
 
-    return inbox;
+    // Если не нашли в памяти, ищем в IndexedDB (может быть не загружено в notes.value)
+    const { offlineStore } = await import('../services/offline/offlineStore');
+    const allNotes = await offlineStore.loadFromCache();
+    inbox = allNotes.find(n => n.title === INBOX_TITLE && !n.parentId);
+
+    if (inbox) {
+      // Добавляем найденный Inbox в реактивный массив, если его там нет
+      if (!notes.value.find(n => n.id === inbox.id)) {
+        notes.value.push(inbox);
+      }
+      return inbox;
+    }
+
+    // Inbox не существует - создаем новый
+    try {
+      inbox = await createNote(INBOX_TITLE, null);
+      await updateNote(inbox.id, {
+        content: INBOX_CONTENT,
+        icon: '📥',
+      });
+      return inbox;
+    } catch (error) {
+      console.error('Failed to create Inbox:', error);
+      throw new Error('Не удалось создать Inbox');
+    }
   }
 
   async function addTextToNote(text: string, noteId: string): Promise<void> {
