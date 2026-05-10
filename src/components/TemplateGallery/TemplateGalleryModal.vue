@@ -62,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onBeforeUnmount } from 'vue';
 import { useTemplates } from '../../composables/useTemplates';
 import { TEMPLATE_CATEGORY_LABELS, type TemplateCategory } from '../../types/template';
 import TemplateCard from './TemplateCard.vue';
@@ -133,14 +133,6 @@ const handleOverlayClick = (e: MouseEvent) => {
   }
 };
 
-watch(() => props.modelValue, (newValue) => {
-  if (newValue) {
-    selectedTemplateId.value = null;
-    selectedCategory.value = 'all';
-    useAI.value = false;
-  }
-});
-
 const handleEscape = (e: KeyboardEvent) => {
   if (e.key === 'Escape' && props.modelValue) {
     close();
@@ -149,10 +141,17 @@ const handleEscape = (e: KeyboardEvent) => {
 
 watch(() => props.modelValue, (newValue) => {
   if (newValue) {
+    selectedTemplateId.value = null;
+    selectedCategory.value = 'all';
+    useAI.value = false;
     document.addEventListener('keydown', handleEscape);
   } else {
     document.removeEventListener('keydown', handleEscape);
   }
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener('keydown', handleEscape);
 });
 </script>
 

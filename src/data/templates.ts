@@ -8,7 +8,7 @@ export const templates: Template[] = [
     icon: '📋',
     category: 'work',
     content: `<h2>📅 Встреча: [Название встречи]</h2>
-<p><strong>Дата:</strong> ${new Date().toLocaleDateString('ru-RU')}</p>
+<p><strong>Дата:</strong> {{DATE}}</p>
 <p><strong>Участники:</strong></p>
 <ul>
   <li></li>
@@ -26,7 +26,7 @@ export const templates: Template[] = [
   <li data-checked="false"></li>
 </ul>`,
     staticExample: `<h2>📅 Встреча: Еженедельный статус по проекту</h2>
-<p><strong>Дата:</strong> ${new Date().toLocaleDateString('ru-RU')}</p>
+<p><strong>Дата:</strong> {{DATE}}</p>
 <p><strong>Участники:</strong></p>
 <ul>
   <li>Александр (PM)</li>
@@ -134,7 +134,7 @@ export const templates: Template[] = [
     icon: '📚',
     category: 'learning',
     content: `<h2>📚 Изучаю: [Тема]</h2>
-<p><strong>Дата:</strong> ${new Date().toLocaleDateString('ru-RU')}</p>
+<p><strong>Дата:</strong> {{DATE}}</p>
 <p><strong>Источник:</strong> </p>
 <h3>Ключевые идеи</h3>
 <ul>
@@ -156,7 +156,7 @@ export const templates: Template[] = [
   <li data-checked="false"></li>
 </ul>`,
     staticExample: `<h2>📚 Изучаю: Основы TypeScript</h2>
-<p><strong>Дата:</strong> ${new Date().toLocaleDateString('ru-RU')}</p>
+<p><strong>Дата:</strong> {{DATE}}</p>
 <p><strong>Источник:</strong> TypeScript Handbook, официальная документация</p>
 <h3>Ключевые идеи</h3>
 <ul>
@@ -192,7 +192,7 @@ export const templates: Template[] = [
     icon: '📅',
     category: 'personal',
     content: `<h2>📅 Недельный обзор</h2>
-<p><strong>Неделя:</strong> ${new Date().toLocaleDateString('ru-RU')}</p>
+<p><strong>Неделя:</strong> {{DATE}}</p>
 <h3>✅ Достижения</h3>
 <ul>
   <li></li>
@@ -214,7 +214,7 @@ export const templates: Template[] = [
   <li></li>
 </ol>`,
     staticExample: `<h2>📅 Недельный обзор</h2>
-<p><strong>Неделя:</strong> ${new Date().toLocaleDateString('ru-RU')}</p>
+<p><strong>Неделя:</strong> {{DATE}}</p>
 <h3>✅ Достижения</h3>
 <ul>
   <li>Завершил редизайн главной страницы приложения</li>
@@ -255,7 +255,7 @@ export const templates: Template[] = [
     icon: '💡',
     category: 'work',
     content: `<h2>💡 Мозговой штурм: [Тема]</h2>
-<p><strong>Дата:</strong> ${new Date().toLocaleDateString('ru-RU')}</p>
+<p><strong>Дата:</strong> {{DATE}}</p>
 <p><strong>Участники:</strong> </p>
 <h3>🎯 Проблема / Вызов</h3>
 <p></p>
@@ -281,7 +281,7 @@ export const templates: Template[] = [
   <li data-checked="false"></li>
 </ul>`,
     staticExample: `<h2>💡 Мозговой штурм: Улучшение onboarding новых пользователей</h2>
-<p><strong>Дата:</strong> ${new Date().toLocaleDateString('ru-RU')}</p>
+<p><strong>Дата:</strong> {{DATE}}</p>
 <p><strong>Участники:</strong> Product Team, UX Designer, Customer Success</p>
 <h3>🎯 Проблема / Вызов</h3>
 <p>40% новых пользователей уходят после первого входа в приложение, не завершив базовую настройку. Нужно сделать onboarding более понятным и вовлекающим.</p>
@@ -329,7 +329,7 @@ export const templates: Template[] = [
     icon: '✏️',
     category: 'personal',
     content: `<h2>✏️ Дневник</h2>
-<p><strong>Дата:</strong> ${new Date().toLocaleDateString('ru-RU')}</p>
+<p><strong>Дата:</strong> {{DATE}}</p>
 <h3>📝 События дня</h3>
 <p></p>
 <h3>💭 Мысли и размышления</h3>
@@ -351,7 +351,7 @@ export const templates: Template[] = [
   <li data-checked="false"></li>
 </ul>`,
     staticExample: `<h2>✏️ Дневник</h2>
-<p><strong>Дата:</strong> ${new Date().toLocaleDateString('ru-RU')}</p>
+<p><strong>Дата:</strong> {{DATE}}</p>
 <h3>📝 События дня</h3>
 <p>Сегодня был продуктивный день на работе. Утром прошла важная встреча с заказчиком, где мы презентовали новую версию продукта. После обеда работал над сложной задачей по оптимизации производительности. Вечером провёл время с семьёй, играли в настольные игры.</p>
 <h3>💭 Мысли и размышления</h3>

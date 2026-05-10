@@ -20,6 +20,11 @@ export function useTemplates() {
     return templates.find(t => t.id === templateId);
   };
 
+  const replacePlaceholders = (content: string): string => {
+    const currentDate = new Date().toLocaleDateString('ru-RU');
+    return content.replace(/\{\{DATE\}\}/g, currentDate);
+  };
+
   const generateTemplateContent = async (
     templateId: string,
     useAI: boolean = false
@@ -30,7 +35,7 @@ export function useTemplates() {
     }
 
     if (!useAI) {
-      return template.content;
+      return replacePlaceholders(template.content);
     }
 
     try {
@@ -39,14 +44,14 @@ export function useTemplates() {
       const aiContent = await aiApi.generateTemplateContent(templateId);
 
       if (aiContent) {
-        return aiContent;
+        return replacePlaceholders(aiContent);
       }
 
-      return template.staticExample || template.content;
+      return replacePlaceholders(template.staticExample || template.content);
     } catch (e) {
       console.error('Failed to generate AI content:', e);
       error.value = 'Не удалось сгенерировать контент с помощью AI';
-      return template.staticExample || template.content;
+      return replacePlaceholders(template.staticExample || template.content);
     } finally {
       loading.value = false;
     }

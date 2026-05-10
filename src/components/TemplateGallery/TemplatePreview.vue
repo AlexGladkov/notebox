@@ -30,7 +30,16 @@ const previewHtml = computed(() => {
   const preview: string[] = [];
 
   headers.forEach(header => {
-    preview.push(`<div class="preview-section">${header.outerHTML}</div>`);
+    const tagName = header.tagName.toLowerCase();
+    const textContent = header.textContent || '';
+    const escapedText = textContent
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+
+    preview.push(`<div class="preview-section"><${tagName}>${escapedText}</${tagName}></div>`);
   });
 
   return preview.join('');
