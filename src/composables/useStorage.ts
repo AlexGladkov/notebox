@@ -5,6 +5,41 @@ import { offlineStore } from '../services/offline/offlineStore';
 import { indexedDbService } from '../services/offline/indexedDb';
 import { useNetworkStatus } from './useNetworkStatus';
 
+/**
+ * Удаляет дубликаты заметок по ID и title.
+ * Для заметок с одинаковым title (например, "📥 Inbox") оставляет только самую свежую (по updatedAt).
+ */
+function deduplicateNotes(notes: Note[]): Note[] {
+  const seenIds = new Set<string>();
+  const titleMap = new Map<string, Note[]>();
+
+  // Группируем заметки по title
+  notes.forEach(note => {
+    const key = `${note.title}:${note.parentId || 'root'}`;
+    if (!titleMap.has(key)) {
+      titleMap.set(key, []);
+    }
+    titleMap.get(key)!.push(note);
+  });
+
+  const result: Note[] = [];
+
+  // Для каждой группы заметок с одинаковым title + parentId
+  titleMap.forEach((group, key) => {
+    if (group.length === 1) {
+      // Одна заметка - добавляем как есть
+      result.push(group[0]);
+    } else {
+      // Несколько заметок - сортируем по updatedAt и берем самую свежую
+      const sorted = group.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+      result.push(sorted[0]);
+      console.warn(`Deduplicated ${group.length} copies of "${group[0].title}", kept the most recent`);
+    }
+  });
+
+  return result;
+}
+
 export function useStorage() {
   const notes = ref<Note[]>([]);
   const loading = ref(false);
@@ -17,22 +52,7 @@ export function useStorage() {
       error.value = null;
 
       // Сначала загружаем из кэша для быстрого отображения
-      let cachedNotes = await offlineStore.loadFromCache();
-
-      // Миграция: удаляем дубликаты Inbox (оставляем только самую свежую)
-      const inboxNotes = cachedNotes.filter(n => n.title === '📥 Inbox' && !n.parentId);
-      if (inboxNotes.length > 1) {
-        console.warn(`Found ${inboxNotes.length} Inbox duplicates, cleaning up...`);
-        // Сортируем по дате обновления (самая свежая первая)
-        inboxNotes.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
-        const keepInbox = inboxNotes[0];
-        const removeIds = inboxNotes.slice(1).map(n => n.id);
-
-        // Удаляем дубликаты из кэша
-        cachedNotes = cachedNotes.filter(n => !removeIds.includes(n.id));
-        await offlineStore.saveToCache(cachedNotes);
-      }
-
+      const cachedNotes = await offlineStore.loadFromCache();
       if (cachedNotes.length > 0) {
         notes.value = cachedNotes;
         loading.value = false;
@@ -63,8 +83,11 @@ export function useStorage() {
             }
           });
 
-          notes.value = mergedNotes;
-          await offlineStore.saveToCache(mergedNotes);
+          // Дедупликация: удаляем дубликаты по title для специальных заметок
+          const deduplicatedNotes = deduplicateNotes(mergedNotes);
+
+          notes.value = deduplicatedNotes;
+          await offlineStore.saveToCache(deduplicatedNotes);
           await indexedDbService.setMetadata('lastSyncTime', Date.now());
         } catch (err) {
           console.error('Failed to load from server:', err);
