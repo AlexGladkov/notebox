@@ -279,6 +279,43 @@ export function useDatabases() {
     }
   };
 
+  // Batch create records
+  const batchCreateRecords = async (
+    databaseId: string,
+    recordsData: Array<{ [columnId: string]: any }>
+  ) => {
+    try {
+      const createdRecords: Record[] = [];
+
+      for (const data of recordsData) {
+        const newRecord = await databasesApi.createRecord(databaseId, { data });
+        createdRecords.push(newRecord);
+      }
+
+      records.value = [...records.value, ...createdRecords];
+      return createdRecords;
+    } catch (err) {
+      console.error('Failed to batch create records:', err);
+      error.value = 'Не удалось создать записи';
+      throw err;
+    }
+  };
+
+  // Batch delete records
+  const batchDeleteRecords = async (databaseId: string, recordIds: string[]) => {
+    try {
+      for (const recordId of recordIds) {
+        await databasesApi.deleteRecord(databaseId, recordId);
+      }
+
+      records.value = records.value.filter(r => !recordIds.includes(r.id));
+    } catch (err) {
+      console.error('Failed to batch delete records:', err);
+      error.value = 'Не удалось удалить записи';
+      throw err;
+    }
+  };
+
   // Get records for a specific database
   const getRecordsByDatabaseId = (databaseId: string) => {
     return records.value.filter(r => r.databaseId === databaseId);
@@ -437,6 +474,8 @@ export function useDatabases() {
     createRecord,
     updateRecord,
     deleteRecord,
+    batchCreateRecords,
+    batchDeleteRecords,
     getRecordsByDatabaseId,
     getDatabaseById,
     createView,

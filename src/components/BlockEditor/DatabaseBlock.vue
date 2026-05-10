@@ -23,6 +23,8 @@
         @filter-change="handleFilterChange"
         @sort-change="handleSortChange"
         @search-change="handleSearchChange"
+        @import="handleImportClick"
+        @export="handleExport"
       />
       <DatabaseTable
         :database="database"
@@ -44,6 +46,14 @@
       <span>⚠️ База данных не найдена</span>
     </div>
 
+    <!-- CSV Import Dialog -->
+    <CsvImportDialog
+      :show="showImportDialog"
+      :columns="database?.columns || []"
+      @cancel="showImportDialog = false"
+      @import="handleImport"
+    />
+
     <!-- Toast Notification -->
     <Transition name="toast">
       <div v-if="toast.visible" class="toast" :class="{ 'toast-error': toast.isError }">
@@ -59,7 +69,10 @@ import { NodeViewWrapper } from '@tiptap/vue-3';
 import DatabaseViewTabs from './DatabaseViewTabs.vue';
 import DatabaseToolbar from './DatabaseToolbar.vue';
 import DatabaseTable from './DatabaseTable.vue';
+import CsvImportDialog from './CsvImportDialog.vue';
+import type { ImportData } from './CsvImportDialog.vue';
 import { useDatabases } from '../../composables/useDatabases';
+import { exportToCsv, downloadCsv, generateCsvFilename } from '../../utils/csvExporter';
 import type { Column, ColumnType, SelectOption, Record } from '../../types';
 import type { DatabaseView, DatabaseFilter, DatabaseSort } from '../../types/database';
 
@@ -91,6 +104,8 @@ const {
   createView,
   updateView,
   deleteView,
+  batchCreateRecords,
+  batchDeleteRecords,
 } = useDatabases();
 
 const loading = ref(false);
@@ -99,6 +114,7 @@ const currentViewId = ref<string>('');
 const currentFilter = ref<DatabaseFilter | null>(null);
 const currentSort = ref<DatabaseSort | null>(null);
 const searchQuery = ref('');
+const showImportDialog = ref(false);
 const toast = ref({ visible: false, message: '', isError: false });
 let toastTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -424,6 +440,98 @@ const handleDeleteColumn = async (columnId: string) => {
 const handleTableSort = async (columnId: string, direction: 'asc' | 'desc') => {
   const newSort: DatabaseSort = { columnId, direction };
   await handleSortChange(newSort);
+};
+
+const handleImportClick = () => {
+  showImportDialog.value = true;
+};
+
+const handleExport = () => {
+  if (!database.value) {
+    showToast('База данных не загружена', true);
+    return;
+  }
+
+  try {
+    // Экспортируем отфильтрованные записи
+    const recordsToExport = filteredRecords.value;
+    const csvContent = exportToCsv(database.value.columns, recordsToExport);
+    const filename = generateCsvFilename(database.value.name);
+    downloadCsv(csvContent, filename, 'utf-8-bom');
+    showToast(`Экспортировано записей: ${recordsToExport.length}`);
+  } catch (err) {
+    console.error('Failed to export CSV:', err);
+    showToast('Не удалось экспортировать CSV', true);
+  }
+};
+
+const handleImport = async (importData: ImportData) => {
+  if (!database.value) {
+    showToast('База данных не загружена', true);
+    return;
+  }
+
+  try {
+    // Создаём новые колонки если нужно
+    const columnIdMap = new Map<string, string>(); // Map временный ID -> реальный ID
+
+    if (importData.newColumns && importData.newColumns.length > 0 && importData.tempColumnIds) {
+      const createdColumns = [];
+      for (const newCol of importData.newColumns) {
+        const column = await addColumn(
+          props.node.attrs.databaseId,
+          newCol.name,
+          newCol.type
+        );
+        createdColumns.push(column);
+      }
+
+      // Создаем маппинг временных ID на реальные ID
+      for (const [tempId, colIndex] of importData.tempColumnIds.entries()) {
+        const realColumn = createdColumns[colIndex];
+        if (realColumn) {
+          columnIdMap.set(tempId, realColumn.id);
+        }
+      }
+    }
+
+    // Преобразуем записи с учётом новых колонок
+    const recordsToImport = importData.records.map(record => {
+      const transformedRecord: { [columnId: string]: any } = {};
+      for (const [key, value] of Object.entries(record)) {
+        const actualColumnId = columnIdMap.get(key) || key;
+        transformedRecord[actualColumnId] = value;
+      }
+      return transformedRecord;
+    });
+
+    // Если режим "заменить" - удаляем существующие записи
+    if (importData.mode === 'replace') {
+      const existingRecords = getRecordsByDatabaseId(props.node.attrs.databaseId);
+      if (existingRecords.length > 0) {
+        const confirmed = confirm(
+          `Вы уверены, что хотите удалить все существующие записи (${existingRecords.length}) и заменить их импортированными данными?`
+        );
+        if (!confirmed) {
+          showImportDialog.value = false;
+          return;
+        }
+        await batchDeleteRecords(
+          props.node.attrs.databaseId,
+          existingRecords.map(r => r.id)
+        );
+      }
+    }
+
+    // Создаём новые записи
+    await batchCreateRecords(props.node.attrs.databaseId, recordsToImport);
+
+    showToast(`Успешно импортировано записей: ${recordsToImport.length}`);
+    showImportDialog.value = false;
+  } catch (err) {
+    console.error('Failed to import CSV:', err);
+    showToast('Не удалось импортировать CSV', true);
+  }
 };
 
 onMounted(() => {
