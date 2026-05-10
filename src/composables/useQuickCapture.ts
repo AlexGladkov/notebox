@@ -29,29 +29,30 @@ export function useQuickCapture() {
   const lastError = ref<string | null>(null);
 
   async function getOrCreateInbox() {
-    // Сначала ищем в реактивном массиве (быстро)
-    let inbox = notes.value.find(n => n.title === INBOX_TITLE && !n.parentId);
-
-    if (inbox) {
-      return inbox;
-    }
-
-    // Если не нашли в памяти, ищем в IndexedDB (может быть не загружено в notes.value)
+    // ВСЕГДА ищем в IndexedDB (источник истины), не в notes.value
+    // т.к. notes.value может быть не синхронизирован или устаревшим
     const { offlineStore } = await import('../services/offline/offlineStore');
     const allNotes = await offlineStore.loadFromCache();
-    inbox = allNotes.find(n => n.title === INBOX_TITLE && !n.parentId);
 
-    if (inbox) {
-      // Добавляем найденный Inbox в реактивный массив, если его там нет
+    // Ищем все Inbox заметки
+    const inboxNotes = allNotes.filter(n => n.title === INBOX_TITLE && !n.parentId);
+
+    if (inboxNotes.length > 0) {
+      // Если найдено несколько - берем самую свежую (по updatedAt)
+      inboxNotes.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+      const inbox = inboxNotes[0];
+
+      // Добавляем в notes.value если его там нет
       if (!notes.value.find(n => n.id === inbox.id)) {
         notes.value.push(inbox);
       }
+
       return inbox;
     }
 
     // Inbox не существует - создаем новый
     try {
-      inbox = await createNote(INBOX_TITLE, null);
+      const inbox = await createNote(INBOX_TITLE, null);
       await updateNote(inbox.id, {
         content: INBOX_CONTENT,
         icon: '📥',
