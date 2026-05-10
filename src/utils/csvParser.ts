@@ -233,7 +233,9 @@ export function convertCsvValue(value: string, type: ColumnType): any {
 
     case 'NUMBER':
       const num = value.replace(',', '.');
-      return Number(num);
+      const parsedNum = Number(num);
+      // Возвращаем null для невалидных чисел вместо NaN
+      return isNaN(parsedNum) ? null : parsedNum;
 
     case 'DATE':
       // Пытаемся распарсить дату
@@ -245,15 +247,32 @@ export function convertCsvValue(value: string, type: ColumnType): any {
       const ddmmyyyy = value.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);
       if (ddmmyyyy) {
         const [, day, month, year] = ddmmyyyy;
-        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        const formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        // Валидируем дату
+        const date = new Date(formattedDate);
+        if (isNaN(date.getTime())) {
+          return null;
+        }
+        return formattedDate;
       }
       // DD/MM/YYYY
       const ddmmyyyySlash = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
       if (ddmmyyyySlash) {
         const [, day, month, year] = ddmmyyyySlash;
-        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        const formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        // Валидируем дату
+        const date = new Date(formattedDate);
+        if (isNaN(date.getTime())) {
+          return null;
+        }
+        return formattedDate;
       }
-      return value;
+      // Если не распознали формат, пытаемся распарсить нативно
+      const parsed = new Date(value);
+      if (!isNaN(parsed.getTime())) {
+        return parsed.toISOString().split('T')[0];
+      }
+      return null;
 
     case 'TEXT':
     case 'URL':

@@ -88,6 +88,29 @@ function formatCsvValue(value: any, column: Column, delimiter: string): string {
       }
       return escapeCsvValue(String(value), delimiter);
 
+    case 'FILE':
+      // Файлы экспортируем как список имён через запятую
+      if (Array.isArray(value)) {
+        const filenames = value.map(file => file.filename || '').filter(Boolean);
+        return escapeCsvValue(filenames.join(', '), delimiter);
+      }
+      return '';
+
+    case 'RELATION':
+      // Связи экспортируем как список ID через запятую
+      if (Array.isArray(value)) {
+        return escapeCsvValue(value.join(', '), delimiter);
+      }
+      return typeof value === 'string' ? escapeCsvValue(value, delimiter) : '';
+
+    case 'FORMULA':
+      // Формулы экспортируем как вычисленное значение
+      // value уже должно быть вычислено
+      if (typeof value === 'number' || typeof value === 'boolean') {
+        return String(value);
+      }
+      return escapeCsvValue(String(value), delimiter);
+
     case 'TEXT':
     case 'URL':
     case 'EMAIL':
@@ -102,25 +125,35 @@ function formatCsvValue(value: any, column: Column, delimiter: string): string {
  * Экранирует значение для CSV:
  * - Если содержит delimiter, перенос строки или кавычки — заключаем в кавычки
  * - Кавычки внутри удваиваем
+ * - Защита от CSV injection (формулы в Excel)
  */
 function escapeCsvValue(value: string, delimiter: string): string {
   if (!value) {
     return '';
   }
 
+  let escapedValue = value;
+
+  // Защита от CSV injection - экранируем значения начинающиеся с опасных символов
+  const dangerousStarts = ['=', '+', '-', '@', '\t', '\r'];
+  if (dangerousStarts.some(char => escapedValue.startsWith(char))) {
+    // Добавляем одинарную кавычку в начало, чтобы Excel не интерпретировал как формулу
+    escapedValue = "'" + escapedValue;
+  }
+
   const needsQuotes =
-    value.includes(delimiter) ||
-    value.includes('\n') ||
-    value.includes('\r') ||
-    value.includes('"');
+    escapedValue.includes(delimiter) ||
+    escapedValue.includes('\n') ||
+    escapedValue.includes('\r') ||
+    escapedValue.includes('"');
 
   if (needsQuotes) {
     // Удваиваем кавычки
-    const escaped = value.replace(/"/g, '""');
+    const escaped = escapedValue.replace(/"/g, '""');
     return `"${escaped}"`;
   }
 
-  return value;
+  return escapedValue;
 }
 
 /**
