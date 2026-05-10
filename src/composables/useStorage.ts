@@ -28,8 +28,10 @@ export function useStorage() {
         try {
           const serverNotes = await notesApi.getAll();
 
+          // Получаем все локальные заметки из IndexedDB (включая несинхронизированные)
+          const allLocalNotes = await offlineStore.loadFromCache();
+
           // Мерджим с локальными заметками, сохраняя несинхронизированные изменения
-          const cachedNotesMap = new Map(cachedNotes.map(n => [n.id, n]));
           const serverNotesMap = new Map(serverNotes.map(n => [n.id, n]));
 
           const mergedNotes: Note[] = [];
@@ -40,9 +42,9 @@ export function useStorage() {
           });
 
           // Добавляем локальные заметки которых нет на сервере (несинхронизированные)
-          cachedNotes.forEach(cachedNote => {
-            if (!serverNotesMap.has(cachedNote.id)) {
-              mergedNotes.push(cachedNote);
+          allLocalNotes.forEach(localNote => {
+            if (!serverNotesMap.has(localNote.id)) {
+              mergedNotes.push(localNote);
             }
           });
 
@@ -51,8 +53,11 @@ export function useStorage() {
           await indexedDbService.setMetadata('lastSyncTime', Date.now());
         } catch (err) {
           console.error('Failed to load from server:', err);
-          // Если есть кэш, используем его
-          if (cachedNotes.length === 0) {
+          // Загружаем актуальные данные из IndexedDB (могли быть обновлены во время загрузки)
+          const freshLocalNotes = await offlineStore.loadFromCache();
+          if (freshLocalNotes.length > 0) {
+            notes.value = freshLocalNotes;
+          } else {
             error.value = err instanceof ApiError ? err.message : 'Failed to load notes';
             notes.value = [];
           }
