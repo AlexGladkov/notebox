@@ -46,6 +46,11 @@
       @create="handleCreateNestedNote"
       @close="nestedNoteModalVisible = false"
     />
+
+    <TemplateGalleryModal
+      v-model="templateGalleryVisible"
+      @create="handleCreateFromTemplate"
+    />
   </div>
 </template>
 
@@ -71,6 +76,7 @@ import EditorBubbleMenu from './BlockEditor/BubbleMenu.vue';
 import SlashCommandMenu from './BlockEditor/SlashCommandMenu.vue';
 import BlockMenu from './BlockEditor/BlockMenu.vue';
 import CreateNestedNoteModal from './BlockEditor/CreateNestedNoteModal.vue';
+import TemplateGalleryModal from './TemplateGallery/TemplateGalleryModal.vue';
 
 import type { SlashCommand as SlashCommandType, BlockMenuAction } from '../types/editor';
 import { notesApi } from '../api/notes';
@@ -87,6 +93,7 @@ const emit = defineEmits<{
   'noteCreated': [noteId: string];
   'requestSave': [];
   'navigate-to-note': [noteId: string];
+  'createFromTemplate': [data: { title: string; content: string; icon: string }];
 }>();
 
 const slashMenuVisible = ref(false);
@@ -94,6 +101,7 @@ const slashQuery = ref('');
 const slashMenuRef = ref<InstanceType<typeof SlashCommandMenu> | null>(null);
 const nestedNoteModalVisible = ref(false);
 const nestedNoteLoading = ref(false);
+const templateGalleryVisible = ref(false);
 const blockMenuVisible = ref(false);
 const blockMenuPosition = ref({ top: 0, left: 0 });
 const blockMenuActions = ref<BlockMenuAction[]>([]);
@@ -334,6 +342,20 @@ const slashCommands = computed<SlashCommandType[]>(() => [
 
   // Вставки
   {
+    id: 'template',
+    title: 'Шаблон',
+    description: 'Создать заметку из шаблона',
+    icon: '📑',
+    category: 'Вставки',
+    keywords: ['template', 'шаблон', 'образец'],
+    command: (editor) => {
+      // Delete slash command from text
+      editor.chain().focus().deleteRange({ from: editor.state.selection.from - slashQuery.value.length - 1, to: editor.state.selection.to }).run();
+      // Show template gallery modal
+      templateGalleryVisible.value = true;
+    },
+  },
+  {
     id: 'nested',
     title: 'Вложенная заметка',
     description: 'Создать дочернюю заметку',
@@ -560,6 +582,15 @@ watch(() => props.noteId, (newNoteId) => {
     handleCreateNestedNote(pendingNestedNoteTitle.value);
   }
 });
+
+const handleCreateFromTemplate = (content: string, icon: string, title: string) => {
+  try {
+    // Emit event to create new note from template
+    emit('createFromTemplate', { title, content, icon });
+  } catch (error) {
+    console.error('Failed to create note from template:', error);
+  }
+};
 
 // Block handle and menu functionality
 const handleMouseMove = (event: MouseEvent) => {

@@ -56,6 +56,7 @@
         @update:model-value="handleContentChange"
         @note-created="handleNoteCreated"
         @navigate-to-note="handleNavigateToNote"
+        @create-from-template="handleCreateFromTemplate"
       />
     </div>
   </div>
@@ -94,6 +95,7 @@ const emit = defineEmits<{
   addTag: [tagId: string];
   removeTag: [tagId: string];
   createTag: [name: string];
+  createFromTemplate: [data: { title: string; content: string; icon: string }];
 }>();
 
 const localTitle = ref('');
@@ -182,6 +184,10 @@ const handleRemoveTag = (tagId: string) => {
 
 const handleCreateTag = (name: string) => {
   emit('createTag', name);
+};
+
+const handleCreateFromTemplate = (data: { title: string; content: string; icon: string }) => {
+  emit('createFromTemplate', data);
 };
 
 // Cleanup debounce таймера при размонтировании

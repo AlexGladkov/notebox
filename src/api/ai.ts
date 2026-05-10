@@ -44,4 +44,19 @@ export const aiApi = {
       return `${text}\n\n✨ Расширенная версия:\n\nЭто расширенная версия текста. API для AI еще не настроен.`;
     }
   },
+
+  /**
+   * Сгенерировать контент для шаблона с помощью AI
+   */
+  async generateTemplateContent(templateId: string): Promise<string> {
+    try {
+      const response = await apiClient.post<AIResponse>('/api/ai/generate-template', {
+        templateId,
+      });
+      return response.result;
+    } catch (error) {
+      console.error('AI template generation error:', error);
+      return '';
+    }
+  },
 };

@@ -189,6 +189,7 @@
             @add-tag="handleAddTag"
             @remove-tag="handleRemoveTag"
             @create-tag="handleCreateTag"
+            @create-from-template="handleCreateFromTemplate"
           />
         </div>
       </div>
@@ -372,6 +373,21 @@ async function handleUpdateNote(updates: {
     }
   } catch (error) {
     console.error('Не удалось обновить заметку:', error);
+  }
+}
+
+async function handleCreateFromTemplate(data: { title: string; content: string; icon: string }) {
+  try {
+    const newNote = await createNote(data.title, null);
+
+    await updateNote(newNote.id, {
+      content: data.content,
+      icon: data.icon,
+    });
+
+    openTab(newNote.id);
+  } catch (error) {
+    console.error('Не удалось создать заметку из шаблона:', error);
   }
 }
 
