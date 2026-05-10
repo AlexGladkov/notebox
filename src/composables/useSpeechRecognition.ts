@@ -1,10 +1,39 @@
 import { ref, onUnmounted } from 'vue';
 
+// Типы для Web Speech API
+interface SpeechRecognitionEvent extends Event {
+  readonly resultIndex: number;
+  readonly results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  readonly error: string;
+  readonly message: string;
+}
+
+interface SpeechRecognition extends EventTarget {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  maxAlternatives: number;
+  start(): void;
+  stop(): void;
+  abort(): void;
+  onstart: ((this: SpeechRecognition, ev: Event) => void) | null;
+  onend: ((this: SpeechRecognition, ev: Event) => void) | null;
+  onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => void) | null;
+  onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => void) | null;
+}
+
+interface SpeechRecognitionConstructor {
+  new (): SpeechRecognition;
+}
+
 // Расширяем Window interface для Web Speech API
 declare global {
   interface Window {
-    SpeechRecognition: any;
-    webkitSpeechRecognition: any;
+    SpeechRecognition?: SpeechRecognitionConstructor;
+    webkitSpeechRecognition?: SpeechRecognitionConstructor;
   }
 }
 
@@ -15,7 +44,7 @@ export function useSpeechRecognition() {
   const interimTranscript = ref('');
   const error = ref<string | null>(null);
 
-  let recognition: any = null;
+  let recognition: SpeechRecognition | null = null;
 
   const checkSupport = () => {
     isSupported.value = 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
@@ -42,7 +71,7 @@ export function useSpeechRecognition() {
         error.value = null;
       };
 
-      recognition.onresult = (event: any) => {
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
         let interim = '';
         let final = '';
 
@@ -62,7 +91,7 @@ export function useSpeechRecognition() {
         interimTranscript.value = interim;
       };
 
-      recognition.onerror = (event: any) => {
+      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
         console.error('Speech recognition error:', event.error);
 
         switch (event.error) {

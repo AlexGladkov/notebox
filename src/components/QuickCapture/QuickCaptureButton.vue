@@ -204,11 +204,13 @@ async function handleStayInInbox() {
 }
 
 function showSuccessNotification(message: string) {
-  console.log('✅', message);
+  // TODO: Заменить на полноценную систему уведомлений
+  alert(message);
 }
 
 function showErrorNotification(message: string) {
-  console.error('❌', message);
+  // TODO: Заменить на полноценную систему уведомлений
+  alert(message);
 }
 </script>
 

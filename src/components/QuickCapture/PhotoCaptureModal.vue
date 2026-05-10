@@ -147,6 +147,7 @@ const isLoading = ref(false);
 const errorMessage = ref('');
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
 
 watch(() => props.isOpen, (newValue) => {
   if (newValue) {
@@ -163,13 +164,15 @@ function handleFileSelect(event: Event) {
 
   errorMessage.value = '';
 
+  // Проверка размера файла
   if (file.size > MAX_FILE_SIZE) {
     errorMessage.value = 'Файл слишком большой. Максимальный размер: 10MB';
     return;
   }
 
-  if (!file.type.startsWith('image/')) {
-    errorMessage.value = 'Выбранный файл не является изображением';
+  // Проверка типа файла (белый список допустимых MIME-типов)
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    errorMessage.value = 'Неподдерживаемый формат изображения. Разрешены: JPEG, PNG, GIF, WebP';
     return;
   }
 

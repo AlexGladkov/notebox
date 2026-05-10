@@ -162,27 +162,6 @@ export function useQuickCapture() {
     }
   }
 
-  async function captureWithAI(text: string, type: CaptureType = 'text'): Promise<{ inboxId: string; suggestions: RelatedNote[] }> {
-    isProcessing.value = true;
-    lastError.value = null;
-
-    try {
-      const inboxId = await captureText(text);
-      const suggestions = await findRelatedNotes(text);
-
-      return {
-        inboxId,
-        suggestions,
-      };
-    } catch (error) {
-      console.error('Failed to capture with AI:', error);
-      lastError.value = error instanceof Error ? error.message : 'Неизвестная ошибка';
-      throw error;
-    } finally {
-      isProcessing.value = false;
-    }
-  }
-
   return {
     isProcessing,
     lastError,
@@ -191,7 +170,6 @@ export function useQuickCapture() {
     capturePhoto,
     findRelatedNotes,
     moveToNote,
-    captureWithAI,
     getOrCreateInbox,
     addTextToNote,
   };
