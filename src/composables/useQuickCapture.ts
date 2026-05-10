@@ -33,6 +33,20 @@ export function useQuickCapture() {
     return inbox;
   }
 
+  async function addTextToNote(text: string, noteId: string): Promise<void> {
+    const note = getNoteById(noteId);
+    if (!note) {
+      throw new Error('Заметка не найдена');
+    }
+
+    const timestamp = new Date().toLocaleString('ru-RU');
+    const newContent = `${note.content}\n\n---\n\n**${timestamp}**\n\n${text.trim()}`;
+
+    await updateNote(noteId, {
+      content: newContent,
+    });
+  }
+
   async function captureText(text: string): Promise<string> {
     if (!text || text.trim().length === 0) {
       throw new Error('Текст не может быть пустым');
@@ -43,13 +57,7 @@ export function useQuickCapture() {
 
     try {
       const inbox = await getOrCreateInbox();
-      const timestamp = new Date().toLocaleString('ru-RU');
-      const newContent = `${inbox.content}\n\n---\n\n**${timestamp}**\n\n${text.trim()}`;
-
-      await updateNote(inbox.id, {
-        content: newContent,
-      });
-
+      await addTextToNote(text, inbox.id);
       return inbox.id;
     } catch (error) {
       console.error('Failed to capture text:', error);
@@ -83,18 +91,8 @@ export function useQuickCapture() {
   }
 
   async function moveToNote(capturedText: string, targetNoteId: string): Promise<void> {
-    const targetNote = getNoteById(targetNoteId);
-    if (!targetNote) {
-      throw new Error('Целевая заметка не найдена');
-    }
-
     try {
-      const timestamp = new Date().toLocaleString('ru-RU');
-      const newContent = `${targetNote.content}\n\n---\n\n**${timestamp}**\n\n${capturedText.trim()}`;
-
-      await updateNote(targetNoteId, {
-        content: newContent,
-      });
+      await addTextToNote(capturedText, targetNoteId);
     } catch (error) {
       console.error('Failed to move to note:', error);
       throw error;
@@ -132,5 +130,6 @@ export function useQuickCapture() {
     moveToNote,
     captureWithAI,
     getOrCreateInbox,
+    addTextToNote,
   };
 }

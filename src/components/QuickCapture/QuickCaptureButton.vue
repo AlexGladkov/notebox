@@ -81,6 +81,7 @@ const {
   capturePhoto,
   findRelatedNotes,
   moveToNote,
+  addTextToNote,
 } = useQuickCapture();
 
 function toggleMenu() {
@@ -107,10 +108,7 @@ async function handleTextSave(text: string) {
     textModalRef.value?.setLoading(true);
     capturedText.value = text;
 
-    // Сначала сохраняем в Inbox
-    await captureText(text);
-
-    // Затем ищем похожие заметки для AI организации
+    // Ищем похожие заметки для AI организации
     const relatedNotes = await findRelatedNotes(text);
 
     if (relatedNotes.length > 0) {
@@ -118,7 +116,8 @@ async function handleTextSave(text: string) {
       suggestions.value = relatedNotes;
       activeModal.value = 'suggestions';
     } else {
-      // Если похожих заметок нет, просто закрываем модал
+      // Если похожих заметок нет, сохраняем в Inbox
+      await captureText(text);
       closeModal();
       showSuccessNotification('Заметка сохранена в Inbox');
     }
@@ -135,14 +134,13 @@ async function handleVoiceSave(text: string) {
     voiceModalRef.value?.setLoading(true);
     capturedText.value = text;
 
-    await captureVoice(text);
-
     const relatedNotes = await findRelatedNotes(text);
 
     if (relatedNotes.length > 0) {
       suggestions.value = relatedNotes;
       activeModal.value = 'suggestions';
     } else {
+      await captureVoice(text);
       closeModal();
       showSuccessNotification('Голосовая заметка сохранена в Inbox');
     }
@@ -159,14 +157,13 @@ async function handlePhotoSave(text: string, imageBase64: string) {
     photoModalRef.value?.setLoading(true);
     capturedText.value = text;
 
-    await capturePhoto(imageBase64, text);
-
     const relatedNotes = await findRelatedNotes(text);
 
     if (relatedNotes.length > 0) {
       suggestions.value = relatedNotes;
       activeModal.value = 'suggestions';
     } else {
+      await capturePhoto(imageBase64, text);
       closeModal();
       showSuccessNotification('Текст с фото сохранен в Inbox');
     }
@@ -192,9 +189,18 @@ async function handleMoveToNote(noteId: string) {
   }
 }
 
-function handleStayInInbox() {
-  closeModal();
-  showSuccessNotification('Заметка сохранена в Inbox');
+async function handleStayInInbox() {
+  try {
+    suggestionModalRef.value?.setLoading(true);
+    await captureText(capturedText.value);
+    closeModal();
+    showSuccessNotification('Заметка сохранена в Inbox');
+  } catch (error) {
+    console.error('Failed to save to inbox:', error);
+    showErrorNotification('Не удалось сохранить в Inbox');
+  } finally {
+    suggestionModalRef.value?.setLoading(false);
+  }
 }
 
 function showSuccessNotification(message: string) {
