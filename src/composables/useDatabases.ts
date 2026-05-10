@@ -285,12 +285,12 @@ export function useDatabases() {
     recordsData: Array<{ [columnId: string]: any }>
   ) => {
     try {
-      const createdRecords: Record[] = [];
+      // Создаём записи параллельно для лучшей производительности
+      const createPromises = recordsData.map(data =>
+        databasesApi.createRecord(databaseId, { data })
+      );
 
-      for (const data of recordsData) {
-        const newRecord = await databasesApi.createRecord(databaseId, { data });
-        createdRecords.push(newRecord);
-      }
+      const createdRecords = await Promise.all(createPromises);
 
       records.value = [...records.value, ...createdRecords];
       return createdRecords;
@@ -304,9 +304,12 @@ export function useDatabases() {
   // Batch delete records
   const batchDeleteRecords = async (databaseId: string, recordIds: string[]) => {
     try {
-      for (const recordId of recordIds) {
-        await databasesApi.deleteRecord(databaseId, recordId);
-      }
+      // Удаляем записи параллельно для лучшей производительности
+      const deletePromises = recordIds.map(recordId =>
+        databasesApi.deleteRecord(databaseId, recordId)
+      );
+
+      await Promise.all(deletePromises);
 
       records.value = records.value.filter(r => !recordIds.includes(r.id));
     } catch (err) {

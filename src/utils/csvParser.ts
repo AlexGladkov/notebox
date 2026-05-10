@@ -111,6 +111,7 @@ function parseCsvLine(line: string): string[] {
   const result: string[] = [];
   let current = '';
   let inQuotes = false;
+  let wasQuoted = false;
 
   for (let i = 0; i < line.length; i++) {
     const char = line[i];
@@ -124,18 +125,21 @@ function parseCsvLine(line: string): string[] {
       } else {
         // Начало/конец quoted value
         inQuotes = !inQuotes;
+        wasQuoted = true;
       }
     } else if (char === ',' && !inQuotes) {
       // Разделитель колонок
-      result.push(current.trim());
+      // Trim только если значение не было в кавычках
+      result.push(wasQuoted ? current : current.trim());
       current = '';
+      wasQuoted = false;
     } else {
       current += char;
     }
   }
 
   // Добавляем последнее значение
-  result.push(current.trim());
+  result.push(wasQuoted ? current : current.trim());
 
   return result;
 }
