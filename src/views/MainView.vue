@@ -183,6 +183,8 @@
           <NoteEditor
             :note="currentNote"
             :available-tags="tags"
+            :backlinks="backlinks"
+            :all-notes="notes"
             @update-note="handleUpdateNote"
             @note-created="handleNoteCreated"
             @navigate-to-note="handleSelectNote"
@@ -225,6 +227,7 @@ import { useTheme } from '../composables/useTheme';
 import { useTabs } from '../composables/useTabs';
 import { useAuth } from '../composables/useAuth';
 import { useTags } from '../composables/useTags';
+import { useBacklinks } from '../composables/useBacklinks';
 import { notesApi } from '../api/notes';
 import SearchBar from '../components/SearchBar.vue';
 import NoteTree from '../components/NoteTree.vue';
@@ -318,6 +321,10 @@ const confirmDialog = reactive({
 
 const activeNoteId = computed(() => activeTabId.value);
 const currentNote = computed(() => getActiveNote());
+
+// Вычисление backlinks для текущей заметки
+const currentNoteIdRef = computed(() => currentNote.value?.id);
+const { backlinks } = useBacklinks(currentNoteIdRef, notes);
 
 const rootNotes = computed(() => {
   let filtered = notes.value.filter(n => !n.parentId);

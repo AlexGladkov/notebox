@@ -49,14 +49,22 @@
       />
     </div>
 
-    <div class="flex-1 overflow-visible">
+    <div class="flex-1 overflow-y-auto">
       <BlockEditor
         v-model="localContent"
         :note-id="note?.id"
+        :all-notes="props.allNotes || []"
         @update:model-value="handleContentChange"
         @note-created="handleNoteCreated"
         @navigate-to-note="handleNavigateToNote"
         @create-from-template="handleCreateFromTemplate"
+      />
+
+      <!-- Секция backlinks -->
+      <Backlinks
+        v-if="props.backlinks && props.backlinks.length > 0"
+        :backlinks="props.backlinks"
+        @navigate="handleNavigateToNote"
       />
     </div>
   </div>
@@ -75,10 +83,13 @@ import NoteCover from './NoteCover.vue';
 import NoteIcon from './NoteIcon.vue';
 import NoteTags from './NoteTags.vue';
 import ExportButton from './ExportButton.vue';
+import Backlinks from './Backlinks.vue';
 
 const props = defineProps<{
   note: Note | undefined;
   availableTags: Tag[];
+  backlinks?: { note: Note; context: string }[];
+  allNotes?: Note[];
 }>();
 
 const emit = defineEmits<{

@@ -32,6 +32,17 @@
       @command-selected="handleSlashCommand"
     />
 
+    <WikiLinkSuggestion
+      v-if="editor"
+      ref="wikiLinkMenuRef"
+      :visible="wikiLinkMenuVisible"
+      :query="wikiLinkQuery"
+      :notes="props.allNotes || []"
+      :range="wikiLinkRange"
+      @select-note="handleWikiLinkSelect"
+      @create-note="handleWikiLinkCreate"
+    />
+
     <BlockMenu
       v-if="blockMenuVisible"
       :visible="blockMenuVisible"
@@ -71,14 +82,17 @@ import { Callout } from '../extensions/CalloutExtension';
 import { SlashCommand } from '../extensions/SlashCommand';
 import { BlockComment } from '../extensions/BlockComment';
 import { Database } from '../extensions/DatabaseExtension';
+import { WikiLink } from '../extensions/WikiLinkExtension';
 
 import EditorBubbleMenu from './BlockEditor/BubbleMenu.vue';
 import SlashCommandMenu from './BlockEditor/SlashCommandMenu.vue';
 import BlockMenu from './BlockEditor/BlockMenu.vue';
 import CreateNestedNoteModal from './BlockEditor/CreateNestedNoteModal.vue';
 import TemplateGalleryModal from './TemplateGallery/TemplateGalleryModal.vue';
+import WikiLinkSuggestion from './BlockEditor/WikiLinkSuggestion.vue';
 
 import type { SlashCommand as SlashCommandType, BlockMenuAction } from '../types/editor';
+import type { Note } from '../types';
 import { notesApi } from '../api/notes';
 import { useDatabases } from '../composables/useDatabases';
 import { useAI } from '../composables/useAI';
@@ -86,6 +100,7 @@ import { useAI } from '../composables/useAI';
 const props = defineProps<{
   modelValue: string;
   noteId?: string;
+  allNotes?: Note[];
 }>();
 
 const emit = defineEmits<{
@@ -108,6 +123,12 @@ const blockMenuActions = ref<BlockMenuAction[]>([]);
 const blockHandleVisible = ref(false);
 const blockHandlePosition = ref<{ top: number; left: number } | null>(null);
 const currentBlockPos = ref<number | null>(null);
+
+// Wiki-link suggestion state
+const wikiLinkMenuVisible = ref(false);
+const wikiLinkQuery = ref('');
+const wikiLinkRange = ref<{ from: number; to: number } | null>(null);
+const wikiLinkMenuRef = ref<InstanceType<typeof WikiLinkSuggestion> | null>(null);
 
 // Database composable for creating databases
 const { createDatabase } = useDatabases();
@@ -484,6 +505,22 @@ const editor = useEditor({
         slashMenuRef.value?.selectCurrent();
       },
     }),
+    WikiLink.configure({
+      notes: props.allNotes || [],
+      onShowSuggestions: (query, range) => {
+        wikiLinkMenuVisible.value = true;
+        wikiLinkQuery.value = query;
+        wikiLinkRange.value = range;
+      },
+      onHideSuggestions: () => {
+        wikiLinkMenuVisible.value = false;
+        wikiLinkQuery.value = '';
+        wikiLinkRange.value = null;
+      },
+      onNavigate: (noteId) => {
+        emit('navigate-to-note', noteId);
+      },
+    }),
     BlockComment,
   ],
   onUpdate: ({ editor }) => {
@@ -517,6 +554,73 @@ const editor = useEditor({
 const handleSlashCommand = () => {
   slashMenuVisible.value = false;
   slashQuery.value = '';
+};
+
+// Wiki-link handlers
+const handleWikiLinkSelect = (note: Note) => {
+  if (!editor.value || !wikiLinkRange.value) return;
+
+  const { from, to } = wikiLinkRange.value;
+
+  // Удаляем [[query и вставляем wiki-link node
+  editor.value
+    .chain()
+    .focus()
+    .deleteRange({ from, to })
+    .insertContent({
+      type: 'wikiLink',
+      attrs: {
+        noteId: note.id,
+        title: note.title || 'Без названия',
+        broken: false,
+      },
+    })
+    .insertContent(' ') // Добавляем пробел после ссылки
+    .run();
+
+  wikiLinkMenuVisible.value = false;
+  wikiLinkQuery.value = '';
+  wikiLinkRange.value = null;
+};
+
+const handleWikiLinkCreate = async (title: string) => {
+  if (!editor.value || !wikiLinkRange.value) return;
+
+  try {
+    // Создаем новую заметку
+    const newNote = await notesApi.create({
+      title,
+      content: '',
+      parentId: null,
+    });
+
+    const { from, to } = wikiLinkRange.value;
+
+    // Удаляем [[query и вставляем wiki-link node
+    editor.value
+      .chain()
+      .focus()
+      .deleteRange({ from, to })
+      .insertContent({
+        type: 'wikiLink',
+        attrs: {
+          noteId: newNote.id,
+          title: newNote.title,
+          broken: false,
+        },
+      })
+      .insertContent(' ')
+      .run();
+
+    wikiLinkMenuVisible.value = false;
+    wikiLinkQuery.value = '';
+    wikiLinkRange.value = null;
+
+    // Уведомляем родителя о создании новой заметки
+    emit('noteCreated', newNote.id);
+  } catch (error) {
+    console.error('Failed to create note from wiki-link:', error);
+  }
 };
 
 const pendingNestedNoteTitle = ref<string | null>(null);
@@ -1124,5 +1228,65 @@ onBeforeUnmount(() => {
 
 .block-handle:active {
   cursor: grabbing;
+}
+
+/* Wiki-link styles */
+.block-editor-content :deep(.wiki-link) {
+  background-color: #eff6ff;
+  color: #2563eb;
+  padding: 0.1em 0.3em;
+  border-radius: 0.25em;
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.block-editor-content :deep(.wiki-link:hover) {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.dark :deep(.block-editor-content .wiki-link) {
+  background-color: #1e3a8a;
+  color: #93c5fd;
+}
+
+.dark :deep(.block-editor-content .wiki-link:hover) {
+  background-color: #1e40af;
+  color: #bfdbfe;
+}
+
+/* Broken wiki-link (ссылка на несуществующую страницу) */
+.block-editor-content :deep(.wiki-link-broken) {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.block-editor-content :deep(.wiki-link-broken:hover) {
+  background-color: #fecaca;
+  color: #b91c1c;
+}
+
+.dark :deep(.block-editor-content .wiki-link-broken) {
+  background-color: #7f1d1d;
+  color: #fca5a5;
+}
+
+.dark :deep(.block-editor-content .wiki-link-broken:hover) {
+  background-color: #991b1b;
+  color: #fecaca;
+}
+
+/* Wiki-link input state (while typing [[...) */
+.block-editor-content :deep(.wiki-link-input-active) {
+  background-color: #fef3c7;
+  padding: 0.1em 0.2em;
+  border-radius: 0.25em;
+}
+
+.dark :deep(.block-editor-content .wiki-link-input-active) {
+  background-color: #854d0e;
+  color: #fef3c7;
 }
 </style>
