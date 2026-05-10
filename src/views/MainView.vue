@@ -385,6 +385,17 @@ async function handleCreateFromTemplate(data: { title: string; content: string; 
       icon: data.icon,
     });
 
+    // Fetch the updated note to ensure content is loaded
+    const updatedNote = await notesApi.getById(newNote.id);
+
+    // Update note in local state
+    const noteIndex = notes.value.findIndex(n => n.id === newNote.id);
+    if (noteIndex !== -1) {
+      notes.value[noteIndex] = updatedNote;
+    } else {
+      notes.value.unshift(updatedNote);
+    }
+
     openTab(newNote.id);
   } catch (error) {
     console.error('Не удалось создать заметку из шаблона:', error);
