@@ -8,6 +8,9 @@ export interface WikiLinkOptions {
   onShowSuggestions?: (query: string, range: { from: number; to: number }) => void;
   onHideSuggestions?: () => void;
   onNavigate?: (noteId: string) => void;
+  onNavigateUp?: () => void;
+  onNavigateDown?: () => void;
+  onSelectCurrent?: () => void;
 }
 
 export interface WikiLinkStorage {
@@ -33,6 +36,9 @@ export const WikiLink = Node.create<WikiLinkOptions, WikiLinkStorage>({
       onShowSuggestions: () => {},
       onHideSuggestions: () => {},
       onNavigate: () => {},
+      onNavigateUp: () => {},
+      onNavigateDown: () => {},
+      onSelectCurrent: () => {},
     };
   },
 
@@ -84,7 +90,7 @@ export const WikiLink = Node.create<WikiLinkOptions, WikiLinkStorage>({
   },
 
   renderHTML({ HTMLAttributes, node }) {
-    const isBroken = !HTMLAttributes.noteId || HTMLAttributes.broken;
+    const isBroken = !node.attrs.noteId || node.attrs.broken;
     const classes = ['wiki-link'];
     if (isBroken) {
       classes.push('wiki-link-broken');
@@ -104,19 +110,21 @@ export const WikiLink = Node.create<WikiLinkOptions, WikiLinkStorage>({
     return {
       Enter: () => {
         if (this.storage.active) {
-          // Будет обработано в компоненте suggestion
+          this.options.onSelectCurrent?.();
           return true;
         }
         return false;
       },
       ArrowDown: () => {
         if (this.storage.active) {
+          this.options.onNavigateDown?.();
           return true;
         }
         return false;
       },
       ArrowUp: () => {
         if (this.storage.active) {
+          this.options.onNavigateUp?.();
           return true;
         }
         return false;

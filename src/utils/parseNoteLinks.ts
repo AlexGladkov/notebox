@@ -36,21 +36,34 @@ export function extractLinkContext(
 ): string {
   if (!content || typeof content !== 'string') return '';
 
-  // Ищем ссылку на целевую заметку
-  const wikiPattern = new RegExp(`data-note-id="${targetNoteId}"[^>]*>([^<]+)</span>`, 'g');
-  const htmlPattern = new RegExp(`href="/notes/${targetNoteId}"[^>]*>([^<]+)</a>`, 'g');
+  // Ищем ссылку на целевую заметку и извлекаем текст ссылки
+  const wikiPattern = new RegExp(`data-note-id="${targetNoteId}"[^>]*>([^<]+)</span>`);
+  const htmlPattern = new RegExp(`href="/notes/${targetNoteId}"[^>]*>([^<]+)</a>`);
 
-  let match = wikiPattern.exec(content) || htmlPattern.exec(content);
-  if (!match) return '';
+  const wikiMatch = wikiPattern.exec(content);
+  const htmlMatch = htmlPattern.exec(content);
+  const match = wikiMatch || htmlMatch;
 
-  const linkPosition = match.index;
+  if (!match || !match[1]) return '';
+
+  const linkText = match[1];
 
   // Извлекаем текст без HTML-тегов
   const textContent = content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 
-  // Находим позицию ссылки в текстовом контенте (примерно)
-  const beforeContext = textContent.slice(Math.max(0, linkPosition - contextLength), linkPosition);
-  const afterContext = textContent.slice(linkPosition, linkPosition + contextLength);
+  // Находим позицию текста ссылки в очищенном контенте
+  const linkTextPosition = textContent.indexOf(linkText);
+  if (linkTextPosition === -1) return linkText;
 
-  return (beforeContext + afterContext).trim();
+  // Извлекаем контекст вокруг ссылки
+  const start = Math.max(0, linkTextPosition - contextLength);
+  const end = Math.min(textContent.length, linkTextPosition + linkText.length + contextLength);
+
+  let context = textContent.slice(start, end).trim();
+
+  // Добавляем многоточие если контекст обрезан
+  if (start > 0) context = '...' + context;
+  if (end < textContent.length) context = context + '...';
+
+  return context;
 }

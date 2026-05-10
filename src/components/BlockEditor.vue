@@ -520,6 +520,15 @@ const editor = useEditor({
       onNavigate: (noteId) => {
         emit('navigate-to-note', noteId);
       },
+      onNavigateUp: () => {
+        wikiLinkMenuRef.value?.navigateUp();
+      },
+      onNavigateDown: () => {
+        wikiLinkMenuRef.value?.navigateDown();
+      },
+      onSelectCurrent: () => {
+        wikiLinkMenuRef.value?.selectCurrent();
+      },
     }),
     BlockComment,
   ],
