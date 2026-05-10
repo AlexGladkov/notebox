@@ -62,8 +62,20 @@ export function useQuickCapture() {
         ? JSON.parse(note.content)
         : { type: 'doc', content: [] };
     } catch (error) {
-      console.error('Failed to parse note content, starting with empty doc:', error);
-      currentDoc = { type: 'doc', content: [] };
+      // Миграция: старый формат (plain text) -> JSON
+      console.warn('Migrating note from plain text to JSON format');
+      const oldContent = note.content?.trim() || '';
+      currentDoc = {
+        type: 'doc',
+        content: oldContent
+          ? [
+              {
+                type: 'paragraph',
+                content: [{ type: 'text', text: oldContent }],
+              },
+            ]
+          : [],
+      };
     }
 
     // Добавляем горизонтальную линию (separator)
