@@ -27,8 +27,27 @@ export function useStorage() {
       if (isOnline.value) {
         try {
           const serverNotes = await notesApi.getAll();
-          notes.value = serverNotes;
-          await offlineStore.saveToCache(serverNotes);
+
+          // Мерджим с локальными заметками, сохраняя несинхронизированные изменения
+          const cachedNotesMap = new Map(cachedNotes.map(n => [n.id, n]));
+          const serverNotesMap = new Map(serverNotes.map(n => [n.id, n]));
+
+          const mergedNotes: Note[] = [];
+
+          // Добавляем все заметки с сервера
+          serverNotes.forEach(serverNote => {
+            mergedNotes.push(serverNote);
+          });
+
+          // Добавляем локальные заметки которых нет на сервере (несинхронизированные)
+          cachedNotes.forEach(cachedNote => {
+            if (!serverNotesMap.has(cachedNote.id)) {
+              mergedNotes.push(cachedNote);
+            }
+          });
+
+          notes.value = mergedNotes;
+          await offlineStore.saveToCache(mergedNotes);
           await indexedDbService.setMetadata('lastSyncTime', Date.now());
         } catch (err) {
           console.error('Failed to load from server:', err);
