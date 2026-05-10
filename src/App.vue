@@ -38,7 +38,14 @@
         <div class="flex-1 overflow-hidden">
           <NoteEditor
             :note="currentNote"
+            :available-tags="[]"
             @update-note="handleUpdateNote"
+            @note-created="() => {}"
+            @navigate-to-note="handleSelectNote"
+            @add-tag="() => {}"
+            @remove-tag="() => {}"
+            @create-tag="() => {}"
+            @create-from-template="handleCreateFromTemplate"
           />
         </div>
       </div>
@@ -226,6 +233,21 @@ const showDeleteNoteWithChildrenDialog = (noteId: string, childrenCount: number)
       console.error('Не удалось удалить заметку:', error);
     }
   };
+};
+
+const handleCreateFromTemplate = async (data: { title: string; content: string; icon: string }) => {
+  try {
+    const newNote = await createNote(data.title, null);
+
+    await updateNote(newNote.id, {
+      content: data.content,
+      icon: data.icon,
+    });
+
+    openTab(newNote.id);
+  } catch (error) {
+    console.error('Не удалось создать заметку из шаблона:', error);
+  }
 };
 
 const handleConfirmAction = async () => {
