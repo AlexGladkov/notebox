@@ -221,12 +221,39 @@ export function detectColumnTypes(headers: string[], rows: string[][]): ColumnTy
 /**
  * Преобразует значение CSV в формат, подходящий для типа колонки
  */
-export function convertCsvValue(value: string, type: ColumnType): any {
+export function convertCsvValue(value: string, type: ColumnType, options?: any[]): any {
   if (!value || value === '') {
     return null;
   }
 
   switch (type) {
+    case 'SELECT':
+    case 'MULTI_SELECT':
+      // Для SELECT полей ищем опцию по label и возвращаем её id
+      if (!options || options.length === 0) {
+        return null;
+      }
+
+      if (type === 'SELECT') {
+        // Для SELECT ищем одну опцию
+        const option = options.find(opt =>
+          opt.label && opt.label.toLowerCase() === value.toLowerCase()
+        );
+        return option ? option.id : null;
+      } else {
+        // Для MULTI_SELECT разбиваем по запятой и ищем каждую опцию
+        const values = value.split(',').map(v => v.trim()).filter(v => v);
+        const selectedIds = values
+          .map(v => {
+            const option = options.find(opt =>
+              opt.label && opt.label.toLowerCase() === v.toLowerCase()
+            );
+            return option ? option.id : null;
+          })
+          .filter(id => id !== null);
+        return selectedIds.length > 0 ? selectedIds : null;
+      }
+
     case 'BOOLEAN':
       const lower = value.toLowerCase();
       return lower === 'true' || lower === 'yes' || lower === '1' || lower === 'да';

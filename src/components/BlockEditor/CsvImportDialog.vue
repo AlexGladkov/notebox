@@ -445,17 +445,21 @@ const handleImport = async () => {
           let columnId: string;
           let columnType: ColumnType;
 
+          let columnOptions: any[] | undefined;
+
           if (mapping === '__new__') {
             columnId = newColumnIndices.get(colIndex)!;
             const newCol = newColumns.find(c => c.name === csvHeaders.value[colIndex]);
             columnType = newCol?.type || 'TEXT';
+            columnOptions = undefined; // Новые колонки пока не имеют options
           } else {
             columnId = mapping;
             const column = props.columns.find(c => c.id === columnId);
             columnType = column?.type || 'TEXT';
+            columnOptions = column?.options;
           }
 
-          recordData[columnId] = convertCsvValue(csvValue, columnType);
+          recordData[columnId] = convertCsvValue(csvValue, columnType, columnOptions);
         });
 
         records.push(recordData);
