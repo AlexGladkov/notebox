@@ -19,6 +19,24 @@
     <div class="toolbar-right">
       <button
         class="toolbar-button"
+        @click="handleImport"
+        title="Импорт CSV"
+      >
+        <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+        </svg>
+      </button>
+      <button
+        class="toolbar-button"
+        @click="handleExport"
+        title="Экспорт CSV"
+      >
+        <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+        </svg>
+      </button>
+      <button
+        class="toolbar-button"
         @click="handleShare"
         title="Поделиться ссылкой"
       >
@@ -53,6 +71,8 @@ const emit = defineEmits<{
   'filter-change': [filter: FilterType | null];
   'sort-change': [sort: SortType | null];
   'search-change': [query: string];
+  'import': [];
+  'export': [];
 }>();
 
 const currentFilter = ref<FilterType | null>(null);
@@ -71,6 +91,14 @@ const handleSortChange = (sort: SortType | null) => {
 
 const handleSearchChange = (query: string) => {
   emit('search-change', query);
+};
+
+const handleImport = () => {
+  emit('import');
+};
+
+const handleExport = () => {
+  emit('export');
 };
 
 const handleShare = async () => {

@@ -279,6 +279,91 @@ export function useDatabases() {
     }
   };
 
+  // Batch create records
+  const batchCreateRecords = async (
+    databaseId: string,
+    recordsData: Array<{ [columnId: string]: any }>,
+    onProgress?: (current: number, total: number) => void
+  ) => {
+    try {
+      const createdRecords: any[] = [];
+      const BATCH_SIZE = 50; // Обрабатываем по 50 записей за раз
+
+      for (let i = 0; i < recordsData.length; i += BATCH_SIZE) {
+        const batch = recordsData.slice(i, i + BATCH_SIZE);
+
+        // Создаём записи в батче параллельно
+        const batchPromises = batch.map(data =>
+          databasesApi.createRecord(databaseId, { data }).catch(err => {
+            console.error('Failed to create record:', err);
+            return null; // Возвращаем null для failed записей
+          })
+        );
+
+        const batchResults = await Promise.all(batchPromises);
+
+        // Фильтруем успешные записи
+        const successfulRecords = batchResults.filter(r => r !== null);
+        createdRecords.push(...successfulRecords);
+
+        // Уведомляем о прогрессе
+        if (onProgress) {
+          onProgress(Math.min(i + BATCH_SIZE, recordsData.length), recordsData.length);
+        }
+      }
+
+      records.value = [...records.value, ...createdRecords];
+      return createdRecords;
+    } catch (err) {
+      console.error('Failed to batch create records:', err);
+      error.value = 'Не удалось создать записи';
+      throw err;
+    }
+  };
+
+  // Batch delete records
+  const batchDeleteRecords = async (
+    databaseId: string,
+    recordIds: string[],
+    onProgress?: (current: number, total: number) => void
+  ) => {
+    try {
+      const BATCH_SIZE = 50; // Обрабатываем по 50 записей за раз
+      const deletedIds: string[] = [];
+
+      for (let i = 0; i < recordIds.length; i += BATCH_SIZE) {
+        const batch = recordIds.slice(i, i + BATCH_SIZE);
+
+        // Удаляем записи в батче параллельно
+        const batchPromises = batch.map(recordId =>
+          databasesApi.deleteRecord(databaseId, recordId)
+            .then(() => recordId)
+            .catch(err => {
+              console.error(`Failed to delete record ${recordId}:`, err);
+              return null; // Возвращаем null для failed удалений
+            })
+        );
+
+        const batchResults = await Promise.all(batchPromises);
+
+        // Собираем успешно удалённые ID
+        const successfulIds = batchResults.filter(id => id !== null) as string[];
+        deletedIds.push(...successfulIds);
+
+        // Уведомляем о прогрессе
+        if (onProgress) {
+          onProgress(Math.min(i + BATCH_SIZE, recordIds.length), recordIds.length);
+        }
+      }
+
+      records.value = records.value.filter(r => !deletedIds.includes(r.id));
+    } catch (err) {
+      console.error('Failed to batch delete records:', err);
+      error.value = 'Не удалось удалить записи';
+      throw err;
+    }
+  };
+
   // Get records for a specific database
   const getRecordsByDatabaseId = (databaseId: string) => {
     return records.value.filter(r => r.databaseId === databaseId);
@@ -437,6 +522,8 @@ export function useDatabases() {
     createRecord,
     updateRecord,
     deleteRecord,
+    batchCreateRecords,
+    batchDeleteRecords,
     getRecordsByDatabaseId,
     getDatabaseById,
     createView,
