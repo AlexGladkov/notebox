@@ -5,7 +5,21 @@ import type { CapturedItem, CaptureType, RelatedNote } from '../types';
 import { aiApi } from '../api/ai';
 
 const INBOX_TITLE = '📥 Inbox';
-const INBOX_CONTENT = 'Временное хранилище для быстро захваченных заметок.';
+// Контент в формате TipTap JSON
+const INBOX_CONTENT = JSON.stringify({
+  type: 'doc',
+  content: [
+    {
+      type: 'paragraph',
+      content: [
+        {
+          type: 'text',
+          text: 'Временное хранилище для быстро захваченных заметок.',
+        },
+      ],
+    },
+  ],
+});
 
 export function useQuickCapture() {
   const { notes } = useStorage();
@@ -40,10 +54,47 @@ export function useQuickCapture() {
     }
 
     const timestamp = new Date().toLocaleString('ru-RU');
-    const newContent = `${note.content}\n\n---\n\n**${timestamp}**\n\n${text.trim()}`;
 
+    // Парсим существующий контент (JSON формат TipTap)
+    let currentDoc;
+    try {
+      currentDoc = note.content && note.content.trim()
+        ? JSON.parse(note.content)
+        : { type: 'doc', content: [] };
+    } catch (error) {
+      console.error('Failed to parse note content, starting with empty doc:', error);
+      currentDoc = { type: 'doc', content: [] };
+    }
+
+    // Добавляем горизонтальную линию (separator)
+    currentDoc.content.push({ type: 'horizontalRule' });
+
+    // Добавляем timestamp (жирным)
+    currentDoc.content.push({
+      type: 'paragraph',
+      content: [
+        {
+          type: 'text',
+          text: timestamp,
+          marks: [{ type: 'bold' }],
+        },
+      ],
+    });
+
+    // Добавляем захваченный текст
+    currentDoc.content.push({
+      type: 'paragraph',
+      content: [
+        {
+          type: 'text',
+          text: text.trim(),
+        },
+      ],
+    });
+
+    // Сохраняем обновлённый контент
     await updateNote(noteId, {
-      content: newContent,
+      content: JSON.stringify(currentDoc),
     });
   }
 
