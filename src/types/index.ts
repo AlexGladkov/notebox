@@ -138,3 +138,20 @@ export interface ApiResponse<T> {
     message: string;
   } | null;
 }
+
+// Quick Capture types
+export type CaptureType = 'text' | 'voice' | 'photo';
+
+export interface CapturedItem {
+  id: string;
+  type: CaptureType;
+  content: string;
+  imageData?: string; // Base64 для фото
+  createdAt: number;
+}
+
+export interface RelatedNote {
+  note: Note;
+  similarity: number; // 0-1, мера семантического сходства
+  reason?: string; // Объяснение, почему заметка релевантна
+}

@@ -5,6 +5,41 @@ import { offlineStore } from '../services/offline/offlineStore';
 import { indexedDbService } from '../services/offline/indexedDb';
 import { useNetworkStatus } from './useNetworkStatus';
 
+/**
+ * Удаляет дубликаты заметок по ID и title.
+ * Для заметок с одинаковым title (например, "📥 Inbox") оставляет только самую свежую (по updatedAt).
+ */
+function deduplicateNotes(notes: Note[]): Note[] {
+  const seenIds = new Set<string>();
+  const titleMap = new Map<string, Note[]>();
+
+  // Группируем заметки по title
+  notes.forEach(note => {
+    const key = `${note.title}:${note.parentId || 'root'}`;
+    if (!titleMap.has(key)) {
+      titleMap.set(key, []);
+    }
+    titleMap.get(key)!.push(note);
+  });
+
+  const result: Note[] = [];
+
+  // Для каждой группы заметок с одинаковым title + parentId
+  titleMap.forEach((group, key) => {
+    if (group.length === 1) {
+      // Одна заметка - добавляем как есть
+      result.push(group[0]);
+    } else {
+      // Несколько заметок - сортируем по updatedAt и берем самую свежую
+      const sorted = group.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+      result.push(sorted[0]);
+      console.warn(`Deduplicated ${group.length} copies of "${group[0].title}", kept the most recent`);
+    }
+  });
+
+  return result;
+}
+
 export function useStorage() {
   const notes = ref<Note[]>([]);
   const loading = ref(false);
@@ -27,13 +62,40 @@ export function useStorage() {
       if (isOnline.value) {
         try {
           const serverNotes = await notesApi.getAll();
-          notes.value = serverNotes;
-          await offlineStore.saveToCache(serverNotes);
+
+          // Получаем все локальные заметки из IndexedDB (включая несинхронизированные)
+          const allLocalNotes = await offlineStore.loadFromCache();
+
+          // Мерджим с локальными заметками, сохраняя несинхронизированные изменения
+          const serverNotesMap = new Map(serverNotes.map(n => [n.id, n]));
+
+          const mergedNotes: Note[] = [];
+
+          // Добавляем все заметки с сервера
+          serverNotes.forEach(serverNote => {
+            mergedNotes.push(serverNote);
+          });
+
+          // Добавляем локальные заметки которых нет на сервере (несинхронизированные)
+          allLocalNotes.forEach(localNote => {
+            if (!serverNotesMap.has(localNote.id)) {
+              mergedNotes.push(localNote);
+            }
+          });
+
+          // Дедупликация: удаляем дубликаты по title для специальных заметок
+          const deduplicatedNotes = deduplicateNotes(mergedNotes);
+
+          notes.value = deduplicatedNotes;
+          await offlineStore.saveToCache(deduplicatedNotes);
           await indexedDbService.setMetadata('lastSyncTime', Date.now());
         } catch (err) {
           console.error('Failed to load from server:', err);
-          // Если есть кэш, используем его
-          if (cachedNotes.length === 0) {
+          // Загружаем актуальные данные из IndexedDB (могли быть обновлены во время загрузки)
+          const freshLocalNotes = await offlineStore.loadFromCache();
+          if (freshLocalNotes.length > 0) {
+            notes.value = freshLocalNotes;
+          } else {
             error.value = err instanceof ApiError ? err.message : 'Failed to load notes';
             notes.value = [];
           }

@@ -84,6 +84,9 @@
         @reset-view="handleResetView"
       />
     </div>
+
+    <!-- Quick Capture FAB -->
+    <QuickCaptureButton />
   </div>
 </template>
 
@@ -95,6 +98,7 @@ import type { Note } from '../types';
 import { useGraph } from '../composables/useGraph';
 import GraphCanvas from '../components/graph/GraphCanvas.vue';
 import GraphControls from '../components/graph/GraphControls.vue';
+import QuickCaptureButton from '../components/QuickCapture/QuickCaptureButton.vue';
 
 const router = useRouter();
 const notes = ref<Note[]>([]);
