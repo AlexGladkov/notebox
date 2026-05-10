@@ -425,9 +425,19 @@ const slashCommands = computed<SlashCommandType[]>(() => [
 const parseInitialContent = () => {
   try {
     const value = props.modelValue;
-    return value && value.trim()
-      ? JSON.parse(value)
-      : { type: 'doc', content: [{ type: 'paragraph' }] };
+    if (!value || !value.trim()) {
+      return { type: 'doc', content: [{ type: 'paragraph' }] };
+    }
+
+    // Попробуем распарсить как JSON
+    // Если это JSON, он начинается с '{' или '['
+    if (value.trim().startsWith('{') || value.trim().startsWith('[')) {
+      return JSON.parse(value);
+    }
+
+    // Иначе считаем это HTML и вернем его как есть
+    // TipTap умеет обрабатывать HTML напрямую
+    return value;
   } catch (error) {
     console.error('Failed to parse initial editor content:', error);
     return { type: 'doc', content: [{ type: 'paragraph' }] };
@@ -851,15 +861,33 @@ watch(
     if (!editor.value) return;
 
     try {
-      // Обработка пустого или невалидного контента
-      const json = newValue && newValue.trim()
-        ? JSON.parse(newValue)
-        : { type: 'doc', content: [{ type: 'paragraph' }] };
+      // Обработка пустого контента
+      if (!newValue || !newValue.trim()) {
+        const currentContent = editor.value.getJSON();
+        const emptyDoc = { type: 'doc', content: [{ type: 'paragraph' }] };
+        if (JSON.stringify(currentContent) !== JSON.stringify(emptyDoc)) {
+          editor.value.commands.setContent(emptyDoc);
+        }
+        return;
+      }
 
-      const currentContent = editor.value.getJSON();
-
-      if (JSON.stringify(json) !== JSON.stringify(currentContent)) {
-        editor.value.commands.setContent(json);
+      // Определяем тип контента (JSON или HTML)
+      let content;
+      if (newValue.trim().startsWith('{') || newValue.trim().startsWith('[')) {
+        // Это JSON
+        content = JSON.parse(newValue);
+        const currentContent = editor.value.getJSON();
+        if (JSON.stringify(content) !== JSON.stringify(currentContent)) {
+          editor.value.commands.setContent(content);
+        }
+      } else {
+        // Это HTML - TipTap может обрабатывать HTML напрямую
+        const currentHTML = editor.value.getHTML();
+        // Нормализуем HTML для сравнения (убираем лишние пробелы)
+        const normalizeHTML = (html: string) => html.replace(/\s+/g, ' ').trim();
+        if (normalizeHTML(currentHTML) !== normalizeHTML(newValue)) {
+          editor.value.commands.setContent(newValue);
+        }
       }
     } catch (error) {
       console.error('Failed to parse editor content:', error);
