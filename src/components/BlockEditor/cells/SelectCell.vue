@@ -224,10 +224,6 @@ const createOption = () => {
 }
 
 /* Dark theme */
-.dark .select-tag {
-  color: #1f2937;
-}
-
 .dark .cell-value.empty {
   color: #6b7280;
 }
@@ -256,7 +252,5 @@ const createOption = () => {
   color: #60a5fa;
 }
 
-.dark .option-tag {
-  color: #1f2937;
-}
+/* Теги с цветным фоном сохраняют темный текст для читаемости на светлых фонах */
 </style>
