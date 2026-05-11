@@ -13,12 +13,14 @@
       <DatabaseViewTabs
         :views="views"
         :current-view-id="currentViewId"
+        :columns="database.columns"
         @select-view="handleSelectView"
         @create-view="handleCreateView"
         @rename-view="handleRenameView"
         @delete-view="handleDeleteView"
       />
       <DatabaseToolbar
+        v-if="currentView.type !== 'kanban'"
         :columns="database.columns"
         @filter-change="handleFilterChange"
         @sort-change="handleSortChange"
@@ -27,6 +29,7 @@
         @export="handleExport"
       />
       <DatabaseTable
+        v-if="!currentView.type || currentView.type === 'table'"
         :database="database"
         :records="filteredRecords"
         :filter="currentFilter"
@@ -39,6 +42,16 @@
         @update-column="handleUpdateColumn"
         @delete-column="handleDeleteColumn"
         @sort="handleTableSort"
+      />
+      <KanbanBoard
+        v-else-if="currentView.type === 'kanban'"
+        :database="database"
+        :records="filteredRecords"
+        :view="currentView"
+        @update-record="handleUpdateRecord"
+        @create-record="handleCreateRecord"
+        @delete-record="handleDeleteRecord"
+        @update-view="handleUpdateView"
       />
     </div>
 
@@ -69,6 +82,7 @@ import { NodeViewWrapper } from '@tiptap/vue-3';
 import DatabaseViewTabs from './DatabaseViewTabs.vue';
 import DatabaseToolbar from './DatabaseToolbar.vue';
 import DatabaseTable from './DatabaseTable.vue';
+import KanbanBoard from './KanbanBoard.vue';
 import CsvImportDialog from './CsvImportDialog.vue';
 import type { ImportData } from './CsvImportDialog.vue';
 import { useDatabases } from '../../composables/useDatabases';
@@ -287,21 +301,31 @@ const handleSelectView = (viewId: string) => {
   }
 };
 
-const handleCreateView = async () => {
-  const name = prompt('Введите название новой вьюхи:');
-  if (!name) return;
-
+const handleCreateView = async (name: string, type: 'table' | 'kanban', groupByColumnId?: string) => {
   try {
-    const newView = await createView(props.node.attrs.databaseId, {
+    const viewData: Omit<DatabaseView, 'id'> = {
       name,
+      type,
       filter: currentFilter.value || undefined,
       sort: currentSort.value || undefined,
-    });
+    };
+
+    // Добавляем конфигурацию kanban
+    if (type === 'kanban' && groupByColumnId) {
+      viewData.kanban = {
+        groupByColumnId,
+        cardFields: [],
+        columnOrder: [],
+        collapsedColumns: [],
+      };
+    }
+
+    const newView = await createView(props.node.attrs.databaseId, viewData);
     currentViewId.value = newView.id;
-    showToast('Вьюха успешно создана');
+    showToast('Представление успешно создано');
   } catch (err) {
     console.error('Failed to create view:', err);
-    showToast('Не удалось создать вьюху', true);
+    showToast('Не удалось создать представление', true);
   }
 };
 
@@ -440,6 +464,15 @@ const handleDeleteColumn = async (columnId: string) => {
 const handleTableSort = async (columnId: string, direction: 'asc' | 'desc') => {
   const newSort: DatabaseSort = { columnId, direction };
   await handleSortChange(newSort);
+};
+
+const handleUpdateView = async (updates: Partial<DatabaseView>) => {
+  try {
+    await updateView(props.node.attrs.databaseId, currentViewId.value, updates);
+  } catch (err) {
+    console.error('Failed to update view:', err);
+    showToast('Не удалось обновить представление', true);
+  }
 };
 
 const handleImportClick = () => {

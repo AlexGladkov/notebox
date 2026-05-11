@@ -9,12 +9,21 @@
         @click="$emit('select-view', view.id)"
         @contextmenu.prevent="handleContextMenu($event, view.id)"
       >
+        <span class="tab-icon-type">{{ getViewIcon(view.type) }}</span>
         <span class="tab-name">{{ view.name }}</span>
       </button>
-      <button class="tab tab-add" @click="handleCreateView" title="Добавить вьюху">
+      <button class="tab tab-add" @click="showCreateModal = true" title="Добавить представление">
         <span class="tab-icon">+</span>
       </button>
     </div>
+
+    <!-- Create View Modal -->
+    <CreateViewModal
+      v-if="showCreateModal"
+      :columns="columns"
+      @close="showCreateModal = false"
+      @create="handleCreateView"
+    />
 
     <!-- Context Menu -->
     <div
@@ -51,16 +60,19 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import type { DatabaseView } from '../../types/database';
+import CreateViewModal from './CreateViewModal.vue';
+import type { Column } from '../../types';
+import type { DatabaseView, ViewType } from '../../types/database';
 
 const props = defineProps<{
   views: DatabaseView[];
   currentViewId: string;
+  columns: Column[];
 }>();
 
 const emit = defineEmits<{
   'select-view': [viewId: string];
-  'create-view': [];
+  'create-view': [name: string, type: ViewType, groupByColumnId?: string];
   'rename-view': [viewId: string];
   'delete-view': [viewId: string];
 }>();
@@ -72,8 +84,15 @@ const contextMenu = ref({
   viewId: null as string | null,
 });
 
-const handleCreateView = () => {
-  emit('create-view');
+const showCreateModal = ref(false);
+
+const getViewIcon = (type?: ViewType): string => {
+  return type === 'kanban' ? '📋' : '📊';
+};
+
+const handleCreateView = (name: string, type: ViewType, groupByColumnId?: string) => {
+  emit('create-view', name, type, groupByColumnId);
+  showCreateModal.value = false;
 };
 
 const handleContextMenu = (event: MouseEvent, viewId: string) => {
@@ -141,7 +160,7 @@ const handleDeleteView = () => {
 .tab {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   padding: 6px 12px;
   border: none;
   background: none;
@@ -152,6 +171,11 @@ const handleDeleteView = () => {
   font-size: 14px;
   white-space: nowrap;
   border-bottom: 2px solid transparent;
+}
+
+.tab-icon-type {
+  font-size: 14px;
+  line-height: 1;
 }
 
 .dark .tab {

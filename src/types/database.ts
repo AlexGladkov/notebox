@@ -1,9 +1,22 @@
+export type ViewType = 'table' | 'kanban';
+
+export interface KanbanConfig {
+  groupByColumnId: string;        // ID SELECT-колонки для группировки
+  swimlaneColumnId?: string;      // Опциональный ID колонки для swimlanes
+  columnOrder?: string[];         // Порядок колонок (option IDs)
+  collapsedColumns?: string[];    // Свёрнутые колонки
+  collapsedSwimlanes?: string[];  // Свёрнутые swimlanes
+  cardFields?: string[];          // ID колонок для отображения на карточке
+}
+
 export interface DatabaseView {
   id: string;
   name: string;
+  type?: ViewType;                // По умолчанию 'table' для обратной совместимости
   filter?: DatabaseFilter;
   sort?: DatabaseSort;
   visibleColumns?: string[];
+  kanban?: KanbanConfig;          // Настройки для kanban view
 }
 
 export interface DatabaseFilter {
