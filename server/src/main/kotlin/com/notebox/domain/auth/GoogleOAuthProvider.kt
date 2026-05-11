@@ -39,7 +39,7 @@ class GoogleOAuthProvider(
         private const val AUTHORIZATION_URL = "https://accounts.google.com/o/oauth2/v2/auth"
         private const val TOKEN_URL = "https://oauth2.googleapis.com/token"
         private const val USER_INFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
-        private const val SCOPE = "openid email profile"
+        private const val SCOPE = "openid email profile https://www.googleapis.com/auth/calendar.events"
     }
 
     override fun getAuthorizationUrl(redirectUri: String, state: String): String {

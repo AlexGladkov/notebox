@@ -36,8 +36,25 @@
         <div class="text-sm text-gray-500 dark:text-gray-400">
           Изменено: {{ formatDate(note.updatedAt) }}
         </div>
-        <ExportButton :note="note" />
+        <div class="flex items-center gap-2">
+          <button
+            @click="openReminderModal"
+            class="reminder-button"
+            title="Добавить напоминание"
+          >
+            <span>🔔</span>
+          </button>
+          <ExportButton :note="note" />
+        </div>
       </div>
+
+      <!-- Напоминание -->
+      <ReminderBadge
+        v-if="noteReminder"
+        :reminder="noteReminder"
+        @edit="openReminderModal"
+        class="mt-2"
+      />
 
       <!-- Теги заметки -->
       <NoteTags
@@ -58,6 +75,7 @@
         @note-created="handleNoteCreated"
         @navigate-to-note="handleNavigateToNote"
         @create-from-template="handleCreateFromTemplate"
+        @open-reminder-modal="openReminderModal"
       />
 
       <!-- Секция backlinks -->
@@ -72,11 +90,22 @@
   <div v-else class="h-full flex items-center justify-center">
     <EmptyState message="Выберите заметку для редактирования" />
   </div>
+
+  <!-- Модальное окно напоминания -->
+  <ReminderModal
+    :visible="reminderModalVisible"
+    :note-id="note?.id || ''"
+    :note-title="note?.title"
+    :reminder="noteReminder"
+    @close="closeReminderModal"
+    @saved="handleReminderSaved"
+  />
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onBeforeUnmount } from 'vue';
+import { ref, watch, onBeforeUnmount, onMounted } from 'vue';
 import type { Note, Tag } from '../types';
+import type { Reminder } from '../types/reminder';
 import EmptyState from './EmptyState.vue';
 import BlockEditor from './BlockEditor.vue';
 import NoteCover from './NoteCover.vue';
@@ -84,6 +113,9 @@ import NoteIcon from './NoteIcon.vue';
 import NoteTags from './NoteTags.vue';
 import ExportButton from './ExportButton.vue';
 import Backlinks from './Backlinks.vue';
+import ReminderBadge from './reminder/ReminderBadge.vue';
+import ReminderModal from './reminder/ReminderModal.vue';
+import { useReminders } from '../composables/useReminders';
 
 const props = defineProps<{
   note: Note | undefined;
@@ -113,19 +145,45 @@ const localTitle = ref('');
 const localContent = ref('');
 let debounceTimer: number | null = null;
 
+const { fetchRemindersByNoteId } = useReminders();
+const noteReminder = ref<Reminder | null>(null);
+const reminderModalVisible = ref(false);
+
 watch(
   () => props.note,
-  (newNote) => {
+  async (newNote) => {
     if (newNote) {
       localTitle.value = newNote.title;
       localContent.value = newNote.content;
+
+      // Загружаем напоминание для заметки
+      const reminders = await fetchRemindersByNoteId(newNote.id);
+      noteReminder.value = reminders.length > 0 ? reminders[0] : null;
     } else {
       localTitle.value = '';
       localContent.value = '';
+      noteReminder.value = null;
     }
   },
   { immediate: true }
 );
+
+const openReminderModal = () => {
+  reminderModalVisible.value = true;
+};
+
+const closeReminderModal = () => {
+  reminderModalVisible.value = false;
+};
+
+const handleReminderSaved = async (reminder: Reminder) => {
+  noteReminder.value = reminder;
+  // Обновляем список напоминаний
+  if (props.note) {
+    const reminders = await fetchRemindersByNoteId(props.note.id);
+    noteReminder.value = reminders.length > 0 ? reminders[0] : null;
+  }
+};
 
 const handleTitleChange = () => {
   debounceUpdate({ title: localTitle.value });
@@ -216,5 +274,30 @@ onBeforeUnmount(() => {
   left: 24px;
   z-index: 10;
   pointer-events: auto;
+}
+
+.reminder-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.375rem 0.75rem;
+  background-color: transparent;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 1rem;
+}
+
+.dark .reminder-button {
+  border-color: #4b5563;
+}
+
+.reminder-button:hover {
+  background-color: #f3f4f6;
+}
+
+.dark .reminder-button:hover {
+  background-color: #374151;
 }
 </style>
