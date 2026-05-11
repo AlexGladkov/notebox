@@ -154,9 +154,9 @@ const columns = computed(() => {
   if (unassignedRecords.length > 0 || optionColumns.length === 0) {
     optionColumns.push({
       id: 'unassigned',
-      option: null as any,
+      option: null,
       records: unassignedRecords,
-    });
+    } as any);
   }
 
   return optionColumns;

@@ -1,6 +1,7 @@
 <template>
   <div
     class="kanban-card"
+    :class="{ dragging: isDragging }"
     draggable="true"
     @dragstart="handleDragStart"
     @dragend="handleDragEnd"
@@ -14,10 +15,10 @@
     </div>
 
     <div v-if="cardFields && cardFields.length > 0" class="card-fields">
-      <div v-for="field in displayFields" :key="field!.columnId" class="card-field">
-        <span class="field-label">{{ field!.columnName }}:</span>
-        <span class="field-value" :class="`field-type-${field!.type}`">
-          {{ field!.displayValue }}
+      <div v-for="field in displayFields" :key="field.columnId" class="card-field">
+        <span class="field-label">{{ field.columnName }}:</span>
+        <span class="field-value" :class="`field-type-${field.type}`">
+          {{ field.displayValue }}
         </span>
       </div>
     </div>
@@ -63,6 +64,7 @@ const emit = defineEmits<{
 }>();
 
 const showMenu = ref(false);
+const isDragging = ref(false);
 
 const toggleMenu = () => {
   showMenu.value = !showMenu.value;
@@ -76,6 +78,7 @@ const handleDelete = () => {
 };
 
 const handleDragStart = (event: DragEvent) => {
+  isDragging.value = true;
   if (event.dataTransfer) {
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('application/json', JSON.stringify({
@@ -86,6 +89,7 @@ const handleDragStart = (event: DragEvent) => {
 };
 
 const handleDragEnd = (event: DragEvent) => {
+  isDragging.value = false;
   emit('dragEnd', event);
 };
 
@@ -150,7 +154,9 @@ const displayFields = computed(() => {
         displayValue,
       };
     })
-    .filter(field => field !== null && field.displayValue);
+    .filter((field): field is { columnId: string; columnName: string; type: string; displayValue: string } =>
+      field !== null && field.displayValue !== null && field.displayValue !== undefined && field.displayValue !== ''
+    );
 });
 </script>
 
