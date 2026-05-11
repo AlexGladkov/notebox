@@ -63,8 +63,8 @@ class ReminderScheduler(
         return when (reminder.repeatType) {
             RepeatType.DAILY -> reminder.remindAt.plus(1, ChronoUnit.DAYS)
             RepeatType.WEEKLY -> reminder.remindAt.plus(7, ChronoUnit.DAYS)
-            RepeatType.MONTHLY -> reminder.remindAt.plus(30, ChronoUnit.DAYS)
-            RepeatType.YEARLY -> reminder.remindAt.plus(365, ChronoUnit.DAYS)
+            RepeatType.MONTHLY -> reminder.remindAt.plus(1, ChronoUnit.MONTHS)
+            RepeatType.YEARLY -> reminder.remindAt.plus(1, ChronoUnit.YEARS)
             else -> null
         }
     }

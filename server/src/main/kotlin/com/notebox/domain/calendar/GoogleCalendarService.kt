@@ -44,7 +44,11 @@ class GoogleCalendarService(
 
             createdEvent.id
         } catch (e: Exception) {
-            logger.error("Failed to create Google Calendar event", e)
+            if (e.message?.contains("401") == true || e.message?.contains("Unauthorized") == true) {
+                logger.warn("Google Calendar access token expired or invalid for user $userId. User needs to re-authenticate.")
+            } else {
+                logger.error("Failed to create Google Calendar event", e)
+            }
             null
         }
     }
@@ -73,7 +77,11 @@ class GoogleCalendarService(
                 .update("primary", reminder.googleEventId, event)
                 .execute()
         } catch (e: Exception) {
-            logger.error("Failed to update Google Calendar event", e)
+            if (e.message?.contains("401") == true || e.message?.contains("Unauthorized") == true) {
+                logger.warn("Google Calendar access token expired or invalid for user $userId. User needs to re-authenticate.")
+            } else {
+                logger.error("Failed to update Google Calendar event", e)
+            }
         }
     }
 
@@ -85,7 +93,11 @@ class GoogleCalendarService(
             val calendar = getCalendarService(account.accessToken)
             calendar.events().delete("primary", googleEventId).execute()
         } catch (e: Exception) {
-            logger.error("Failed to delete Google Calendar event", e)
+            if (e.message?.contains("401") == true || e.message?.contains("Unauthorized") == true) {
+                logger.warn("Google Calendar access token expired or invalid for user $userId. User needs to re-authenticate.")
+            } else {
+                logger.error("Failed to delete Google Calendar event", e)
+            }
         }
     }
 

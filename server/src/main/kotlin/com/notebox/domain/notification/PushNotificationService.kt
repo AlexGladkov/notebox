@@ -1,5 +1,6 @@
 package com.notebox.domain.notification
 
+import com.google.gson.Gson
 import nl.martijndwars.webpush.Notification
 import nl.martijndwars.webpush.PushService
 import org.slf4j.LoggerFactory
@@ -16,6 +17,7 @@ class PushNotificationService(
 ) {
     private val logger = LoggerFactory.getLogger(PushNotificationService::class.java)
     private val pushService: PushService? = initPushService()
+    private val gson = Gson()
 
     private fun initPushService(): PushService? {
         return try {
@@ -46,13 +48,12 @@ class PushNotificationService(
 
         val subscriptions = subscriptionRepository.findAll(userId)
 
-        val payload = """
-            {
-                "title": "$title",
-                "body": "$body",
-                "url": "$url"
-            }
-        """.trimIndent()
+        val payloadData = mapOf(
+            "title" to title,
+            "body" to body,
+            "url" to url
+        )
+        val payload = gson.toJson(payloadData)
 
         subscriptions.forEach { sub ->
             try {
