@@ -30,6 +30,15 @@ class UserOAuthAccountRepository {
             .singleOrNull()
     }
 
+    fun getByUserIdAndProvider(userId: String, provider: String): UserOAuthAccount? = transaction {
+        UserOAuthAccountsTable.select {
+            (UserOAuthAccountsTable.userId eq userId) and
+            (UserOAuthAccountsTable.provider eq provider)
+        }
+            .mapNotNull { toUserOAuthAccount(it) }
+            .singleOrNull()
+    }
+
     fun create(
         userId: String,
         provider: String,

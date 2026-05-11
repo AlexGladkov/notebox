@@ -17,12 +17,12 @@ class NotificationController(
     @GetMapping("/vapid-public-key")
     fun getVapidPublicKey(): ResponseEntity<Map<String, Any>> {
         if (!pushNotificationService.isConfigured()) {
-            return ResponseEntity.ok(mapOf("configured" to false))
+            return ResponseEntity.ok(mapOf<String, Any>("configured" to false))
         }
 
-        return ResponseEntity.ok(mapOf(
+        return ResponseEntity.ok(mapOf<String, Any>(
             "configured" to true,
-            "publicKey" to System.getenv("VAPID_PUBLIC_KEY") ?: ""
+            "publicKey" to (System.getenv("VAPID_PUBLIC_KEY") ?: "")
         ))
     }
 
