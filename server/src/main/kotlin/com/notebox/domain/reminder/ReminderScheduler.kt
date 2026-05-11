@@ -16,7 +16,7 @@ class ReminderScheduler(
 ) {
     private val logger = LoggerFactory.getLogger(ReminderScheduler::class.java)
 
-    @Scheduled(fixedRate = 60000) // каждую минуту
+    @Scheduled(fixedRate = 60000, initialDelay = 10000) // каждую минуту, первый запуск через 10 секунд
     fun checkReminders() {
         try {
             val now = Instant.now()
