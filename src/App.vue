@@ -83,11 +83,38 @@ initializeTheme();
 // Инициализация отслеживания состояния сети
 onMounted(() => {
   initNetworkStatus();
+  registerServiceWorker();
 });
 
 onUnmounted(() => {
   destroyNetworkStatus();
 });
+
+// Регистрация Service Worker для push-уведомлений
+const registerServiceWorker = async () => {
+  if ('serviceWorker' in navigator) {
+    try {
+      const registration = await navigator.serviceWorker.register('/sw.js', {
+        scope: '/',
+      });
+      console.log('Service Worker registered:', registration);
+
+      // Слушаем сообщения от Service Worker для навигации
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'NAVIGATE') {
+          const url = event.data.url;
+          // Извлекаем ID заметки из URL
+          const match = url.match(/\/notes\/([a-f0-9-]+)/);
+          if (match && match[1]) {
+            handleSelectNote(match[1]);
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Service Worker registration failed:', error);
+    }
+  }
+};
 
 const { notes } = useStorage();
 const {

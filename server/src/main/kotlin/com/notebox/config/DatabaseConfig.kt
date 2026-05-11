@@ -5,6 +5,8 @@ import com.notebox.domain.database.CustomDatabasesTable
 import com.notebox.domain.database.FilesTable
 import com.notebox.domain.database.RecordsTable
 import com.notebox.domain.note.NotesTable
+import com.notebox.domain.notification.PushSubscriptionsTable
+import com.notebox.domain.reminder.RemindersTable
 import com.notebox.domain.tag.TagsTable
 import com.notebox.domain.tag.NoteTagsTable
 import com.notebox.migration.FolderToNoteMigration
@@ -36,7 +38,9 @@ class DatabaseInitializer(
                 RecordsTable,
                 FilesTable,
                 TagsTable,
-                NoteTagsTable
+                NoteTagsTable,
+                RemindersTable,
+                PushSubscriptionsTable
             )
         }
 

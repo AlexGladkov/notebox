@@ -109,6 +109,7 @@ const emit = defineEmits<{
   'requestSave': [];
   'navigate-to-note': [noteId: string];
   'createFromTemplate': [data: { title: string; content: string; icon: string }];
+  'openReminderModal': [];
 }>();
 
 const slashMenuVisible = ref(false);
@@ -438,6 +439,22 @@ const slashCommands = computed<SlashCommandType[]>(() => [
       // Удалить slash-команду из текста
       editor.chain().focus().deleteRange({ from: editor.state.selection.from - slashQuery.value.length - 1, to: editor.state.selection.to }).run();
       await handleExpand(editor);
+    },
+  },
+
+  // Действия
+  {
+    id: 'remind',
+    title: 'Напоминание',
+    description: 'Добавить напоминание к заметке',
+    icon: '🔔',
+    category: 'Действия',
+    keywords: ['remind', 'reminder', 'напоминание', 'deadline', 'дедлайн'],
+    command: (editor) => {
+      // Удалить slash-команду из текста
+      editor.chain().focus().deleteRange({ from: editor.state.selection.from - slashQuery.value.length - 1, to: editor.state.selection.to }).run();
+      // Открыть модал создания напоминания
+      emit('openReminderModal');
     },
   },
 ]);

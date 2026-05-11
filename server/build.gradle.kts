@@ -48,6 +48,15 @@ dependencies {
     // HTTP Client for OAuth
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
+    // Web Push Notifications
+    implementation("nl.martijndwars:web-push:5.1.1")
+    implementation("org.bouncycastle:bcprov-jdk15on:1.70")
+
+    // Google Calendar API
+    implementation("com.google.api-client:google-api-client:2.2.0")
+    implementation("com.google.apis:google-api-services-calendar:v3-rev20230825-2.0.0")
+    implementation("com.google.auth:google-auth-library-oauth2-http:1.19.0")
+
     // Development
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 
