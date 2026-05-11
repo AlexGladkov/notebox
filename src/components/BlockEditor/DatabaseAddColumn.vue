@@ -215,4 +215,33 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
 }
+
+/* Dark theme */
+.dark .add-column-btn {
+  color: #6b7280;
+}
+
+.dark .add-column-btn:hover {
+  background: #374151;
+  color: #d1d5db;
+}
+
+.dark .add-column-menu {
+  background: #1f2937;
+  border-color: #374151;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.dark .menu-title {
+  color: #6b7280;
+  border-bottom-color: #374151;
+}
+
+.dark .menu-item {
+  color: #d1d5db;
+}
+
+.dark .menu-item:hover {
+  background: #374151;
+}
 </style>

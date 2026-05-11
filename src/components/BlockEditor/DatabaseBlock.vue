@@ -698,4 +698,33 @@ watch(() => props.node.attrs.databaseId, () => {
   opacity: 0;
   transform: translateX(-50%) translateY(10px);
 }
+
+/* Dark theme */
+.dark .database-loading,
+.dark .database-error {
+  background: #1f2937;
+  border-color: #374151;
+  color: #9ca3af;
+}
+
+.dark .database-error {
+  background: #7f1d1d;
+  border-color: #991b1b;
+  color: #fca5a5;
+}
+
+.dark .loading-spinner {
+  border-color: #374151;
+  border-top-color: #60a5fa;
+}
+
+.dark .toast {
+  background: #f9fafb;
+  color: #111827;
+}
+
+.dark .toast-error {
+  background: #ef4444;
+  color: white;
+}
 </style>

@@ -222,4 +222,41 @@ const createOption = () => {
   font-size: 18px;
   font-weight: 600;
 }
+
+/* Dark theme */
+.dark .select-tag {
+  color: #1f2937;
+}
+
+.dark .cell-value.empty {
+  color: #6b7280;
+}
+
+.dark .select-menu {
+  background: #1f2937;
+  border-color: #374151;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.dark .menu-search {
+  border-bottom-color: #374151;
+  background: #1f2937;
+  color: #d1d5db;
+}
+
+.dark .menu-option:hover {
+  background: #374151;
+}
+
+.dark .menu-option.active {
+  background: #1e3a5f;
+}
+
+.dark .menu-option.create {
+  color: #60a5fa;
+}
+
+.dark .option-tag {
+  color: #1f2937;
+}
 </style>

@@ -85,4 +85,17 @@ const cancelEdit = () => {
   font-family: inherit;
   padding: 0;
 }
+
+/* Dark theme */
+.dark .cell-value {
+  color: #d1d5db;
+}
+
+.dark .cell-value:empty::before {
+  color: #6b7280;
+}
+
+.dark .cell-input {
+  color: #d1d5db;
+}
 </style>

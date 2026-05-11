@@ -398,4 +398,56 @@ onUnmounted(() => {
 .context-menu-icon {
   font-size: 16px;
 }
+
+/* Dark theme */
+.dark .database-table {
+  background: #1f2937;
+  border-color: #374151;
+}
+
+.dark .database-table thead {
+  background: #111827;
+  border-bottom-color: #374151;
+}
+
+.dark .checkbox-cell {
+  border-right-color: #374151;
+}
+
+.dark .column-header-cell,
+.dark .add-column-cell {
+  color: #d1d5db;
+  border-right-color: #374151;
+}
+
+.dark .data-row {
+  border-bottom-color: #374151;
+}
+
+.dark .data-row:hover {
+  background: #111827;
+}
+
+.dark .data-cell,
+.dark .empty-cell {
+  border-right-color: #374151;
+}
+
+.dark .empty-message {
+  color: #6b7280;
+}
+
+.dark .context-menu {
+  background: #1f2937;
+  border-color: #374151;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.dark .context-menu-item {
+  color: #d1d5db;
+}
+
+.dark .context-menu-item:hover {
+  background: #374151;
+}
 </style>

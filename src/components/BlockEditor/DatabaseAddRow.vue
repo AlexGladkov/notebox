@@ -48,4 +48,14 @@ const addRow = () => {
   font-size: 16px;
   font-weight: 600;
 }
+
+/* Dark theme */
+.dark .add-row-btn {
+  color: #9ca3af;
+}
+
+.dark .add-row-btn:hover {
+  background: #374151;
+  color: #d1d5db;
+}
 </style>

@@ -334,4 +334,54 @@ onUnmounted(() => {
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
+
+/* Dark theme */
+.dark .column-header:hover {
+  background: #374151;
+}
+
+.dark .column-name {
+  color: #d1d5db;
+}
+
+.dark .column-name-input {
+  background: #1f2937;
+  border-color: #60a5fa;
+  color: #d1d5db;
+}
+
+.dark .column-menu {
+  background: #1f2937;
+  border-color: #374151;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.dark .column-menu-item {
+  color: #d1d5db;
+}
+
+.dark .column-menu-item:hover {
+  background: #374151;
+}
+
+.dark .column-menu-item.active {
+  background: #1e3a5f;
+  color: #60a5fa;
+}
+
+.dark .column-menu-item.danger {
+  color: #ef4444;
+}
+
+.dark .column-menu-item.danger:hover {
+  background: #7f1d1d;
+}
+
+.dark .column-menu-divider {
+  background: #374151;
+}
+
+.dark .column-menu-section-title {
+  color: #6b7280;
+}
 </style>
