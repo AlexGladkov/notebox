@@ -9,8 +9,14 @@ COPY package*.json ./
 # Устанавливаем зависимости
 RUN npm ci
 
-# Копируем исходники frontend
-COPY . .
+# Копируем только необходимые файлы для frontend build
+COPY src ./src
+COPY public ./public
+COPY index.html .
+COPY vite.config.ts .
+COPY tsconfig.json .
+COPY tailwind.config.js .
+COPY postcss.config.js .
 
 # Собираем production build
 RUN npm run build
