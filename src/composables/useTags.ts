@@ -91,7 +91,7 @@ export function useTags() {
     const color = TAG_COLOR_PALETTE.find(
       c => c.light.toLowerCase() === normalizedHex || c.dark.toLowerCase() === normalizedHex
     );
-    return color ? color.name : TAG_COLOR_PALETTE[0].name;
+    return color ? color.name : 'gray';
   };
 
   const getTagColors = (colorNameOrHex: string, isDark: boolean) => {
