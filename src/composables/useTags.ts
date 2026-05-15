@@ -82,9 +82,31 @@ export function useTags() {
   };
 
   const getNextColor = (): string => {
-    const colorPalette = TAG_COLOR_PALETTE.map(c => c.light);
-    const nextColorIndex = tags.value.length % colorPalette.length;
-    return colorPalette[nextColorIndex];
+    const nextColorIndex = tags.value.length % TAG_COLOR_PALETTE.length;
+    return TAG_COLOR_PALETTE[nextColorIndex].name;
+  };
+
+  const getColorNameFromHex = (hex: string): string => {
+    const normalizedHex = hex.toLowerCase().trim();
+    const color = TAG_COLOR_PALETTE.find(
+      c => c.light.toLowerCase() === normalizedHex || c.dark.toLowerCase() === normalizedHex
+    );
+    return color ? color.name : TAG_COLOR_PALETTE[0].name;
+  };
+
+  const getTagColors = (colorNameOrHex: string, isDark: boolean) => {
+    let colorName = colorNameOrHex;
+
+    // Если передан hex-код, конвертируем в имя цвета (для обратной совместимости)
+    if (colorNameOrHex.startsWith('#')) {
+      colorName = getColorNameFromHex(colorNameOrHex);
+    }
+
+    const palette = TAG_COLOR_PALETTE.find(c => c.name === colorName) || TAG_COLOR_PALETTE[0];
+    return {
+      background: isDark ? palette.dark : palette.light,
+      text: isDark ? '#ffffff' : palette.text
+    };
   };
 
   const findOrCreateTag = async (name: string): Promise<Tag> => {
@@ -109,5 +131,6 @@ export function useTags() {
     deleteTag,
     setNoteTags,
     findOrCreateTag,
+    getTagColors,
   };
 }

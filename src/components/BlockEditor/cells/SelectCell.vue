@@ -1,6 +1,6 @@
 <template>
   <div class="select-cell" @click="toggleMenu">
-    <div v-if="selectedOption" class="select-tag" :style="{ backgroundColor: selectedOption.color || '#e5e7eb' }">
+    <div v-if="selectedOption" class="select-tag" :style="getOptionStyle(selectedOption.color || 'gray')">
       {{ selectedOption.label }}
     </div>
     <span v-else class="cell-value empty">Выберите</span>
@@ -27,7 +27,7 @@
           :class="{ active: option.id === value }"
           @click="selectOption(option.id)"
         >
-          <span class="option-tag" :style="{ backgroundColor: option.color }">
+          <span class="option-tag" :style="getOptionStyle(option.color)">
             {{ option.label }}
           </span>
         </div>
@@ -51,6 +51,8 @@
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue';
 import type { Column, SelectOption } from '../../../types';
+import { TAG_COLOR_PALETTE } from '../../../types/database';
+import { useTheme } from '../../../composables/useTheme';
 
 const props = defineProps<{
   value: string | null;
@@ -66,10 +68,31 @@ const menuVisible = ref(false);
 const searchQuery = ref('');
 const searchInput = ref<HTMLInputElement | null>(null);
 
-import { TAG_COLOR_PALETTE } from '../../../types/database';
+const { effectiveTheme } = useTheme();
 
-// Extract light colors for the palette
-const colorPalette = TAG_COLOR_PALETTE.map(c => c.light);
+const getColorNameFromHex = (hex: string): string => {
+  const normalizedHex = hex.toLowerCase().trim();
+  const color = TAG_COLOR_PALETTE.find(
+    c => c.light.toLowerCase() === normalizedHex || c.dark.toLowerCase() === normalizedHex
+  );
+  return color ? color.name : 'gray';
+};
+
+const getOptionStyle = (colorNameOrHex: string) => {
+  let colorName = colorNameOrHex;
+
+  if (colorNameOrHex.startsWith('#')) {
+    colorName = getColorNameFromHex(colorNameOrHex);
+  }
+
+  const palette = TAG_COLOR_PALETTE.find(c => c.name === colorName) || TAG_COLOR_PALETTE[0];
+  const isDark = effectiveTheme.value === 'dark';
+
+  return {
+    backgroundColor: isDark ? palette.dark : palette.light,
+    color: isDark ? '#ffffff' : palette.text
+  };
+};
 
 const options = computed(() => props.column.options || []);
 
@@ -112,12 +135,12 @@ const selectOption = (optionId: string) => {
 const createOption = () => {
   if (!searchQuery.value.trim()) return;
 
-  // Get next color from palette (cycle through colors)
-  const nextColorIndex = (props.column.options?.length || 0) % colorPalette.length;
+  // Get next color name from palette (cycle through colors)
+  const nextColorIndex = (props.column.options?.length || 0) % TAG_COLOR_PALETTE.length;
   const newOption: SelectOption = {
     id: `opt_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
     label: searchQuery.value.trim(),
-    color: colorPalette[nextColorIndex],
+    color: TAG_COLOR_PALETTE[nextColorIndex].name,
   };
 
   // Emit event to parent component to handle the option creation
@@ -142,7 +165,6 @@ const createOption = () => {
   padding: 2px 8px;
   border-radius: 4px;
   font-size: 13px;
-  color: #374151;
 }
 
 .cell-value.empty {
@@ -215,7 +237,6 @@ const createOption = () => {
   padding: 2px 8px;
   border-radius: 4px;
   font-size: 13px;
-  color: #374151;
 }
 
 .create-icon {

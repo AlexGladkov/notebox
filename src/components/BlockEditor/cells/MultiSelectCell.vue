@@ -5,7 +5,7 @@
         v-for="option in selectedOptions"
         :key="option.id"
         class="select-tag"
-        :style="{ backgroundColor: option.color || '#e5e7eb' }"
+        :style="getOptionStyle(option.color || 'gray')"
         @click.stop="removeOption(option.id)"
       >
         {{ option.label }}
@@ -42,7 +42,7 @@
             class="option-checkbox"
             @click.stop
           />
-          <span class="option-tag" :style="{ backgroundColor: option.color }">
+          <span class="option-tag" :style="getOptionStyle(option.color)">
             {{ option.label }}
           </span>
         </div>
@@ -67,6 +67,7 @@
 import { ref, computed, nextTick } from 'vue';
 import type { Column, SelectOption } from '../../../types';
 import { TAG_COLOR_PALETTE } from '../../../types/database';
+import { useTheme } from '../../../composables/useTheme';
 
 const props = defineProps<{
   value: string[] | null;
@@ -82,8 +83,31 @@ const menuVisible = ref(false);
 const searchQuery = ref('');
 const searchInput = ref<HTMLInputElement | null>(null);
 
-// Extract light colors for the palette
-const colorPalette = TAG_COLOR_PALETTE.map(c => c.light);
+const { effectiveTheme } = useTheme();
+
+const getColorNameFromHex = (hex: string): string => {
+  const normalizedHex = hex.toLowerCase().trim();
+  const color = TAG_COLOR_PALETTE.find(
+    c => c.light.toLowerCase() === normalizedHex || c.dark.toLowerCase() === normalizedHex
+  );
+  return color ? color.name : 'gray';
+};
+
+const getOptionStyle = (colorNameOrHex: string) => {
+  let colorName = colorNameOrHex;
+
+  if (colorNameOrHex.startsWith('#')) {
+    colorName = getColorNameFromHex(colorNameOrHex);
+  }
+
+  const palette = TAG_COLOR_PALETTE.find(c => c.name === colorName) || TAG_COLOR_PALETTE[0];
+  const isDark = effectiveTheme.value === 'dark';
+
+  return {
+    backgroundColor: isDark ? palette.dark : palette.light,
+    color: isDark ? '#ffffff' : palette.text
+  };
+};
 
 const options = computed(() => props.column.options || []);
 
@@ -144,12 +168,12 @@ const removeOption = (optionId: string) => {
 const createOption = () => {
   if (!searchQuery.value.trim()) return;
 
-  // Get next color from palette (cycle through colors)
-  const nextColorIndex = (props.column.options?.length || 0) % colorPalette.length;
+  // Get next color name from palette (cycle through colors)
+  const nextColorIndex = (props.column.options?.length || 0) % TAG_COLOR_PALETTE.length;
   const newOption: SelectOption = {
     id: `opt_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
     label: searchQuery.value.trim(),
-    color: colorPalette[nextColorIndex],
+    color: TAG_COLOR_PALETTE[nextColorIndex].name,
   };
 
   // Emit event to parent component to handle the option creation
@@ -184,7 +208,6 @@ const createOption = () => {
   padding: 2px 6px 2px 8px;
   border-radius: 4px;
   font-size: 13px;
-  color: #374151;
 }
 
 .remove-icon {
@@ -275,7 +298,6 @@ const createOption = () => {
   padding: 2px 8px;
   border-radius: 4px;
   font-size: 13px;
-  color: #374151;
 }
 
 .create-icon {

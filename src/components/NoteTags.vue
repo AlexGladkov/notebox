@@ -6,7 +6,7 @@
         v-for="tag in selectedTags"
         :key="tag.id"
         class="tag"
-        :style="{ backgroundColor: tag.color }"
+        :style="getTagStyle(tag.color)"
         @click.stop="removeTag(tag.id)"
       >
         {{ tag.name }}
@@ -53,7 +53,7 @@
             class="option-checkbox"
             @click.stop
           />
-          <span class="option-tag" :style="{ backgroundColor: tag.color }">
+          <span class="option-tag" :style="getTagStyle(tag.color)">
             {{ tag.name }}
           </span>
         </div>
@@ -81,11 +81,16 @@
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue';
 import type { Tag } from '../types';
+import { useTags } from '../composables/useTags';
+import { useTheme } from '../composables/useTheme';
 
 const props = defineProps<{
   selectedTagIds: string[];
   availableTags: Tag[];
 }>();
+
+const { getTagColors } = useTags();
+const { effectiveTheme } = useTheme();
 
 const emit = defineEmits<{
   addTag: [tagId: string];
@@ -114,6 +119,14 @@ const exactMatchExists = computed(() => {
     tag => tag.name.toLowerCase() === searchQuery.value.toLowerCase()
   );
 });
+
+const getTagStyle = (colorNameOrHex: string) => {
+  const colors = getTagColors(colorNameOrHex, effectiveTheme.value === 'dark');
+  return {
+    backgroundColor: colors.background,
+    color: colors.text
+  };
+};
 
 const isSelected = (tagId: string) => {
   return props.selectedTagIds.includes(tagId);
@@ -187,17 +200,12 @@ const createAndAddTag = () => {
   padding: 4px 8px 4px 10px;
   border-radius: 4px;
   font-size: 13px;
-  color: #374151;
   cursor: pointer;
   transition: opacity 0.15s ease;
 }
 
 .tag:hover {
   opacity: 0.8;
-}
-
-.dark .tag {
-  color: #e5e7eb;
 }
 
 .remove-icon {
@@ -351,11 +359,6 @@ const createAndAddTag = () => {
   padding: 3px 10px;
   border-radius: 4px;
   font-size: 13px;
-  color: #374151;
-}
-
-.dark .option-tag {
-  color: #e5e7eb;
 }
 
 .create-icon {

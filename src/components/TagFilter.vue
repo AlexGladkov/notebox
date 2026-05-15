@@ -30,7 +30,7 @@
           @change="toggleTag(tag.id)"
           class="tag-checkbox"
         />
-        <span class="tag-badge" :style="{ backgroundColor: tag.color }">
+        <span class="tag-badge" :style="getTagStyle(tag.color)">
           {{ tag.name }}
         </span>
       </label>
@@ -40,6 +40,8 @@
 
 <script setup lang="ts">
 import type { Tag } from '../types';
+import { useTags } from '../composables/useTags';
+import { useTheme } from '../composables/useTheme';
 
 const props = defineProps<{
   tags: Tag[];
@@ -50,6 +52,17 @@ const emit = defineEmits<{
   toggleTag: [tagId: string];
   clearFilter: [];
 }>();
+
+const { getTagColors } = useTags();
+const { effectiveTheme } = useTheme();
+
+const getTagStyle = (colorNameOrHex: string) => {
+  const colors = getTagColors(colorNameOrHex, effectiveTheme.value === 'dark');
+  return {
+    backgroundColor: colors.background,
+    color: colors.text
+  };
+};
 
 const toggleTag = (tagId: string) => {
   emit('toggleTag', tagId);
@@ -162,15 +175,10 @@ const clearFilter = () => {
   padding: 3px 8px;
   border-radius: 4px;
   font-size: 12px;
-  color: #374151;
   flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.dark .tag-badge {
-  color: #e5e7eb;
 }
 </style>

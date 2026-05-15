@@ -47,7 +47,7 @@
             v-for="tag in note.tags.slice(0, 2)"
             :key="tag.id"
             class="note-tag"
-            :style="{ backgroundColor: tag.color }"
+            :style="getTagStyle(tag.color)"
             :title="tag.name"
           >
             {{ tag.name }}
@@ -85,6 +85,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import type { Note } from '../types';
+import { useTags } from '../composables/useTags';
+import { useTheme } from '../composables/useTheme';
 
 const props = withDefaults(defineProps<{
   notes: Note[];
@@ -102,7 +104,18 @@ const emit = defineEmits<{
   toggleExpand: [id: string];
 }>();
 
+const { getTagColors } = useTags();
+const { effectiveTheme } = useTheme();
+
 const hoveredNoteId = ref<string | null>(null);
+
+const getTagStyle = (colorNameOrHex: string) => {
+  const colors = getTagColors(colorNameOrHex, effectiveTheme.value === 'dark');
+  return {
+    backgroundColor: colors.background,
+    color: colors.text
+  };
+};
 
 const sortedNotes = computed(() => {
   return [...props.notes].sort((a, b) => a.title.localeCompare(b.title));
@@ -238,15 +251,10 @@ const handleNoteClick = (noteId: string, event: MouseEvent) => {
   padding: 2px 6px;
   border-radius: 3px;
   font-size: 11px;
-  color: #374151;
   max-width: 60px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.dark .note-tag {
-  color: #e5e7eb;
 }
 
 .more-tags {

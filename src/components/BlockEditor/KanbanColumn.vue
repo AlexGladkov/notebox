@@ -55,6 +55,7 @@ import { ref, computed } from 'vue';
 import KanbanCard from './KanbanCard.vue';
 import type { Record, CustomDatabase, SelectOption } from '../../types';
 import { TAG_COLOR_PALETTE } from '../../types/database';
+import { useTheme } from '../../composables/useTheme';
 
 interface Props {
   option: SelectOption | null; // null для "Без статуса"
@@ -82,15 +83,31 @@ const emit = defineEmits<{
 const isDragOver = ref(false);
 const isDragging = ref(false);
 
+const { effectiveTheme } = useTheme();
+
 const columnName = computed(() => {
   return props.option?.label || 'Без статуса';
 });
 
+const getColorNameFromHex = (colorValue: string): string => {
+  if (!colorValue.startsWith('#')) return colorValue;
+
+  const normalizedHex = colorValue.toLowerCase().trim();
+  const colorDef = TAG_COLOR_PALETTE.find(
+    c => c.light.toLowerCase() === normalizedHex || c.dark.toLowerCase() === normalizedHex
+  );
+  return colorDef ? colorDef.name : 'gray';
+};
+
 const headerColor = computed(() => {
   if (!props.option?.color) return '#d1d5db';
 
-  const colorDef = TAG_COLOR_PALETTE.find(c => c.name === props.option!.color);
-  return colorDef?.dark || '#d1d5db';
+  const colorName = getColorNameFromHex(props.option.color);
+  const colorDef = TAG_COLOR_PALETTE.find(c => c.name === colorName);
+
+  // В зависимости от темы выбираем dark или light вариант
+  const isDark = effectiveTheme.value === 'dark';
+  return colorDef ? (isDark ? colorDef.dark : colorDef.light) : '#d1d5db';
 });
 
 const handleDragOver = (event: DragEvent) => {
