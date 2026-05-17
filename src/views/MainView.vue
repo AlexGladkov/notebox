@@ -218,7 +218,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted } from 'vue';
+import { ref, computed, reactive, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStorage } from '../composables/useStorage';
 import { useNotes } from '../composables/useNotes';
@@ -329,17 +329,16 @@ const { backlinks } = useBacklinks(currentNoteIdRef, notes);
 // Вспомогательная функция для получения всех ID предков заметки
 const getAllAncestorIds = (noteId: string): string[] => {
   const ancestorIds: string[] = [];
-  let currentId: string | null | undefined = noteId;
+  const note = notes.value.find(n => n.id === noteId);
+  if (!note) return ancestorIds;
+
+  let currentId = note.parentId;
 
   while (currentId) {
-    const note = notes.value.find(n => n.id === currentId);
-    if (!note) break;
-
-    if (note.parentId) {
-      ancestorIds.push(note.parentId);
-    }
-
-    currentId = note.parentId;
+    ancestorIds.push(currentId);
+    const parent = notes.value.find(n => n.id === currentId);
+    if (!parent) break;
+    currentId = parent.parentId;
   }
 
   return ancestorIds;
@@ -371,8 +370,6 @@ const rootNotes = computed(() => {
     const ancestorIds = getAllAncestorIds(note.id);
     ancestorIds.forEach(id => {
       relevantNoteIds.add(id);
-      // Автоматически раскрыть предков для видимости вложенных заметок
-      expandedNotes.value.add(id);
     });
   });
 
@@ -381,6 +378,38 @@ const rootNotes = computed(() => {
     .filter(n => !n.parentId && relevantNoteIds.has(n.id))
     .sort((a, b) => a.title.localeCompare(b.title));
 });
+
+// Автоматическое раскрытие предков при фильтрации по тегам
+watch([selectedTagIds, notes], () => {
+  if (selectedTagIds.value.length === 0) return;
+
+  // Найти все заметки с выбранными тегами
+  const notesWithTags = notes.value.filter(note => {
+    if (!note.tags || note.tags.length === 0) return false;
+    return note.tags.some(tag => selectedTagIds.value.includes(tag.id));
+  });
+
+  // Раскрыть всех предков для каждой найденной заметки
+  let hasChanges = false;
+  notesWithTags.forEach(note => {
+    const ancestorIds = getAllAncestorIds(note.id);
+    ancestorIds.forEach(id => {
+      if (!expandedNotes.value.has(id)) {
+        expandedNotes.value.add(id);
+        hasChanges = true;
+      }
+    });
+  });
+
+  // Сохранить состояние раскрытия в localStorage, если были изменения
+  if (hasChanges) {
+    try {
+      localStorage.setItem('expandedNotes', JSON.stringify(Array.from(expandedNotes.value)));
+    } catch (err) {
+      console.error('Failed to save expanded state:', err);
+    }
+  }
+}, { deep: true });
 
 function handleSelectNote(noteId: string, forceNewTab = false) {
   const note = getNoteById(noteId);
