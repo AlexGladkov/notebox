@@ -326,18 +326,60 @@ const currentNote = computed(() => getActiveNote());
 const currentNoteIdRef = computed(() => currentNote.value?.id);
 const { backlinks } = useBacklinks(currentNoteIdRef, notes);
 
-const rootNotes = computed(() => {
-  let filtered = notes.value.filter(n => !n.parentId);
+// Вспомогательная функция для получения всех ID предков заметки
+const getAllAncestorIds = (noteId: string): string[] => {
+  const ancestorIds: string[] = [];
+  let currentId: string | null | undefined = noteId;
 
-  // Фильтрация по тегам (OR логика - показать заметки с любым из выбранных тегов)
-  if (selectedTagIds.value.length > 0) {
-    filtered = filtered.filter(note => {
-      if (!note.tags || note.tags.length === 0) return false;
-      return note.tags.some(tag => selectedTagIds.value.includes(tag.id));
-    });
+  while (currentId) {
+    const note = notes.value.find(n => n.id === currentId);
+    if (!note) break;
+
+    if (note.parentId) {
+      ancestorIds.push(note.parentId);
+    }
+
+    currentId = note.parentId;
   }
 
-  return filtered.sort((a, b) => a.title.localeCompare(b.title));
+  return ancestorIds;
+};
+
+const rootNotes = computed(() => {
+  // Если нет фильтра по тегам, показываем все корневые заметки
+  if (selectedTagIds.value.length === 0) {
+    return notes.value
+      .filter(n => !n.parentId)
+      .sort((a, b) => a.title.localeCompare(b.title));
+  }
+
+  // Фильтрация по тегам (OR логика - показать заметки с любым из выбранных тегов)
+  // 1. Найти ВСЕ заметки с выбранными тегами (включая вложенные)
+  const notesWithTags = notes.value.filter(note => {
+    if (!note.tags || note.tags.length === 0) return false;
+    return note.tags.some(tag => selectedTagIds.value.includes(tag.id));
+  });
+
+  // 2. Собрать ID всех заметок с тегами и их предков
+  const relevantNoteIds = new Set<string>();
+
+  notesWithTags.forEach(note => {
+    // Добавить саму заметку
+    relevantNoteIds.add(note.id);
+
+    // Добавить всех её предков
+    const ancestorIds = getAllAncestorIds(note.id);
+    ancestorIds.forEach(id => {
+      relevantNoteIds.add(id);
+      // Автоматически раскрыть предков для видимости вложенных заметок
+      expandedNotes.value.add(id);
+    });
+  });
+
+  // 3. Вернуть только корневые заметки, которые либо имеют тег, либо являются предками заметок с тегом
+  return notes.value
+    .filter(n => !n.parentId && relevantNoteIds.has(n.id))
+    .sort((a, b) => a.title.localeCompare(b.title));
 });
 
 function handleSelectNote(noteId: string, forceNewTab = false) {
