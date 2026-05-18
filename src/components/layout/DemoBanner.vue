@@ -90,16 +90,16 @@ const handleLogout = async () => {
 
 :global(.dark) .demo-banner-icon,
 :global(.dark) .demo-banner-text {
-  color: #fef3c7;
+  color: #78350f;
 }
 
 :global(.dark) .demo-banner-logout {
-  background: rgba(254, 243, 199, 0.1);
-  border-color: #fef3c7;
-  color: #fef3c7;
+  background: rgba(120, 53, 15, 0.1);
+  border-color: #78350f;
+  color: #78350f;
 }
 
 :global(.dark) .demo-banner-logout:hover {
-  background: rgba(254, 243, 199, 0.2);
+  background: rgba(120, 53, 15, 0.2);
 }
 </style>

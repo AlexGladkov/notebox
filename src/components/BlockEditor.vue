@@ -1197,8 +1197,8 @@ onBeforeUnmount(() => {
 }
 
 .dark :deep(.block-editor-content .ProseMirror mark) {
-  background-color: #854d0e;
-  color: #fef3c7;
+  background-color: #fef3c7;
+  color: #78350f;
 }
 
 .block-editor-content :deep(.slash-command-active) {
@@ -1312,7 +1312,7 @@ onBeforeUnmount(() => {
 }
 
 .dark :deep(.block-editor-content .wiki-link-input-active) {
-  background-color: #854d0e;
-  color: #fef3c7;
+  background-color: #fef3c7;
+  color: #78350f;
 }
 </style>

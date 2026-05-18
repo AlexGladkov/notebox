@@ -348,9 +348,9 @@ onMounted(() => {
 }
 
 .dark .warning-box {
-  background: #78350f;
-  border-color: #92400e;
-  color: #fef3c7;
+  background: #fef3c7;
+  border-color: #f59e0b;
+  color: #78350f;
 }
 
 .warning-icon {
