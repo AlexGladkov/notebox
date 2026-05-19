@@ -17,6 +17,7 @@
     <!-- Dropdown Menu -->
     <div
       v-if="menuVisible"
+      ref="menuElement"
       class="select-menu"
       @click.stop
     >
@@ -82,6 +83,7 @@ const emit = defineEmits<{
 const menuVisible = ref(false);
 const searchQuery = ref('');
 const searchInput = ref<HTMLInputElement | null>(null);
+const menuElement = ref<HTMLElement | null>(null);
 let clickOutsideTimer: ReturnType<typeof setTimeout> | null = null;
 
 const { effectiveTheme } = useTheme();
@@ -141,9 +143,8 @@ const handleEscape = (event: KeyboardEvent) => {
 };
 
 const handleClickOutside = (event: MouseEvent) => {
-  const menu = document.querySelector('.select-menu');
   const target = event.target as Node;
-  if (menu && !menu.contains(target)) {
+  if (menuElement.value && !menuElement.value.contains(target)) {
     closeMenu();
   }
 };
