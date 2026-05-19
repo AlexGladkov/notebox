@@ -714,7 +714,7 @@ watch(() => props.node.attrs.databaseId, () => {
   border-radius: 8px;
   font-size: 14px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-  z-index: 2000;
+  z-index: 9999;
 }
 
 .toast-error {
