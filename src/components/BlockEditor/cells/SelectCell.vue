@@ -49,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick } from 'vue';
+import { ref, computed, nextTick, onUnmounted } from 'vue';
 import type { Column, SelectOption } from '../../../types';
 import { TAG_COLOR_PALETTE } from '../../../types/database';
 import { useTheme } from '../../../composables/useTheme';
@@ -67,6 +67,7 @@ const emit = defineEmits<{
 const menuVisible = ref(false);
 const searchQuery = ref('');
 const searchInput = ref<HTMLInputElement | null>(null);
+let clickOutsideTimer: ReturnType<typeof setTimeout> | null = null;
 
 const { effectiveTheme } = useTheme();
 
@@ -113,18 +114,44 @@ const exactMatchExists = computed(() => {
   return options.value.some(opt => opt.label.toLowerCase() === searchQuery.value.toLowerCase());
 });
 
+const handleEscape = (event: KeyboardEvent) => {
+  if (event.key === 'Escape') {
+    closeMenu();
+  }
+};
+
+const handleClickOutside = (event: MouseEvent) => {
+  const menu = document.querySelector('.select-menu');
+  const target = event.target as Node;
+  if (menu && !menu.contains(target)) {
+    closeMenu();
+  }
+};
+
 const toggleMenu = async () => {
-  menuVisible.value = !menuVisible.value;
-  if (menuVisible.value) {
+  if (!menuVisible.value) {
+    menuVisible.value = true;
     searchQuery.value = '';
     await nextTick();
     searchInput.value?.focus();
+    document.addEventListener('keydown', handleEscape);
+    clickOutsideTimer = setTimeout(() => {
+      document.addEventListener('click', handleClickOutside);
+    }, 0);
+  } else {
+    closeMenu();
   }
 };
 
 const closeMenu = () => {
   menuVisible.value = false;
   searchQuery.value = '';
+  document.removeEventListener('keydown', handleEscape);
+  document.removeEventListener('click', handleClickOutside);
+  if (clickOutsideTimer) {
+    clearTimeout(clickOutsideTimer);
+    clickOutsideTimer = null;
+  }
 };
 
 const selectOption = (optionId: string) => {
@@ -150,6 +177,14 @@ const createOption = () => {
   emit('update', newOption.id);
   closeMenu();
 };
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleEscape);
+  document.removeEventListener('click', handleClickOutside);
+  if (clickOutsideTimer) {
+    clearTimeout(clickOutsideTimer);
+  }
+});
 </script>
 
 <style scoped>
