@@ -36,7 +36,7 @@ export function useTheme() {
     return themeMode.value;
   });
 
-  const applyTheme = () => {
+  const applyTheme = (): void => {
     const html = document.documentElement;
     if (effectiveTheme.value === 'dark') {
       html.classList.add('dark');
@@ -45,18 +45,18 @@ export function useTheme() {
     }
   };
 
-  const cycleTheme = () => {
+  const cycleTheme = (): void => {
     const modes: ThemeMode[] = ['light', 'dark', 'system'];
     const currentIndex = modes.indexOf(themeMode.value);
     const nextIndex = (currentIndex + 1) % modes.length;
     themeMode.value = modes[nextIndex];
   };
 
-  const setTheme = (mode: ThemeMode) => {
+  const setTheme = (mode: ThemeMode): void => {
     themeMode.value = mode;
   };
 
-  const loadTheme = () => {
+  const loadTheme = (): void => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored && ['light', 'dark', 'system'].includes(stored)) {
@@ -68,7 +68,7 @@ export function useTheme() {
     }
   };
 
-  const saveTheme = () => {
+  const saveTheme = (): void => {
     try {
       localStorage.setItem(STORAGE_KEY, themeMode.value);
     } catch (e) {
@@ -77,7 +77,7 @@ export function useTheme() {
     }
   };
 
-  const initSystemThemeListener = () => {
+  const initSystemThemeListener = (): (() => void) => {
     if (window.matchMedia) {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       systemPrefersDark.value = mediaQuery.matches;
@@ -107,7 +107,7 @@ export function useTheme() {
     }
   };
 
-  const initialize = () => {
+  const initialize = (): void => {
     if (isInitialized.value) return;
 
     loadTheme();
