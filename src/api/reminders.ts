@@ -10,10 +10,6 @@ export const remindersApi = {
     return apiClient.get<Reminder[]>('/api/reminders');
   },
 
-  async getByNoteId(noteId: string): Promise<Reminder[]> {
-    return apiClient.get<Reminder[]>(`/api/reminders/note/${noteId}`);
-  },
-
   async create(request: CreateReminderRequest): Promise<Reminder> {
     return apiClient.post<Reminder>('/api/reminders', request);
   },

@@ -30,10 +30,6 @@ export const notesApi = {
     return apiClient.get<Note[]>('/api/notes');
   },
 
-  async getRootNotes(): Promise<Note[]> {
-    return apiClient.get<Note[]>('/api/notes/root');
-  },
-
   async getById(id: string): Promise<Note> {
     return apiClient.get<Note>(`/api/notes/${id}`);
   },
