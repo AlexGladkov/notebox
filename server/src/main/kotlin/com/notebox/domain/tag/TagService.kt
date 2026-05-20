@@ -17,8 +17,9 @@ class TagService(
         return tagRepository.findById(id)
     }
 
-    fun getTagByIdForUser(id: String, userId: String): Tag? {
-        val tag = getTagById(id) ?: return null
+    fun getTagByIdForUser(id: String, userId: String): Tag {
+        val tag = getTagById(id)
+            ?: throw NotFoundException("Tag not found: $id")
         if (tag.userId != userId) {
             throw AccessDeniedException("Access denied to tag: $id")
         }
@@ -65,7 +66,7 @@ class TagService(
         }
 
         val tag = tagRepository.findById(id)
-            ?: throw IllegalArgumentException("Tag not found")
+            ?: throw NotFoundException("Tag not found: $id")
 
         if (name != null && name != tag.name) {
             val existingTag = tagRepository.findByUserIdAndName(tag.userId, name)

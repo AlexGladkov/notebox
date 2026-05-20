@@ -45,9 +45,10 @@ class TagController(
 
         return try {
             val tag = tagService.getTagByIdForUser(id, userId)
-                ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(errorResponse("NOT_FOUND", "Tag not found"))
             ResponseEntity.ok(successResponse(tag.toDto()))
+        } catch (e: NotFoundException) {
+            ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(errorResponse("NOT_FOUND", e.message ?: "Tag not found"))
         } catch (e: AccessDeniedException) {
             ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(errorResponse("FORBIDDEN", e.message ?: "Access denied"))
