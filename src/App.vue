@@ -68,7 +68,8 @@ import { useNotes } from './composables/useNotes';
 import { useSearch } from './composables/useSearch';
 import { useTheme } from './composables/useTheme';
 import { useTabs } from './composables/useTabs';
-import { initNetworkStatus, destroyNetworkStatus } from './services/offline/networkStatus';
+import { initNetworkStatus, destroyNetworkStatus, useNetworkStatus } from './services/offline/networkStatus';
+import { offlineStore } from './services/offline/offlineStore';
 import { notesApi } from './api/notes';
 import UnifiedSidebar from './components/UnifiedSidebar.vue';
 import NoteEditor from './components/NoteEditor.vue';
@@ -79,6 +80,10 @@ import SyncStatusIndicator from './components/SyncStatusIndicator.vue';
 // Инициализация темы
 const { initialize: initializeTheme } = useTheme();
 initializeTheme();
+
+// Инициализация offlineStore с network status
+const { isOnline } = useNetworkStatus();
+offlineStore.setNetworkStatusGetter(() => isOnline.value);
 
 // Инициализация отслеживания состояния сети
 onMounted(() => {

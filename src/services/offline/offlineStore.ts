@@ -4,9 +4,13 @@ import type { CreateNoteRequest, UpdateNoteRequest } from '../../api/notes';
 import { indexedDbService } from './indexedDb';
 import { syncQueue } from './syncQueue';
 import { syncService } from './syncService';
-import { useNetworkStatus } from './networkStatus';
 
 class OfflineStore {
+  private getIsOnline: () => boolean = () => true;
+
+  setNetworkStatusGetter(getter: () => boolean) {
+    this.getIsOnline = getter;
+  }
   async loadFromCache(): Promise<Note[]> {
     try {
       await indexedDbService.init();
@@ -28,9 +32,7 @@ class OfflineStore {
   }
 
   async syncWithServer(): Promise<void> {
-    const { isOnline } = useNetworkStatus();
-
-    if (!isOnline.value) {
+    if (!this.getIsOnline()) {
       console.log('Cannot sync: offline');
       return;
     }
@@ -44,8 +46,6 @@ class OfflineStore {
   }
 
   async createNote(request: CreateNoteRequest): Promise<Note> {
-    const { isOnline } = useNetworkStatus();
-
     // Создаём заметку локально с клиентским UUID
     const now = Date.now();
     const newNote: Note = {
@@ -74,7 +74,7 @@ class OfflineStore {
     });
 
     // Если онлайн, сразу пытаемся синхронизировать
-    if (isOnline.value) {
+    if (this.getIsOnline()) {
       syncService.processQueue().catch(error => {
         console.error('Failed to sync after create:', error);
       });
@@ -84,7 +84,6 @@ class OfflineStore {
   }
 
   async updateNote(id: string, request: UpdateNoteRequest): Promise<Note> {
-    const { isOnline } = useNetworkStatus();
 
     // Получаем текущую версию
     const currentNote = await indexedDbService.getNote(id);
@@ -117,7 +116,7 @@ class OfflineStore {
     });
 
     // Если онлайн, сразу пытаемся синхронизировать
-    if (isOnline.value) {
+    if (this.getIsOnline()) {
       syncService.processQueue().catch(error => {
         console.error('Failed to sync after update:', error);
       });
@@ -127,7 +126,6 @@ class OfflineStore {
   }
 
   async deleteNote(id: string): Promise<void> {
-    const { isOnline } = useNetworkStatus();
 
     // Удаляем из локального кэша
     await indexedDbService.deleteNote(id);
@@ -141,7 +139,7 @@ class OfflineStore {
     });
 
     // Если онлайн, сразу пытаемся синхронизировать
-    if (isOnline.value) {
+    if (this.getIsOnline()) {
       syncService.processQueue().catch(error => {
         console.error('Failed to sync after delete:', error);
       });
@@ -149,7 +147,6 @@ class OfflineStore {
   }
 
   async moveNote(id: string, parentId: string | null): Promise<Note> {
-    const { isOnline } = useNetworkStatus();
 
     // Получаем текущую версию
     const currentNote = await indexedDbService.getNote(id);
@@ -176,7 +173,7 @@ class OfflineStore {
     });
 
     // Если онлайн, сразу пытаемся синхронизировать
-    if (isOnline.value) {
+    if (this.getIsOnline()) {
       syncService.processQueue().catch(error => {
         console.error('Failed to sync after move:', error);
       });
