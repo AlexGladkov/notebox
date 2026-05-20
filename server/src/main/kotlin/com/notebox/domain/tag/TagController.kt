@@ -2,7 +2,7 @@ package com.notebox.domain.tag
 
 import com.notebox.domain.auth.SessionService
 import com.notebox.dto.*
-import com.notebox.exception.AccessDeniedException
+import com.notebox.exception.AuthenticationException
 import com.notebox.exception.NotFoundException
 import com.notebox.validation.ValidUuid
 import jakarta.servlet.http.HttpServletRequest
@@ -27,9 +27,6 @@ class TagController(
     @GetMapping
     fun getAllTags(request: HttpServletRequest): ResponseEntity<ApiResponse<List<TagDto>>> {
         val userId = getUserIdFromRequest(request)
-            ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(errorResponse("UNAUTHORIZED", "Not authenticated"))
-
         val tags = tagService.getAllTags(userId).map { it.toDto() }
         return ResponseEntity.ok(successResponse(tags))
     }
@@ -40,19 +37,8 @@ class TagController(
         request: HttpServletRequest
     ): ResponseEntity<ApiResponse<TagDto>> {
         val userId = getUserIdFromRequest(request)
-            ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(errorResponse("UNAUTHORIZED", "Not authenticated"))
-
-        return try {
-            val tag = tagService.getTagByIdForUser(id, userId)
-            ResponseEntity.ok(successResponse(tag.toDto()))
-        } catch (e: NotFoundException) {
-            ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(errorResponse("NOT_FOUND", e.message ?: "Tag not found"))
-        } catch (e: AccessDeniedException) {
-            ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(errorResponse("FORBIDDEN", e.message ?: "Access denied"))
-        }
+        val tag = tagService.getTagByIdForUser(id, userId)
+        return ResponseEntity.ok(successResponse(tag.toDto()))
     }
 
     @PostMapping
@@ -61,17 +47,9 @@ class TagController(
         httpRequest: HttpServletRequest
     ): ResponseEntity<ApiResponse<TagDto>> {
         val userId = getUserIdFromRequest(httpRequest)
-            ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(errorResponse("UNAUTHORIZED", "Not authenticated"))
-
-        try {
-            val tag = tagService.createTag(userId, request.name, request.color)
-            return ResponseEntity.status(HttpStatus.CREATED)
-                .body(successResponse(tag.toDto()))
-        } catch (e: IllegalArgumentException) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(errorResponse("VALIDATION_ERROR", e.message ?: "Invalid request"))
-        }
+        val tag = tagService.createTag(userId, request.name, request.color)
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(successResponse(tag.toDto()))
     }
 
     @PutMapping("/{id}")
@@ -81,47 +59,21 @@ class TagController(
         httpRequest: HttpServletRequest
     ): ResponseEntity<ApiResponse<TagDto>> {
         val userId = getUserIdFromRequest(httpRequest)
-            ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(errorResponse("UNAUTHORIZED", "Not authenticated"))
-
-        return try {
-            tagService.verifyTagOwnership(id, userId)
-            val updatedTag = tagService.updateTag(id, request.name, request.color)
-                ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(errorResponse("NOT_FOUND", "Tag not found"))
-            ResponseEntity.ok(successResponse(updatedTag.toDto()))
-        } catch (e: NotFoundException) {
-            ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(errorResponse("NOT_FOUND", e.message ?: "Tag not found"))
-        } catch (e: AccessDeniedException) {
-            ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(errorResponse("FORBIDDEN", e.message ?: "Access denied"))
-        } catch (e: IllegalArgumentException) {
-            ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(errorResponse("VALIDATION_ERROR", e.message ?: "Invalid request"))
-        }
+        tagService.verifyTagOwnership(id, userId)
+        val updatedTag = tagService.updateTag(id, request.name, request.color)
+            ?: throw NotFoundException("Tag with id '$id' not found")
+        return ResponseEntity.ok(successResponse(updatedTag.toDto()))
     }
 
     @DeleteMapping("/{id}")
     fun deleteTag(
         @PathVariable @ValidUuid(fieldName = "id") id: String,
         httpRequest: HttpServletRequest
-    ): ResponseEntity<ApiResponse<*>> {
+    ): ResponseEntity<Void> {
         val userId = getUserIdFromRequest(httpRequest)
-            ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(errorResponse<Nothing>("UNAUTHORIZED", "Not authenticated"))
-
-        return try {
-            tagService.verifyTagOwnership(id, userId)
-            tagService.deleteTag(id)
-            ResponseEntity.noContent().build()
-        } catch (e: NotFoundException) {
-            ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(errorResponse<Nothing>("NOT_FOUND", e.message ?: "Tag not found"))
-        } catch (e: AccessDeniedException) {
-            ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(errorResponse<Nothing>("FORBIDDEN", e.message ?: "Access denied"))
-        }
+        tagService.verifyTagOwnership(id, userId)
+        tagService.deleteTag(id)
+        return ResponseEntity.noContent().build()
     }
 
     @PutMapping("/notes/{noteId}/tags")
@@ -131,21 +83,10 @@ class TagController(
         httpRequest: HttpServletRequest
     ): ResponseEntity<ApiResponse<List<TagDto>>> {
         val userId = getUserIdFromRequest(httpRequest)
-            ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(errorResponse("UNAUTHORIZED", "Not authenticated"))
-
-        return try {
-            tagService.verifyTagsOwnership(request.tagIds, userId)
-            tagService.setNoteTags(noteId, request.tagIds)
-            val tags = tagService.getNoteTags(noteId).map { it.toDto() }
-            ResponseEntity.ok(successResponse(tags))
-        } catch (e: NotFoundException) {
-            ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(errorResponse("NOT_FOUND", e.message ?: "Tag not found"))
-        } catch (e: AccessDeniedException) {
-            ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(errorResponse("FORBIDDEN", e.message ?: "Access denied"))
-        }
+        tagService.verifyTagsOwnership(request.tagIds, userId)
+        tagService.setNoteTags(noteId, request.tagIds)
+        val tags = tagService.getNoteTags(noteId).map { it.toDto() }
+        return ResponseEntity.ok(successResponse(tags))
     }
 
     @GetMapping("/notes/{noteId}/tags")
@@ -154,9 +95,10 @@ class TagController(
         return ResponseEntity.ok(successResponse(tags))
     }
 
-    private fun getUserIdFromRequest(request: HttpServletRequest): String? {
+    private fun getUserIdFromRequest(request: HttpServletRequest): String {
         val sessionId = request.cookies?.find { it.name == SESSION_COOKIE_NAME }?.value
-            ?: return null
+            ?: throw AuthenticationException("Session cookie not found")
         return sessionService.getUserIdFromSession(sessionId)
+            ?: throw AuthenticationException("Invalid or expired session")
     }
 }

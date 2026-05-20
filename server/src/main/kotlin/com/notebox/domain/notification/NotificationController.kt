@@ -1,6 +1,7 @@
 package com.notebox.domain.notification
 
 import com.notebox.dto.*
+import com.notebox.exception.AuthenticationException
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -44,21 +45,15 @@ class NotificationController(
         @Valid @RequestBody request: SubscribePushRequest
     ): ResponseEntity<ApiResponse<PushSubscriptionDto>> {
         val userId = getCurrentUserId()
+        val subscription = subscriptionRepository.create(
+            userId = userId,
+            endpoint = request.endpoint,
+            p256dh = request.p256dh,
+            auth = request.auth
+        )
 
-        try {
-            val subscription = subscriptionRepository.create(
-                userId = userId,
-                endpoint = request.endpoint,
-                p256dh = request.p256dh,
-                auth = request.auth
-            )
-
-            return ResponseEntity.status(HttpStatus.CREATED)
-                .body(successResponse(subscription.toDto()))
-        } catch (e: Exception) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(errorResponse("SUBSCRIPTION_ERROR", e.message ?: "Failed to create subscription"))
-        }
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(successResponse(subscription.toDto()))
     }
 
     @PostMapping("/unsubscribe")
@@ -73,6 +68,6 @@ class NotificationController(
     private fun getCurrentUserId(): String {
         val authentication = SecurityContextHolder.getContext().authentication
         return authentication?.principal as? String
-            ?: throw IllegalStateException("User not authenticated")
+            ?: throw AuthenticationException("User not authenticated")
     }
 }

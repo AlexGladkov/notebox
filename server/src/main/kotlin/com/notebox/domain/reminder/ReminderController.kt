@@ -1,6 +1,8 @@
 package com.notebox.domain.reminder
 
 import com.notebox.dto.*
+import com.notebox.exception.AuthenticationException
+import com.notebox.exception.NotFoundException
 import com.notebox.validation.ValidUuid
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
@@ -28,8 +30,7 @@ class ReminderController(
     fun getReminderById(@PathVariable @ValidUuid(fieldName = "id") id: String): ResponseEntity<ApiResponse<ReminderDto>> {
         val userId = getCurrentUserId()
         val reminder = reminderService.getReminderById(id, userId)
-            ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(errorResponse("NOT_FOUND", "Reminder not found"))
+            ?: throw NotFoundException("Reminder with id '$id' not found")
 
         return ResponseEntity.ok(successResponse(reminder.toDto()))
     }
@@ -55,25 +56,19 @@ class ReminderController(
         @Valid @RequestBody request: CreateReminderRequest
     ): ResponseEntity<ApiResponse<ReminderDto>> {
         val userId = getCurrentUserId()
+        val repeatType = RepeatType.valueOf(request.repeatType ?: "NONE")
+        val reminder = reminderService.createReminder(
+            noteId = request.noteId,
+            userId = userId,
+            title = request.title,
+            remindAt = Instant.ofEpochMilli(request.remindAt),
+            repeatType = repeatType,
+            repeatEndAt = request.repeatEndAt?.let { Instant.ofEpochMilli(it) },
+            syncToGoogleCalendar = request.syncToGoogleCalendar
+        )
 
-        try {
-            val repeatType = RepeatType.valueOf(request.repeatType ?: "NONE")
-            val reminder = reminderService.createReminder(
-                noteId = request.noteId,
-                userId = userId,
-                title = request.title,
-                remindAt = Instant.ofEpochMilli(request.remindAt),
-                repeatType = repeatType,
-                repeatEndAt = request.repeatEndAt?.let { Instant.ofEpochMilli(it) },
-                syncToGoogleCalendar = request.syncToGoogleCalendar
-            )
-
-            return ResponseEntity.status(HttpStatus.CREATED)
-                .body(successResponse(reminder.toDto()))
-        } catch (e: IllegalArgumentException) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(errorResponse("VALIDATION_ERROR", e.message ?: "Invalid request"))
-        }
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(successResponse(reminder.toDto()))
     }
 
     @PutMapping("/{id}")
@@ -82,24 +77,17 @@ class ReminderController(
         @Valid @RequestBody request: UpdateReminderRequest
     ): ResponseEntity<ApiResponse<ReminderDto>> {
         val userId = getCurrentUserId()
+        val repeatType = request.repeatType?.let { RepeatType.valueOf(it) }
+        val reminder = reminderService.updateReminder(
+            id = id,
+            userId = userId,
+            title = request.title,
+            remindAt = request.remindAt?.let { Instant.ofEpochMilli(it) },
+            repeatType = repeatType,
+            repeatEndAt = request.repeatEndAt?.let { Instant.ofEpochMilli(it) }
+        ) ?: throw NotFoundException("Reminder with id '$id' not found")
 
-        try {
-            val repeatType = request.repeatType?.let { RepeatType.valueOf(it) }
-            val reminder = reminderService.updateReminder(
-                id = id,
-                userId = userId,
-                title = request.title,
-                remindAt = request.remindAt?.let { Instant.ofEpochMilli(it) },
-                repeatType = repeatType,
-                repeatEndAt = request.repeatEndAt?.let { Instant.ofEpochMilli(it) }
-            ) ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(errorResponse("NOT_FOUND", "Reminder not found"))
-
-            return ResponseEntity.ok(successResponse(reminder.toDto()))
-        } catch (e: IllegalArgumentException) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(errorResponse("VALIDATION_ERROR", e.message ?: "Invalid request"))
-        }
+        return ResponseEntity.ok(successResponse(reminder.toDto()))
     }
 
     @DeleteMapping("/{id}")
@@ -117,6 +105,6 @@ class ReminderController(
     private fun getCurrentUserId(): String {
         val authentication = SecurityContextHolder.getContext().authentication
         return authentication?.principal as? String
-            ?: throw IllegalStateException("User not authenticated")
+            ?: throw AuthenticationException("User not authenticated")
     }
 }

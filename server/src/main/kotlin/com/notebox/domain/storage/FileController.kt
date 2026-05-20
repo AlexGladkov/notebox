@@ -26,38 +26,26 @@ class FileController(
 
     @PostMapping("/upload")
     fun uploadFile(@RequestParam("file") file: MultipartFile): ResponseEntity<ApiResponse<UploadFileResponse>> {
-        return try {
-            val result = fileService.uploadFile(file)
-            val response = UploadFileResponse(
-                fileId = result.fileId,
-                filename = result.filename,
-                key = result.key,
-                contentType = result.contentType,
-                size = result.size
-            )
-            ResponseEntity.status(HttpStatus.CREATED).body(successResponse(response))
-        } catch (e: IllegalArgumentException) {
-            ResponseEntity.badRequest().body(errorResponse("VALIDATION_ERROR", e.message ?: "Invalid file"))
-        }
+        val result = fileService.uploadFile(file)
+        val response = UploadFileResponse(
+            fileId = result.fileId,
+            filename = result.filename,
+            key = result.key,
+            contentType = result.contentType,
+            size = result.size
+        )
+        return ResponseEntity.status(HttpStatus.CREATED).body(successResponse(response))
     }
 
     @GetMapping("/{key}")
     fun getFileUrl(@PathVariable key: String): ResponseEntity<ApiResponse<GetFileUrlResponse>> {
-        return try {
-            val url = fileService.getFileUrl(key)
-            ResponseEntity.ok(successResponse(GetFileUrlResponse(url)))
-        } catch (e: IllegalArgumentException) {
-            ResponseEntity.badRequest().body(errorResponse("INVALID_KEY", e.message ?: "Invalid key"))
-        }
+        val url = fileService.getFileUrl(key)
+        return ResponseEntity.ok(successResponse(GetFileUrlResponse(url)))
     }
 
     @DeleteMapping("/{key}")
-    fun deleteFile(@PathVariable key: String): ResponseEntity<ApiResponse<Nothing>> {
-        return try {
-            fileService.deleteFile(key)
-            ResponseEntity.status(HttpStatus.NO_CONTENT).build()
-        } catch (e: IllegalArgumentException) {
-            ResponseEntity.badRequest().body(errorResponse("INVALID_KEY", e.message ?: "Invalid key"))
-        }
+    fun deleteFile(@PathVariable key: String): ResponseEntity<Void> {
+        fileService.deleteFile(key)
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build()
     }
 }

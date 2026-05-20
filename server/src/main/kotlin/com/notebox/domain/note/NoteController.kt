@@ -1,6 +1,7 @@
 package com.notebox.domain.note
 
 import com.notebox.dto.*
+import com.notebox.exception.NotFoundException
 import com.notebox.validation.ValidUuid
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
@@ -30,34 +31,27 @@ class NoteController(
     @GetMapping("/{id}")
     fun getNoteById(@PathVariable @ValidUuid(fieldName = "id") id: String): ResponseEntity<ApiResponse<NoteDto>> {
         val noteDto = noteService.getNoteByIdWithTags(id)
-            ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(errorResponse("NOT_FOUND", "Note not found"))
+            ?: throw NotFoundException("Note with id '$id' not found")
 
         return ResponseEntity.ok(successResponse(noteDto))
     }
 
     @PostMapping
     fun createNote(@Valid @RequestBody request: CreateNoteRequest): ResponseEntity<ApiResponse<NoteDto>> {
-        try {
-            val note = noteService.createNote(
-                request.title,
-                request.content,
-                request.parentId,
-                request.icon,
-                request.backdropType,
-                request.backdropValue,
-                request.backdropPositionY,
-                request.color
-            )
-            val noteDto = noteService.getNoteByIdWithTags(note.id)
-                ?: return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(errorResponse("INTERNAL_ERROR", "Failed to retrieve created note"))
-            return ResponseEntity.status(HttpStatus.CREATED)
-                .body(successResponse(noteDto))
-        } catch (e: IllegalArgumentException) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(errorResponse("VALIDATION_ERROR", e.message ?: "Invalid request"))
-        }
+        val note = noteService.createNote(
+            request.title,
+            request.content,
+            request.parentId,
+            request.icon,
+            request.backdropType,
+            request.backdropValue,
+            request.backdropPositionY,
+            request.color
+        )
+        val noteDto = noteService.getNoteByIdWithTags(note.id)
+            ?: throw NotFoundException("Failed to retrieve created note")
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(successResponse(noteDto))
     }
 
     @PutMapping("/{id}")
@@ -75,13 +69,10 @@ class NoteController(
             request.backdropValue,
             request.backdropPositionY,
             request.color
-        )
-            ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(errorResponse("NOT_FOUND", "Note not found"))
+        ) ?: throw NotFoundException("Note with id '$id' not found")
 
         val noteDto = noteService.getNoteByIdWithTags(id)
-            ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(errorResponse("NOT_FOUND", "Note not found"))
+            ?: throw NotFoundException("Note with id '$id' not found")
         return ResponseEntity.ok(successResponse(noteDto))
     }
 
@@ -112,17 +103,10 @@ class NoteController(
         @PathVariable @ValidUuid(fieldName = "id") id: String,
         @Valid @RequestBody request: MoveNoteRequest
     ): ResponseEntity<ApiResponse<NoteDto>> {
-        try {
-            noteService.moveNote(id, request.parentId)
-                ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(errorResponse("NOT_FOUND", "Note not found"))
-            val noteDto = noteService.getNoteByIdWithTags(id)
-                ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(errorResponse("NOT_FOUND", "Note not found"))
-            return ResponseEntity.ok(successResponse(noteDto))
-        } catch (e: IllegalArgumentException) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(errorResponse("VALIDATION_ERROR", e.message ?: "Invalid request"))
-        }
+        noteService.moveNote(id, request.parentId)
+            ?: throw NotFoundException("Note with id '$id' not found")
+        val noteDto = noteService.getNoteByIdWithTags(id)
+            ?: throw NotFoundException("Note with id '$id' not found")
+        return ResponseEntity.ok(successResponse(noteDto))
     }
 }
