@@ -43,7 +43,7 @@ class SecurityConfig {
                     .requestMatchers("/api/config").permitAll()
                     .anyRequest().authenticated()
             }
-            .addFilterBefore(rateLimitFilter, SessionAuthenticationFilter::class.java)
+            .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter::class.java)
             .addFilterBefore(sessionAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
 
         return http.build()
