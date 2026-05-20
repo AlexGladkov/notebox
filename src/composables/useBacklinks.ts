@@ -1,5 +1,7 @@
 import { computed, type Ref } from 'vue';
+import { storeToRefs } from 'pinia';
 import type { Note } from '../types';
+import { useNotesStore } from '../stores/notesStore';
 import { extractNoteLinks, extractLinkContext } from '../utils/parseNoteLinks';
 
 export interface Backlink {
@@ -19,19 +21,20 @@ export interface UseBacklinksReturn {
  * - Wiki-ссылки формата [[название]]
  *
  * @param currentNoteId - ID текущей заметки
- * @param allNotes - Все заметки в системе
  * @returns Список обратных ссылок с контекстом
  */
 export function useBacklinks(
-  currentNoteId: Ref<string | null | undefined>,
-  allNotes: Ref<Note[]>
+  currentNoteId: Ref<string | null | undefined>
 ): UseBacklinksReturn {
+  const notesStore = useNotesStore();
+  const { notes } = storeToRefs(notesStore);
+
   const backlinks = computed<Backlink[]>(() => {
     if (!currentNoteId.value) return [];
 
     const targetId = currentNoteId.value;
 
-    return allNotes.value
+    return notes.value
       .filter(note => {
         // Не включаем саму заметку
         if (note.id === targetId) return false;

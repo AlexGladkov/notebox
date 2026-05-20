@@ -1,5 +1,6 @@
 import { ref, computed, type Ref } from 'vue';
 import type { Note } from '../types';
+import { useNotesStore } from '../stores/notesStore';
 
 export interface Tab {
   id: string;      // уникальный ID вкладки
@@ -32,8 +33,14 @@ function getInstance(): TabsStoreInstance {
   return _instance;
 }
 
-export function useTabs(getNoteById: (id: string) => Note | undefined) {
+export function useTabs() {
   const { tabs, activeTabId, tabCounter } = getInstance();
+  const notesStore = useNotesStore();
+
+  // Получаем getNoteById из store
+  const getNoteById = (id: string): Note | undefined => {
+    return notesStore.getNoteById(id);
+  };
   /**
    * Генерирует уникальный ID для вкладки
    */

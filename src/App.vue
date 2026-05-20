@@ -63,6 +63,8 @@
 
 <script setup lang="ts">
 import { ref, computed, reactive, onMounted, onUnmounted } from 'vue';
+import { storeToRefs } from 'pinia';
+import { useNotesStore } from './stores/notesStore';
 import { useStorage } from './composables/useStorage';
 import { useNotes } from './composables/useNotes';
 import { useSearch } from './composables/useSearch';
@@ -81,13 +83,21 @@ import SyncStatusIndicator from './components/SyncStatusIndicator.vue';
 const { initialize: initializeTheme } = useTheme();
 initializeTheme();
 
+// Notes Store
+const notesStore = useNotesStore();
+const { notes, expandedNotes } = storeToRefs(notesStore);
+const { loadNotes } = useStorage();
+const { isOnline } = useNetworkStatus();
+
 // Инициализация отслеживания состояния сети
-onMounted(() => {
+onMounted(async () => {
   initNetworkStatus();
 
   // Инициализация offlineStore с network status после initNetworkStatus
-  const { isOnline } = useNetworkStatus();
   offlineStore.setNetworkStatusGetter(() => isOnline.value);
+
+  // Загружаем заметки
+  await loadNotes();
 
   registerServiceWorker();
 });
@@ -122,7 +132,6 @@ const registerServiceWorker = async () => {
   }
 };
 
-const { notes } = useStorage();
 const {
   createNote,
   updateNote,
@@ -130,10 +139,9 @@ const {
   getNoteById,
   getAllDescendants,
   getChildrenCount,
-  expandedNotes,
   toggleNoteExpanded,
   expandAllAncestors,
-} = useNotes(notes);
+} = useNotes();
 
 // Система вкладок
 const {
@@ -148,10 +156,10 @@ const {
   getActiveNote,
   updateTabTitle,
   removeTabsByNoteId,
-} = useTabs(getNoteById);
+} = useTabs();
 
 const searchQuery = ref('');
-const { searchResults } = useSearch(notes, searchQuery);
+const { searchResults } = useSearch(searchQuery);
 
 const confirmDialog = reactive({
   show: false,

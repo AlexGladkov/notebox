@@ -1,7 +1,11 @@
 import { computed, type Ref } from 'vue';
-import type { Note } from '../types';
+import { storeToRefs } from 'pinia';
+import { useNotesStore } from '../stores/notesStore';
 
-export function useSearch(notes: Ref<Note[]>, searchQuery: Ref<string>) {
+export function useSearch(searchQuery: Ref<string>) {
+  const notesStore = useNotesStore();
+  const { notes } = storeToRefs(notesStore);
+
   const searchResults = computed(() => {
     if (!searchQuery.value.trim()) {
       return [];

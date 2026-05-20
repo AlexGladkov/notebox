@@ -220,6 +220,8 @@
 <script setup lang="ts">
 import { ref, computed, reactive, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { storeToRefs } from 'pinia';
+import { useNotesStore } from '../stores/notesStore';
 import { useStorage } from '../composables/useStorage';
 import { useNotes } from '../composables/useNotes';
 import { useSearch } from '../composables/useSearch';
@@ -269,7 +271,11 @@ const themeTooltip = computed(() => {
   }
 });
 
-const { notes } = useStorage();
+// Notes Store - убираем дублирование состояния с App.vue
+const notesStore = useNotesStore();
+const { notes, expandedNotes } = storeToRefs(notesStore);
+const { loadNotes } = useStorage();
+
 const {
   createNote,
   updateNote,
@@ -277,10 +283,9 @@ const {
   getNoteById,
   getAllDescendants,
   getChildrenCount,
-  expandedNotes,
   toggleNoteExpanded,
   expandAllAncestors,
-} = useNotes(notes);
+} = useNotes();
 
 // Теги
 const {
@@ -304,10 +309,10 @@ const {
   getActiveNote,
   updateTabTitle,
   removeTabsByNoteId,
-} = useTabs(getNoteById);
+} = useTabs();
 
 const searchQuery = ref('');
-const { searchResults } = useSearch(notes, searchQuery);
+const { searchResults } = useSearch(searchQuery);
 
 // Фильтр по тегам
 const selectedTagIds = ref<string[]>([]);
@@ -324,7 +329,7 @@ const currentNote = computed(() => getActiveNote());
 
 // Вычисление backlinks для текущей заметки
 const currentNoteIdRef = computed(() => currentNote.value?.id);
-const { backlinks } = useBacklinks(currentNoteIdRef, notes);
+const { backlinks } = useBacklinks(currentNoteIdRef);
 
 // Вспомогательная функция для получения всех ID предков заметки
 const getAllAncestorIds = (noteId: string): string[] => {
