@@ -1,11 +1,9 @@
 package com.notebox.domain.tag
 
-import com.notebox.domain.auth.SessionService
+import com.notebox.config.BaseController
 import com.notebox.dto.*
-import com.notebox.exception.AuthenticationException
 import com.notebox.exception.NotFoundException
 import com.notebox.validation.ValidUuid
-import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -16,37 +14,26 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/api/tags")
 class TagController(
-    private val tagService: TagService,
-    private val sessionService: SessionService
-) {
-
-    companion object {
-        private const val SESSION_COOKIE_NAME = "SESSION_ID"
-    }
+    private val tagService: TagService
+) : BaseController() {
 
     @GetMapping
-    fun getAllTags(request: HttpServletRequest): ResponseEntity<ApiResponse<List<TagDto>>> {
-        val userId = getUserIdFromRequest(request)
+    fun getAllTags(): ResponseEntity<ApiResponse<List<TagDto>>> {
+        val userId = getCurrentUserId()
         val tags = tagService.getAllTags(userId).map { it.toDto() }
         return ResponseEntity.ok(successResponse(tags))
     }
 
     @GetMapping("/{id}")
-    fun getTagById(
-        @PathVariable @ValidUuid(fieldName = "id") id: String,
-        request: HttpServletRequest
-    ): ResponseEntity<ApiResponse<TagDto>> {
-        val userId = getUserIdFromRequest(request)
+    fun getTagById(@PathVariable @ValidUuid(fieldName = "id") id: String): ResponseEntity<ApiResponse<TagDto>> {
+        val userId = getCurrentUserId()
         val tag = tagService.getTagByIdForUser(id, userId)
         return ResponseEntity.ok(successResponse(tag.toDto()))
     }
 
     @PostMapping
-    fun createTag(
-        @Valid @RequestBody request: CreateTagRequest,
-        httpRequest: HttpServletRequest
-    ): ResponseEntity<ApiResponse<TagDto>> {
-        val userId = getUserIdFromRequest(httpRequest)
+    fun createTag(@Valid @RequestBody request: CreateTagRequest): ResponseEntity<ApiResponse<TagDto>> {
+        val userId = getCurrentUserId()
         val tag = tagService.createTag(userId, request.name, request.color)
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(successResponse(tag.toDto()))
@@ -55,10 +42,9 @@ class TagController(
     @PutMapping("/{id}")
     fun updateTag(
         @PathVariable @ValidUuid(fieldName = "id") id: String,
-        @Valid @RequestBody request: UpdateTagRequest,
-        httpRequest: HttpServletRequest
+        @Valid @RequestBody request: UpdateTagRequest
     ): ResponseEntity<ApiResponse<TagDto>> {
-        val userId = getUserIdFromRequest(httpRequest)
+        val userId = getCurrentUserId()
         tagService.verifyTagOwnership(id, userId)
         val updatedTag = tagService.updateTag(id, request.name, request.color)
             ?: throw NotFoundException("Tag with id '$id' not found")
@@ -66,11 +52,8 @@ class TagController(
     }
 
     @DeleteMapping("/{id}")
-    fun deleteTag(
-        @PathVariable @ValidUuid(fieldName = "id") id: String,
-        httpRequest: HttpServletRequest
-    ): ResponseEntity<Void> {
-        val userId = getUserIdFromRequest(httpRequest)
+    fun deleteTag(@PathVariable @ValidUuid(fieldName = "id") id: String): ResponseEntity<Void> {
+        val userId = getCurrentUserId()
         tagService.verifyTagOwnership(id, userId)
         tagService.deleteTag(id)
         return ResponseEntity.noContent().build()
@@ -79,10 +62,9 @@ class TagController(
     @PutMapping("/notes/{noteId}/tags")
     fun setNoteTags(
         @PathVariable @ValidUuid(fieldName = "noteId") noteId: String,
-        @Valid @RequestBody request: SetNoteTagsRequest,
-        httpRequest: HttpServletRequest
+        @Valid @RequestBody request: SetNoteTagsRequest
     ): ResponseEntity<ApiResponse<List<TagDto>>> {
-        val userId = getUserIdFromRequest(httpRequest)
+        val userId = getCurrentUserId()
         tagService.verifyTagsOwnership(request.tagIds, userId)
         tagService.setNoteTags(noteId, request.tagIds)
         val tags = tagService.getNoteTags(noteId).map { it.toDto() }
@@ -93,12 +75,5 @@ class TagController(
     fun getNoteTags(@PathVariable @ValidUuid(fieldName = "noteId") noteId: String): ResponseEntity<ApiResponse<List<TagDto>>> {
         val tags = tagService.getNoteTags(noteId).map { it.toDto() }
         return ResponseEntity.ok(successResponse(tags))
-    }
-
-    private fun getUserIdFromRequest(request: HttpServletRequest): String {
-        val sessionId = request.cookies?.find { it.name == SESSION_COOKIE_NAME }?.value
-            ?: throw AuthenticationException("Session cookie not found")
-        return sessionService.getUserIdFromSession(sessionId)
-            ?: throw AuthenticationException("Invalid or expired session")
     }
 }

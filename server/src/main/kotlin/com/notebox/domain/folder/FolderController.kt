@@ -1,5 +1,6 @@
 package com.notebox.domain.folder
 
+import com.notebox.config.BaseController
 import com.notebox.dto.*
 import com.notebox.exception.NotFoundException
 import com.notebox.validation.ValidUuid
@@ -14,17 +15,19 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/api/folders")
 class FolderController(
     private val folderService: FolderService
-) {
+) : BaseController() {
 
     @GetMapping
     fun getAllFolders(): ResponseEntity<ApiResponse<List<FolderDto>>> {
-        val folders = folderService.getAllFolders().map { it.toDto() }
+        val userId = getCurrentUserId()
+        val folders = folderService.getAllFolders(userId).map { it.toDto() }
         return ResponseEntity.ok(successResponse(folders))
     }
 
     @GetMapping("/{id}")
     fun getFolderById(@PathVariable @ValidUuid(fieldName = "id") id: String): ResponseEntity<ApiResponse<FolderDto>> {
-        val folder = folderService.getFolderById(id)
+        val userId = getCurrentUserId()
+        val folder = folderService.getFolderById(id, userId)
             ?: throw NotFoundException("Folder with id '$id' not found")
 
         return ResponseEntity.ok(successResponse(folder.toDto()))
@@ -32,7 +35,8 @@ class FolderController(
 
     @PostMapping
     fun createFolder(@Valid @RequestBody request: CreateFolderRequest): ResponseEntity<ApiResponse<FolderDto>> {
-        val folder = folderService.createFolder(request.name, request.parentId)
+        val userId = getCurrentUserId()
+        val folder = folderService.createFolder(userId, request.name, request.parentId)
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(successResponse(folder.toDto()))
     }
@@ -42,7 +46,8 @@ class FolderController(
         @PathVariable @ValidUuid(fieldName = "id") id: String,
         @Valid @RequestBody request: UpdateFolderRequest
     ): ResponseEntity<ApiResponse<FolderDto>> {
-        val folder = folderService.updateFolder(id, request.name, request.parentId)
+        val userId = getCurrentUserId()
+        val folder = folderService.updateFolder(id, userId, request.name, request.parentId)
             ?: throw NotFoundException("Folder with id '$id' not found")
 
         return ResponseEntity.ok(successResponse(folder.toDto()))
@@ -50,7 +55,8 @@ class FolderController(
 
     @DeleteMapping("/{id}")
     fun deleteFolder(@PathVariable @ValidUuid(fieldName = "id") id: String): ResponseEntity<Void> {
-        folderService.deleteFolder(id)
+        val userId = getCurrentUserId()
+        folderService.deleteFolder(id, userId)
         return ResponseEntity.noContent().build()
     }
 }

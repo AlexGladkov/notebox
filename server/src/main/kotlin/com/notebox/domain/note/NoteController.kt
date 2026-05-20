@@ -1,5 +1,6 @@
 package com.notebox.domain.note
 
+import com.notebox.config.BaseController
 import com.notebox.dto.*
 import com.notebox.exception.NotFoundException
 import com.notebox.validation.ValidUuid
@@ -14,23 +15,26 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/api/notes")
 class NoteController(
     private val noteService: NoteService
-) {
+) : BaseController() {
 
     @GetMapping
     fun getAllNotes(): ResponseEntity<ApiResponse<List<NoteDto>>> {
-        val notes = noteService.getAllNotesWithTags()
+        val userId = getCurrentUserId()
+        val notes = noteService.getAllNotesWithTags(userId)
         return ResponseEntity.ok(successResponse(notes))
     }
 
     @GetMapping("/root")
     fun getRootNotes(): ResponseEntity<ApiResponse<List<NoteDto>>> {
-        val notes = noteService.getRootNotesWithTags()
+        val userId = getCurrentUserId()
+        val notes = noteService.getRootNotesWithTags(userId)
         return ResponseEntity.ok(successResponse(notes))
     }
 
     @GetMapping("/{id}")
     fun getNoteById(@PathVariable @ValidUuid(fieldName = "id") id: String): ResponseEntity<ApiResponse<NoteDto>> {
-        val noteDto = noteService.getNoteByIdWithTags(id)
+        val userId = getCurrentUserId()
+        val noteDto = noteService.getNoteByIdWithTags(id, userId)
             ?: throw NotFoundException("Note with id '$id' not found")
 
         return ResponseEntity.ok(successResponse(noteDto))
@@ -38,7 +42,9 @@ class NoteController(
 
     @PostMapping
     fun createNote(@Valid @RequestBody request: CreateNoteRequest): ResponseEntity<ApiResponse<NoteDto>> {
+        val userId = getCurrentUserId()
         val note = noteService.createNote(
+            userId,
             request.title,
             request.content,
             request.parentId,
@@ -48,7 +54,7 @@ class NoteController(
             request.backdropPositionY,
             request.color
         )
-        val noteDto = noteService.getNoteByIdWithTags(note.id)
+        val noteDto = noteService.getNoteByIdWithTags(note.id, userId)
             ?: throw NotFoundException("Failed to retrieve created note")
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(successResponse(noteDto))
@@ -59,8 +65,10 @@ class NoteController(
         @PathVariable @ValidUuid(fieldName = "id") id: String,
         @Valid @RequestBody request: UpdateNoteRequest
     ): ResponseEntity<ApiResponse<NoteDto>> {
+        val userId = getCurrentUserId()
         noteService.updateNote(
             id,
+            userId,
             request.title,
             request.content,
             request.parentId,
@@ -71,7 +79,7 @@ class NoteController(
             request.color
         ) ?: throw NotFoundException("Note with id '$id' not found")
 
-        val noteDto = noteService.getNoteByIdWithTags(id)
+        val noteDto = noteService.getNoteByIdWithTags(id, userId)
             ?: throw NotFoundException("Note with id '$id' not found")
         return ResponseEntity.ok(successResponse(noteDto))
     }
@@ -81,20 +89,23 @@ class NoteController(
         @PathVariable @ValidUuid(fieldName = "id") id: String,
         @RequestParam(required = false, defaultValue = "cascade") action: String
     ): ResponseEntity<Void> {
+        val userId = getCurrentUserId()
         val cascadeDelete = action == "cascade"
-        noteService.deleteNote(id, cascadeDelete)
+        noteService.deleteNote(id, userId, cascadeDelete)
         return ResponseEntity.noContent().build()
     }
 
     @GetMapping("/{id}/children")
     fun getChildren(@PathVariable @ValidUuid(fieldName = "id") id: String): ResponseEntity<ApiResponse<List<NoteDto>>> {
-        val children = noteService.getChildrenWithTags(id)
+        val userId = getCurrentUserId()
+        val children = noteService.getChildrenWithTags(id, userId)
         return ResponseEntity.ok(successResponse(children))
     }
 
     @GetMapping("/{id}/path")
     fun getPath(@PathVariable @ValidUuid(fieldName = "id") id: String): ResponseEntity<ApiResponse<List<NoteDto>>> {
-        val path = noteService.getAncestorPathWithTags(id)
+        val userId = getCurrentUserId()
+        val path = noteService.getAncestorPathWithTags(id, userId)
         return ResponseEntity.ok(successResponse(path))
     }
 
@@ -103,9 +114,10 @@ class NoteController(
         @PathVariable @ValidUuid(fieldName = "id") id: String,
         @Valid @RequestBody request: MoveNoteRequest
     ): ResponseEntity<ApiResponse<NoteDto>> {
-        noteService.moveNote(id, request.parentId)
+        val userId = getCurrentUserId()
+        noteService.moveNote(id, userId, request.parentId)
             ?: throw NotFoundException("Note with id '$id' not found")
-        val noteDto = noteService.getNoteByIdWithTags(id)
+        val noteDto = noteService.getNoteByIdWithTags(id, userId)
             ?: throw NotFoundException("Note with id '$id' not found")
         return ResponseEntity.ok(successResponse(noteDto))
     }

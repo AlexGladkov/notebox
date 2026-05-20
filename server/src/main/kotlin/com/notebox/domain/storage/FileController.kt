@@ -1,5 +1,6 @@
 package com.notebox.domain.storage
 
+import com.notebox.config.BaseController
 import com.notebox.dto.ApiResponse
 import com.notebox.dto.errorResponse
 import com.notebox.dto.successResponse
@@ -22,7 +23,7 @@ data class GetFileUrlResponse(val url: String)
 @RequestMapping("/api/files")
 class FileController(
     private val fileService: FileService
-) {
+) : BaseController() {
 
     @PostMapping("/upload")
     fun uploadFile(@RequestParam("file") file: MultipartFile): ResponseEntity<ApiResponse<UploadFileResponse>> {
