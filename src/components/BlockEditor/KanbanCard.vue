@@ -17,7 +17,30 @@
     <div v-if="cardFields && cardFields.length > 0" class="card-fields">
       <div v-for="field in displayFields" :key="field.columnId" class="card-field">
         <span class="field-label">{{ field.columnName }}:</span>
-        <span class="field-value" :class="`field-type-${field.type}`">
+
+        <!-- Цветные теги для SELECT -->
+        <span
+          v-if="field.type === 'SELECT' && field.option"
+          class="field-select-tag"
+          :style="getOptionStyle(field.option.color)"
+        >
+          {{ field.option.label }}
+        </span>
+
+        <!-- Цветные теги для MULTI_SELECT -->
+        <div v-else-if="field.type === 'MULTI_SELECT' && field.options" class="field-multi-select">
+          <span
+            v-for="option in field.options"
+            :key="option.id"
+            class="field-select-tag"
+            :style="getOptionStyle(option.color)"
+          >
+            {{ option.label }}
+          </span>
+        </div>
+
+        <!-- Обычные значения для остальных типов -->
+        <span v-else class="field-value" :class="`field-type-${field.type}`">
           {{ field.displayValue }}
         </span>
       </div>
@@ -46,7 +69,9 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import type { Record, CustomDatabase } from '../../types';
+import type { Record, CustomDatabase, SelectOption } from '../../types';
+import { TAG_COLOR_PALETTE } from '../../types/database';
+import { useTheme } from '../../composables/useTheme';
 
 interface Props {
   record: Record;
@@ -65,6 +90,32 @@ const emit = defineEmits<{
 
 const showMenu = ref(false);
 const isDragging = ref(false);
+
+const { effectiveTheme } = useTheme();
+
+const getColorNameFromHex = (hex: string): string => {
+  const normalizedHex = hex.toLowerCase().trim();
+  const color = TAG_COLOR_PALETTE.find(
+    c => c.light.toLowerCase() === normalizedHex || c.dark.toLowerCase() === normalizedHex
+  );
+  return color ? color.name : 'gray';
+};
+
+const getOptionStyle = (colorNameOrHex: string) => {
+  let colorName = colorNameOrHex;
+
+  if (colorNameOrHex?.startsWith('#')) {
+    colorName = getColorNameFromHex(colorNameOrHex);
+  }
+
+  const palette = TAG_COLOR_PALETTE.find(c => c.name === colorName) || TAG_COLOR_PALETTE.find(c => c.name === 'gray')!;
+  const isDark = effectiveTheme.value === 'dark';
+
+  return {
+    backgroundColor: isDark ? palette.dark : palette.light,
+    color: isDark ? '#ffffff' : palette.text
+  };
+};
 
 const toggleMenu = () => {
   showMenu.value = !showMenu.value;
@@ -113,23 +164,22 @@ const displayFields = computed(() => {
 
       const value = props.record.data[columnId];
       let displayValue = '';
+      let option: SelectOption | undefined;
+      let options: SelectOption[] | undefined;
 
       switch (column.type) {
         case 'SELECT':
           if (value && column.options) {
-            const option = column.options.find(opt => opt.id === value);
+            option = column.options.find(opt => opt.id === value);
             displayValue = option?.label || '';
           }
           break;
         case 'MULTI_SELECT':
           if (Array.isArray(value) && column.options) {
-            const labels = value
-              .map(optId => {
-                const option = column.options!.find(opt => opt.id === optId);
-                return option?.label;
-              })
-              .filter(Boolean);
-            displayValue = labels.join(', ');
+            options = value
+              .map(optId => column.options!.find(opt => opt.id === optId))
+              .filter((opt): opt is SelectOption => opt !== undefined);
+            displayValue = options.map(opt => opt.label).join(', ');
           }
           break;
         case 'DATE':
@@ -152,9 +202,18 @@ const displayFields = computed(() => {
         columnName: column.name,
         type: column.type,
         displayValue,
+        option,
+        options,
       };
     })
-    .filter((field): field is { columnId: string; columnName: string; type: string; displayValue: string } =>
+    .filter((field): field is {
+      columnId: string;
+      columnName: string;
+      type: string;
+      displayValue: string;
+      option?: SelectOption;
+      options?: SelectOption[];
+    } =>
       field !== null && field.displayValue !== null && field.displayValue !== undefined && field.displayValue !== ''
     );
 });
@@ -282,6 +341,20 @@ const displayFields = computed(() => {
 
 .field-type-BOOLEAN {
   font-size: 14px;
+}
+
+.field-select-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.field-multi-select {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 
 /* Card Menu */

@@ -31,6 +31,25 @@
           <span class="option-tag" :style="getOptionStyle(option.color)">
             {{ option.label }}
           </span>
+          <button
+            class="option-settings-btn"
+            @click.stop="toggleColorPicker(option.id)"
+            title="Изменить цвет"
+          >
+            ⋮
+          </button>
+
+          <!-- Color Picker Submenu -->
+          <div
+            v-if="colorPickerVisible === option.id"
+            class="color-picker-container"
+            @click.stop
+          >
+            <ColorPicker
+              :selected-color="option.color"
+              @select="(color) => updateOptionColor(option.id, color)"
+            />
+          </div>
         </div>
 
         <div v-if="searchQuery && !exactMatchExists" class="menu-option create" @click="createOption">
@@ -54,6 +73,7 @@ import { ref, computed, nextTick, onUnmounted } from 'vue';
 import type { Column, SelectOption } from '../../../types';
 import { TAG_COLOR_PALETTE } from '../../../types/database';
 import { useTheme } from '../../../composables/useTheme';
+import ColorPicker from './ColorPicker.vue';
 
 const props = defineProps<{
   value: string | null;
@@ -63,12 +83,14 @@ const props = defineProps<{
 const emit = defineEmits<{
   update: [value: string];
   createOption: [option: SelectOption];
+  updateOptionColor: [optionId: string, color: string];
 }>();
 
 const menuVisible = ref(false);
 const searchQuery = ref('');
 const searchInput = ref<HTMLInputElement | null>(null);
 const menuElement = ref<HTMLElement | null>(null);
+const colorPickerVisible = ref<string | null>(null);
 let clickOutsideTimer: ReturnType<typeof setTimeout> | null = null;
 
 const { effectiveTheme } = useTheme();
@@ -179,6 +201,19 @@ const createOption = () => {
   closeMenu();
 };
 
+const toggleColorPicker = (optionId: string) => {
+  if (colorPickerVisible.value === optionId) {
+    colorPickerVisible.value = null;
+  } else {
+    colorPickerVisible.value = optionId;
+  }
+};
+
+const updateOptionColor = (optionId: string, color: string) => {
+  emit('updateOptionColor', optionId, color);
+  colorPickerVisible.value = null;
+};
+
 onUnmounted(() => {
   document.removeEventListener('keydown', handleEscape);
   document.removeEventListener('click', handleClickOutside);
@@ -254,6 +289,7 @@ onUnmounted(() => {
   cursor: pointer;
   border-radius: 4px;
   transition: background-color 0.15s ease;
+  position: relative;
 }
 
 .menu-option:hover {
@@ -262,6 +298,41 @@ onUnmounted(() => {
 
 .menu-option.active {
   background: #eff6ff;
+}
+
+.option-settings-btn {
+  margin-left: auto;
+  padding: 2px 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  font-size: 16px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: all 0.15s ease;
+}
+
+.menu-option:hover .option-settings-btn {
+  opacity: 1;
+}
+
+.option-settings-btn:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.dark .option-settings-btn:hover {
+  background: #4b5563;
+  color: #e5e7eb;
+}
+
+.color-picker-container {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  margin-left: 8px;
+  z-index: 1001;
 }
 
 .menu-option.create {

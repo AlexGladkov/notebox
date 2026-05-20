@@ -6,6 +6,7 @@
     :record-id="recordId"
     @update="handleUpdate"
     @create-option="handleCreateOption"
+    @update-option-color="handleUpdateOptionColor"
   />
 </template>
 
@@ -39,6 +40,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   update: [value: any];
   createOption: [option: SelectOption];
+  updateOptionColor: [optionId: string, color: string];
 }>();
 
 const cellComponent = computed(() => {
@@ -84,5 +86,9 @@ const handleUpdate = (value: any) => {
 
 const handleCreateOption = (option: SelectOption) => {
   emit('createOption', option);
+};
+
+const handleUpdateOptionColor = (optionId: string, color: string) => {
+  emit('updateOptionColor', optionId, color);
 };
 </script>

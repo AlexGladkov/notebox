@@ -56,20 +56,40 @@
 
       <div v-if="selectedColumnId && needsValue" class="menu-section">
         <label class="menu-label">Значение</label>
-        <select
+
+        <!-- Custom dropdown для SELECT с цветами -->
+        <div
           v-if="selectedColumnType === 'SELECT'"
-          v-model="selectedValue"
-          class="menu-select"
+          class="custom-select"
+          @click="toggleValueDropdown"
         >
-          <option value="">Выберите значение</option>
-          <option
-            v-for="option in selectedColumn?.options"
-            :key="option.id"
-            :value="option.label"
-          >
-            {{ option.label }}
-          </option>
-        </select>
+          <div class="custom-select-trigger">
+            <span
+              v-if="selectedValueOption"
+              class="select-option-tag"
+              :style="getOptionStyle(selectedValueOption.color)"
+            >
+              {{ selectedValueOption.label }}
+            </span>
+            <span v-else class="placeholder">Выберите значение</span>
+            <span class="dropdown-arrow">▼</span>
+          </div>
+
+          <!-- Dropdown опций -->
+          <div v-if="valueDropdownVisible" class="custom-select-dropdown">
+            <div
+              v-for="option in selectedColumn?.options"
+              :key="option.id"
+              class="custom-select-option"
+              @click.stop="selectValue(option.label)"
+            >
+              <span class="select-option-tag" :style="getOptionStyle(option.color)">
+                {{ option.label }}
+              </span>
+            </div>
+          </div>
+        </div>
+
         <input
           v-else-if="selectedColumnType === 'TEXT' || selectedColumnType === 'EMAIL' || selectedColumnType === 'URL' || selectedColumnType === 'PHONE'"
           v-model="selectedValue"
@@ -126,6 +146,8 @@
 import { ref, computed, watch } from 'vue';
 import type { Column, ColumnType } from '../../types';
 import type { DatabaseFilter } from '../../types/database';
+import { TAG_COLOR_PALETTE } from '../../types/database';
+import { useTheme } from '../../composables/useTheme';
 
 const props = defineProps<{
   modelValue: DatabaseFilter | null;
@@ -137,9 +159,12 @@ const emit = defineEmits<{
 }>();
 
 const menuVisible = ref(false);
+const valueDropdownVisible = ref(false);
 const selectedColumnId = ref<string | null>(props.modelValue?.columnId || null);
 const selectedOperator = ref<DatabaseFilter['operator']>(props.modelValue?.operator || 'equals');
 const selectedValue = ref<any>(props.modelValue?.value || '');
+
+const { effectiveTheme } = useTheme();
 
 const selectedColumn = computed(() => {
   if (!selectedColumnId.value) return null;
@@ -147,6 +172,35 @@ const selectedColumn = computed(() => {
 });
 
 const selectedColumnType = computed(() => selectedColumn.value?.type || null);
+
+const selectedValueOption = computed(() => {
+  if (!selectedValue.value || !selectedColumn.value?.options) return null;
+  return selectedColumn.value.options.find(opt => opt.label === selectedValue.value) || null;
+});
+
+const getColorNameFromHex = (hex: string): string => {
+  const normalizedHex = hex.toLowerCase().trim();
+  const color = TAG_COLOR_PALETTE.find(
+    c => c.light.toLowerCase() === normalizedHex || c.dark.toLowerCase() === normalizedHex
+  );
+  return color ? color.name : 'gray';
+};
+
+const getOptionStyle = (colorNameOrHex: string) => {
+  let colorName = colorNameOrHex;
+
+  if (colorNameOrHex?.startsWith('#')) {
+    colorName = getColorNameFromHex(colorNameOrHex);
+  }
+
+  const palette = TAG_COLOR_PALETTE.find(c => c.name === colorName) || TAG_COLOR_PALETTE.find(c => c.name === 'gray')!;
+  const isDark = effectiveTheme.value === 'dark';
+
+  return {
+    backgroundColor: isDark ? palette.dark : palette.light,
+    color: isDark ? '#ffffff' : palette.text
+  };
+};
 
 const availableOperators = computed(() => {
   const type = selectedColumnType.value;
@@ -203,6 +257,7 @@ const handleColumnChange = () => {
   // Reset operator and value when column changes
   selectedOperator.value = 'equals';
   selectedValue.value = '';
+  valueDropdownVisible.value = false;
 };
 
 const toggleMenu = () => {
@@ -211,6 +266,16 @@ const toggleMenu = () => {
 
 const closeMenu = () => {
   menuVisible.value = false;
+  valueDropdownVisible.value = false;
+};
+
+const toggleValueDropdown = () => {
+  valueDropdownVisible.value = !valueDropdownVisible.value;
+};
+
+const selectValue = (value: string) => {
+  selectedValue.value = value;
+  valueDropdownVisible.value = false;
 };
 
 const handleApply = () => {
@@ -427,5 +492,90 @@ const handleClear = () => {
 .menu-button.primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Custom Select для цветных опций */
+.custom-select {
+  position: relative;
+  width: 100%;
+}
+
+.custom-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: white;
+  color: #111827;
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.dark .custom-select-trigger {
+  background: #111827;
+  border-color: #374151;
+  color: #f9fafb;
+}
+
+.custom-select-trigger:hover {
+  border-color: #3b82f6;
+}
+
+.custom-select-trigger .placeholder {
+  color: #9ca3af;
+}
+
+.dropdown-arrow {
+  font-size: 10px;
+  color: #6b7280;
+  transition: transform 0.15s ease;
+}
+
+.custom-select-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 1001;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.dark .custom-select-dropdown {
+  background: #1f2937;
+  border-color: #374151;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.custom-select-option {
+  padding: 6px 8px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.15s ease;
+}
+
+.custom-select-option:hover {
+  background: #f3f4f6;
+}
+
+.dark .custom-select-option:hover {
+  background: #374151;
+}
+
+.select-option-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 13px;
 }
 </style>
