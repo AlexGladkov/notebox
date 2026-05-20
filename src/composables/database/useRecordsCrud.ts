@@ -1,5 +1,5 @@
 import { ref } from 'vue';
-import type { Record } from '../../types';
+import type { Record, RecordData } from '../../types';
 import { databasesApi } from '../../api/databases';
 
 export function useRecordsCrud() {
@@ -7,7 +7,7 @@ export function useRecordsCrud() {
   const loading = ref(false);
   const error = ref<string | null>(null);
 
-  const loadRecords = async (databaseId: string) => {
+  const loadRecords = async (databaseId: string): Promise<Record[]> => {
     try {
       loading.value = true;
       error.value = null;
@@ -29,7 +29,7 @@ export function useRecordsCrud() {
     }
   };
 
-  const createRecord = async (databaseId: string, data: { [columnId: string]: any }) => {
+  const createRecord = async (databaseId: string, data: RecordData): Promise<Record> => {
     try {
       const newRecord = await databasesApi.createRecord(databaseId, { data });
       records.value.push(newRecord);
@@ -44,8 +44,8 @@ export function useRecordsCrud() {
   const updateRecord = async (
     databaseId: string,
     recordId: string,
-    data: { [columnId: string]: any }
-  ) => {
+    data: RecordData
+  ): Promise<Record> => {
     try {
       const updatedRecord = await databasesApi.updateRecord(databaseId, recordId, { data });
 
@@ -62,7 +62,7 @@ export function useRecordsCrud() {
     }
   };
 
-  const deleteRecord = async (databaseId: string, recordId: string) => {
+  const deleteRecord = async (databaseId: string, recordId: string): Promise<void> => {
     try {
       await databasesApi.deleteRecord(databaseId, recordId);
       records.value = records.value.filter(r => r.id !== recordId);
@@ -73,7 +73,7 @@ export function useRecordsCrud() {
     }
   };
 
-  const getRecordsByDatabaseId = (databaseId: string) => {
+  const getRecordsByDatabaseId = (databaseId: string): Record[] => {
     return records.value.filter(r => r.databaseId === databaseId);
   };
 

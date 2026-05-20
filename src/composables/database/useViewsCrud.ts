@@ -5,9 +5,10 @@ import { databasesApi } from '../../api/databases';
 import { useLocalStorageFallback } from '../utils/useLocalStorageFallback';
 
 export function useViewsCrud(databases: Ref<CustomDatabase[]>) {
+  const loading = ref(false);
   const error = ref<string | null>(null);
 
-  const createView = async (databaseId: string, view: Omit<DatabaseView, 'id'>) => {
+  const createView = async (databaseId: string, view: Omit<DatabaseView, 'id'>): Promise<DatabaseView> => {
     try {
       const database = databases.value.find(db => db.id === databaseId);
       if (!database) {
@@ -44,7 +45,7 @@ export function useViewsCrud(databases: Ref<CustomDatabase[]>) {
     }
   };
 
-  const updateView = async (databaseId: string, viewId: string, view: Partial<DatabaseView>) => {
+  const updateView = async (databaseId: string, viewId: string, view: Partial<DatabaseView>): Promise<DatabaseView> => {
     try {
       const database = databases.value.find(db => db.id === databaseId);
       if (!database) {
@@ -84,7 +85,7 @@ export function useViewsCrud(databases: Ref<CustomDatabase[]>) {
     }
   };
 
-  const deleteView = async (databaseId: string, viewId: string) => {
+  const deleteView = async (databaseId: string, viewId: string): Promise<void> => {
     try {
       const database = databases.value.find(db => db.id === databaseId);
       if (!database) {
@@ -114,6 +115,7 @@ export function useViewsCrud(databases: Ref<CustomDatabase[]>) {
   };
 
   return {
+    loading,
     error,
     createView,
     updateView,

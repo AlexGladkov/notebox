@@ -98,7 +98,7 @@ export interface CustomDatabase {
 export interface Record {
   id: string;
   databaseId: string;
-  data: { [columnId: string]: any };
+  data: RecordData;
   createdAt: number;
   updatedAt: number;
 }
@@ -129,6 +129,20 @@ export interface FileCellValue {
 export interface FileValue {
   files: FileCellValue[];
 }
+
+// Типизированные значения ячеек базы данных
+export type CellValue =
+  | string
+  | number
+  | boolean
+  | Date
+  | string[]           // для MULTI_SELECT
+  | FileCellValue[]    // для FILE
+  | null
+  | undefined;
+
+// Типизированные данные записи (вместо { [columnId: string]: any })
+export type RecordData = { [columnId: string]: CellValue };
 
 // API Response types
 export interface ApiResponse<T> {

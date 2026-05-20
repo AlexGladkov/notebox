@@ -1,8 +1,9 @@
 import { ref, type Ref } from 'vue';
-import type { CustomDatabase, ColumnType, SelectOption } from '../../types';
+import type { CustomDatabase, ColumnType, SelectOption, Column } from '../../types';
 import { databasesApi } from '../../api/databases';
 
 export function useColumnsCrud(databases: Ref<CustomDatabase[]>) {
+  const loading = ref(false);
   const error = ref<string | null>(null);
 
   const addColumn = async (
@@ -10,7 +11,7 @@ export function useColumnsCrud(databases: Ref<CustomDatabase[]>) {
     name: string,
     type: ColumnType,
     options?: SelectOption[]
-  ) => {
+  ): Promise<Column> => {
     try {
       const database = databases.value.find(db => db.id === databaseId);
       if (!database) {
@@ -40,7 +41,7 @@ export function useColumnsCrud(databases: Ref<CustomDatabase[]>) {
     name: string,
     type: ColumnType,
     options?: SelectOption[]
-  ) => {
+  ): Promise<Column> => {
     try {
       const database = databases.value.find(db => db.id === databaseId);
       if (!database) {
@@ -76,7 +77,7 @@ export function useColumnsCrud(databases: Ref<CustomDatabase[]>) {
     }
   };
 
-  const deleteColumn = async (databaseId: string, columnId: string) => {
+  const deleteColumn = async (databaseId: string, columnId: string): Promise<void> => {
     try {
       await databasesApi.deleteColumn(databaseId, columnId);
 
@@ -92,6 +93,7 @@ export function useColumnsCrud(databases: Ref<CustomDatabase[]>) {
   };
 
   return {
+    loading,
     error,
     addColumn,
     updateColumn,

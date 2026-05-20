@@ -1,15 +1,18 @@
 import { ref, type Ref } from 'vue';
-import type { Record } from '../../types';
+import type { Record, RecordData } from '../../types';
 import { databasesApi } from '../../api/databases';
 
 export function useRecordsBatch(records: Ref<Record[]>) {
+  const loading = ref(false);
   const error = ref<string | null>(null);
 
   const batchCreateRecords = async (
     databaseId: string,
-    recordsData: Array<{ [columnId: string]: any }>,
+    recordsData: RecordData[],
     onProgress?: (current: number, total: number) => void
-  ) => {
+  ): Promise<Record[]> => {
+    loading.value = true;
+    error.value = null;
     try {
       const createdRecords: Record[] = [];
       const BATCH_SIZE = 50;
@@ -40,6 +43,8 @@ export function useRecordsBatch(records: Ref<Record[]>) {
       console.error('Failed to batch create records:', err);
       error.value = 'Не удалось создать записи';
       throw err;
+    } finally {
+      loading.value = false;
     }
   };
 
@@ -47,7 +52,9 @@ export function useRecordsBatch(records: Ref<Record[]>) {
     databaseId: string,
     recordIds: string[],
     onProgress?: (current: number, total: number) => void
-  ) => {
+  ): Promise<void> => {
+    loading.value = true;
+    error.value = null;
     try {
       const BATCH_SIZE = 50;
       const deletedIds: string[] = [];
@@ -79,10 +86,13 @@ export function useRecordsBatch(records: Ref<Record[]>) {
       console.error('Failed to batch delete records:', err);
       error.value = 'Не удалось удалить записи';
       throw err;
+    } finally {
+      loading.value = false;
     }
   };
 
   return {
+    loading,
     error,
     batchCreateRecords,
     batchDeleteRecords,

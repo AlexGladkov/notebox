@@ -7,7 +7,7 @@ export function useDatabasesCrud() {
   const loading = ref(false);
   const error = ref<string | null>(null);
 
-  const loadDatabases = async () => {
+  const loadDatabases = async (): Promise<void> => {
     try {
       loading.value = true;
       error.value = null;
@@ -21,7 +21,7 @@ export function useDatabasesCrud() {
     }
   };
 
-  const loadDatabase = async (id: string) => {
+  const loadDatabase = async (id: string): Promise<CustomDatabase> => {
     try {
       loading.value = true;
       error.value = null;
@@ -58,7 +58,7 @@ export function useDatabasesCrud() {
     }
   };
 
-  const createDatabase = async (name: string, folderId: string | null = null) => {
+  const createDatabase = async (name: string, folderId: string | null = null): Promise<CustomDatabase> => {
     try {
       loading.value = true;
       error.value = null;
@@ -85,7 +85,7 @@ export function useDatabasesCrud() {
     }
   };
 
-  const updateDatabase = async (id: string, name: string, folderId: string | null = null) => {
+  const updateDatabase = async (id: string, name: string, folderId: string | null = null): Promise<CustomDatabase> => {
     try {
       const updatedDatabase = await databasesApi.update(id, { name, folderId });
 
@@ -102,7 +102,7 @@ export function useDatabasesCrud() {
     }
   };
 
-  const deleteDatabase = async (id: string) => {
+  const deleteDatabase = async (id: string): Promise<void> => {
     try {
       await databasesApi.delete(id);
       databases.value = databases.value.filter(db => db.id !== id);
@@ -113,7 +113,7 @@ export function useDatabasesCrud() {
     }
   };
 
-  const getDatabaseById = (id: string) => {
+  const getDatabaseById = (id: string): CustomDatabase | undefined => {
     return databases.value.find(db => db.id === id);
   };
 

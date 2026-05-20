@@ -1,3 +1,5 @@
+import type { CellValue } from './index';
+
 export type ViewType = 'table' | 'kanban';
 
 export interface KanbanConfig {
@@ -22,7 +24,7 @@ export interface DatabaseView {
 export interface DatabaseFilter {
   columnId: string;
   operator: 'equals' | 'contains' | 'isEmpty' | 'isNotEmpty' | 'gt' | 'lt' | 'gte' | 'lte';
-  value?: any;
+  value?: CellValue;
 }
 
 export interface DatabaseSort {
