@@ -5,6 +5,7 @@ import java.time.Instant
 
 data class Folder(
     val id: String,
+    val userId: String,
     val name: String,
     val parentId: String?,
     val createdAt: Instant,

@@ -6,6 +6,7 @@ import java.time.Instant
 
 object CustomDatabasesTable : Table("custom_databases") {
     val id = varchar("id", 36)
+    val userId = varchar("user_id", 36).index()
     val name = varchar("name", 255)
     val folderId = varchar("folder_id", 36).nullable().index()
     val createdAt = timestamp("created_at").default(Instant.now())

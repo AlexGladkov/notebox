@@ -6,6 +6,7 @@ import java.time.Instant
 
 object FoldersTable : Table("folders") {
     val id = varchar("id", 36)
+    val userId = varchar("user_id", 36).index()
     val name = varchar("name", 255)
     val parentId = varchar("parent_id", 36).nullable().index()
     val createdAt = timestamp("created_at").default(Instant.now())

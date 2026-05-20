@@ -10,6 +10,7 @@ import java.time.Instant
 
 data class CustomDatabase(
     val id: String,
+    val userId: String,
     val name: String,
     val folderId: String?,
     val createdAt: Instant,
