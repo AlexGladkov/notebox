@@ -12,8 +12,8 @@ import java.util.*
 @Repository
 class NoteRepository {
 
-    fun findAll(): List<Note> = transaction {
-        NotesTable.selectAll().map { toNote(it) }
+    fun findAll(userId: String): List<Note> = transaction {
+        NotesTable.select { NotesTable.userId eq userId }.map { toNote(it) }
     }
 
     fun findById(id: String): Note? = transaction {
@@ -22,12 +22,19 @@ class NoteRepository {
             .singleOrNull()
     }
 
-    fun findRootNotes(): List<Note> = transaction {
-        NotesTable.select { NotesTable.parentId.isNull() }
+    fun findByIdAndUserId(id: String, userId: String): Note? = transaction {
+        NotesTable.select { (NotesTable.id eq id) and (NotesTable.userId eq userId) }
+            .mapNotNull { toNote(it) }
+            .singleOrNull()
+    }
+
+    fun findRootNotes(userId: String): List<Note> = transaction {
+        NotesTable.select { (NotesTable.parentId.isNull()) and (NotesTable.userId eq userId) }
             .map { toNote(it) }
     }
 
     fun create(
+        userId: String,
         title: String,
         content: String,
         parentId: String? = null,
@@ -42,6 +49,7 @@ class NoteRepository {
 
         NotesTable.insert {
             it[NotesTable.id] = id
+            it[NotesTable.userId] = userId
             it[NotesTable.title] = title
             it[NotesTable.content] = content
             it[NotesTable.parentId] = parentId
@@ -54,11 +62,12 @@ class NoteRepository {
             it[updatedAt] = now
         }
 
-        Note(id, title, content, parentId, icon, backdropType, backdropValue, backdropPositionY, color, now, now)
+        Note(id, userId, title, content, parentId, icon, backdropType, backdropValue, backdropPositionY, color, now, now)
     }
 
     fun update(
         id: String,
+        userId: String,
         title: String,
         content: String,
         parentId: String? = null,
@@ -68,11 +77,11 @@ class NoteRepository {
         backdropPositionY: Int? = 50,
         color: String? = null
     ): Note? = transaction {
-        val exists = NotesTable.select { NotesTable.id eq id }.any()
+        val exists = NotesTable.select { (NotesTable.id eq id) and (NotesTable.userId eq userId) }.any()
         if (!exists) return@transaction null
 
         val now = Instant.now()
-        NotesTable.update({ NotesTable.id eq id }) {
+        NotesTable.update({ (NotesTable.id eq id) and (NotesTable.userId eq userId) }) {
             it[NotesTable.title] = title
             it[NotesTable.content] = content
             it[NotesTable.parentId] = parentId
@@ -87,50 +96,52 @@ class NoteRepository {
         findById(id)
     }
 
-    fun delete(id: String): Boolean = transaction {
-        NotesTable.deleteWhere { NotesTable.id eq id } > 0
+    fun delete(id: String, userId: String): Boolean = transaction {
+        NotesTable.deleteWhere { (NotesTable.id eq id) and (NotesTable.userId eq userId) } > 0
     }
 
-    fun findByIds(ids: List<String>): List<Note> = transaction {
+    fun findByIds(ids: List<String>, userId: String): List<Note> = transaction {
         if (ids.isEmpty()) return@transaction emptyList()
 
-        NotesTable.select { NotesTable.id inList ids }
+        NotesTable.select { (NotesTable.id inList ids) and (NotesTable.userId eq userId) }
             .map { toNote(it) }
     }
 
-    fun deleteByIds(ids: List<String>): Int = transaction {
+    fun deleteByIds(ids: List<String>, userId: String): Int = transaction {
         if (ids.isEmpty()) return@transaction 0
 
-        NotesTable.deleteWhere { NotesTable.id inList ids }
+        NotesTable.deleteWhere { (NotesTable.id inList ids) and (NotesTable.userId eq userId) }
     }
 
-    fun findByParentId(parentId: String?): List<Note> = transaction {
+    fun findByParentId(parentId: String?, userId: String): List<Note> = transaction {
         if (parentId == null) {
-            NotesTable.select { NotesTable.parentId.isNull() }
+            NotesTable.select { (NotesTable.parentId.isNull()) and (NotesTable.userId eq userId) }
                 .map { toNote(it) }
         } else {
-            NotesTable.select { NotesTable.parentId eq parentId }
+            NotesTable.select { (NotesTable.parentId eq parentId) and (NotesTable.userId eq userId) }
                 .map { toNote(it) }
         }
     }
 
-    fun findAllDescendants(noteId: String): List<Note> = transaction {
+    fun findAllDescendants(noteId: String, userId: String): List<Note> = transaction {
         // Валидация UUID для предотвращения SQL injection
         UUID.fromString(noteId) // Throws IllegalArgumentException if invalid
+        UUID.fromString(userId)
 
         val sql = """
             WITH RECURSIVE descendants AS (
-                SELECT id, title, content, parent_id, icon, backdrop_type, backdrop_value,
+                SELECT id, user_id, title, content, parent_id, icon, backdrop_type, backdrop_value,
                        backdrop_position_y, color, created_at, updated_at
                 FROM notes
-                WHERE parent_id = '$noteId'
+                WHERE parent_id = '$noteId' AND user_id = '$userId'
 
                 UNION ALL
 
-                SELECT n.id, n.title, n.content, n.parent_id, n.icon, n.backdrop_type,
+                SELECT n.id, n.user_id, n.title, n.content, n.parent_id, n.icon, n.backdrop_type,
                        n.backdrop_value, n.backdrop_position_y, n.color, n.created_at, n.updated_at
                 FROM notes n
                 INNER JOIN descendants d ON n.parent_id = d.id
+                WHERE n.user_id = '$userId'
             )
             SELECT * FROM descendants
         """.trimIndent()
@@ -147,21 +158,23 @@ class NoteRepository {
         result
     }
 
-    fun getDepth(noteId: String): Int = transaction {
+    fun getDepth(noteId: String, userId: String): Int = transaction {
         // Валидация UUID для предотвращения SQL injection
         UUID.fromString(noteId) // Throws IllegalArgumentException if invalid
+        UUID.fromString(userId)
 
         val sql = """
             WITH RECURSIVE ancestors AS (
-                SELECT id, parent_id, 0 as depth
+                SELECT id, parent_id, user_id, 0 as depth
                 FROM notes
-                WHERE id = '$noteId'
+                WHERE id = '$noteId' AND user_id = '$userId'
 
                 UNION ALL
 
-                SELECT n.id, n.parent_id, a.depth + 1
+                SELECT n.id, n.parent_id, n.user_id, a.depth + 1
                 FROM notes n
                 INNER JOIN ancestors a ON n.id = a.parent_id
+                WHERE n.user_id = '$userId'
             )
             SELECT MAX(depth) as max_depth FROM ancestors
         """.trimIndent()
@@ -178,26 +191,28 @@ class NoteRepository {
         result
     }
 
-    fun getAncestorPath(noteId: String): List<Note> = transaction {
+    fun getAncestorPath(noteId: String, userId: String): List<Note> = transaction {
         // Валидация UUID для предотвращения SQL injection
         UUID.fromString(noteId) // Throws IllegalArgumentException if invalid
+        UUID.fromString(userId)
 
         val sql = """
             WITH RECURSIVE ancestors AS (
-                SELECT id, title, content, parent_id, icon, backdrop_type, backdrop_value,
+                SELECT id, user_id, title, content, parent_id, icon, backdrop_type, backdrop_value,
                        backdrop_position_y, color, created_at, updated_at, 0 as depth
                 FROM notes
-                WHERE id = '$noteId'
+                WHERE id = '$noteId' AND user_id = '$userId'
 
                 UNION ALL
 
-                SELECT n.id, n.title, n.content, n.parent_id, n.icon, n.backdrop_type,
+                SELECT n.id, n.user_id, n.title, n.content, n.parent_id, n.icon, n.backdrop_type,
                        n.backdrop_value, n.backdrop_position_y, n.color, n.created_at, n.updated_at,
                        a.depth + 1
                 FROM notes n
                 INNER JOIN ancestors a ON n.id = a.parent_id
+                WHERE n.user_id = '$userId'
             )
-            SELECT id, title, content, parent_id, icon, backdrop_type, backdrop_value,
+            SELECT id, user_id, title, content, parent_id, icon, backdrop_type, backdrop_value,
                    backdrop_position_y, color, created_at, updated_at
             FROM ancestors ORDER BY depth DESC
         """.trimIndent()
@@ -214,12 +229,12 @@ class NoteRepository {
         result
     }
 
-    fun updateParentId(noteId: String, newParentId: String?): Boolean = transaction {
-        val exists = NotesTable.select { NotesTable.id eq noteId }.any()
+    fun updateParentId(noteId: String, userId: String, newParentId: String?): Boolean = transaction {
+        val exists = NotesTable.select { (NotesTable.id eq noteId) and (NotesTable.userId eq userId) }.any()
         if (!exists) return@transaction false
 
         val now = Instant.now()
-        NotesTable.update({ NotesTable.id eq noteId }) {
+        NotesTable.update({ (NotesTable.id eq noteId) and (NotesTable.userId eq userId) }) {
             it[parentId] = newParentId
             it[updatedAt] = now
         }
@@ -227,24 +242,24 @@ class NoteRepository {
         true
     }
 
-    fun deleteByParentId(parentId: String): Int = transaction {
-        NotesTable.deleteWhere { NotesTable.parentId eq parentId }
+    fun deleteByParentId(parentId: String, userId: String): Int = transaction {
+        NotesTable.deleteWhere { (NotesTable.parentId eq parentId) and (NotesTable.userId eq userId) }
     }
 
-    fun deleteWithDescendants(noteId: String): Int = transaction {
-        val descendants = findAllDescendants(noteId)
+    fun deleteWithDescendants(noteId: String, userId: String): Int = transaction {
+        val descendants = findAllDescendants(noteId, userId)
         val allIds = listOf(noteId) + descendants.map { it.id }
 
         if (allIds.isEmpty()) return@transaction 0
 
-        NotesTable.deleteWhere { NotesTable.id inList allIds }
+        NotesTable.deleteWhere { (NotesTable.id inList allIds) and (NotesTable.userId eq userId) }
     }
 
-    fun orphanChildren(noteId: String): Int = transaction {
-        val note = findById(noteId) ?: return@transaction 0
+    fun orphanChildren(noteId: String, userId: String): Int = transaction {
+        val note = findByIdAndUserId(noteId, userId) ?: return@transaction 0
         val now = Instant.now()
 
-        NotesTable.update({ NotesTable.parentId eq noteId }) {
+        NotesTable.update({ (NotesTable.parentId eq noteId) and (NotesTable.userId eq userId) }) {
             it[parentId] = note.parentId
             it[updatedAt] = now
         }
@@ -264,6 +279,7 @@ class NoteRepository {
 
     private fun toNote(row: ResultRow) = Note(
         id = row[NotesTable.id],
+        userId = row[NotesTable.userId],
         title = row[NotesTable.title],
         content = row[NotesTable.content],
         parentId = row[NotesTable.parentId],
@@ -278,6 +294,7 @@ class NoteRepository {
 
     private fun toNoteFromResultSet(rs: java.sql.ResultSet) = Note(
         id = rs.getString("id"),
+        userId = rs.getString("user_id"),
         title = rs.getString("title"),
         content = rs.getString("content"),
         parentId = rs.getString("parent_id"),  // getString возвращает null для SQL NULL

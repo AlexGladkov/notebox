@@ -13,12 +13,12 @@ import java.util.*
 class DatabaseRepository {
 
     // CustomDatabase operations
-    fun findAllDatabases(): List<CustomDatabase> = transaction {
-        CustomDatabasesTable.selectAll().map { toDatabase(it) }
+    fun findAllDatabases(userId: String): List<CustomDatabase> = transaction {
+        CustomDatabasesTable.select { CustomDatabasesTable.userId eq userId }.map { toDatabase(it) }
     }
 
-    fun findAllDatabasesWithColumns(): List<Pair<CustomDatabase, List<Column>>> = transaction {
-        val databases = CustomDatabasesTable.selectAll().map { toDatabase(it) }
+    fun findAllDatabasesWithColumns(userId: String): List<Pair<CustomDatabase, List<Column>>> = transaction {
+        val databases = CustomDatabasesTable.select { CustomDatabasesTable.userId eq userId }.map { toDatabase(it) }
         val databaseIds = databases.map { it.id }
 
         // Fetch all columns in one query
@@ -37,27 +37,34 @@ class DatabaseRepository {
             .singleOrNull()
     }
 
-    fun createDatabase(name: String, folderId: String?): CustomDatabase = transaction {
+    fun findDatabaseByIdAndUserId(id: String, userId: String): CustomDatabase? = transaction {
+        CustomDatabasesTable.select { (CustomDatabasesTable.id eq id) and (CustomDatabasesTable.userId eq userId) }
+            .mapNotNull { toDatabase(it) }
+            .singleOrNull()
+    }
+
+    fun createDatabase(userId: String, name: String, folderId: String?): CustomDatabase = transaction {
         val id = UUID.randomUUID().toString()
         val now = Instant.now()
 
         CustomDatabasesTable.insert {
             it[CustomDatabasesTable.id] = id
+            it[CustomDatabasesTable.userId] = userId
             it[CustomDatabasesTable.name] = name
             it[CustomDatabasesTable.folderId] = folderId
             it[createdAt] = now
             it[updatedAt] = now
         }
 
-        CustomDatabase(id, name, folderId, now, now)
+        CustomDatabase(id, userId, name, folderId, now, now)
     }
 
-    fun updateDatabase(id: String, name: String, folderId: String?): CustomDatabase? = transaction {
-        val exists = CustomDatabasesTable.select { CustomDatabasesTable.id eq id }.any()
+    fun updateDatabase(id: String, userId: String, name: String, folderId: String?): CustomDatabase? = transaction {
+        val exists = CustomDatabasesTable.select { (CustomDatabasesTable.id eq id) and (CustomDatabasesTable.userId eq userId) }.any()
         if (!exists) return@transaction null
 
         val now = Instant.now()
-        CustomDatabasesTable.update({ CustomDatabasesTable.id eq id }) {
+        CustomDatabasesTable.update({ (CustomDatabasesTable.id eq id) and (CustomDatabasesTable.userId eq userId) }) {
             it[CustomDatabasesTable.name] = name
             it[CustomDatabasesTable.folderId] = folderId
             it[updatedAt] = now
@@ -66,8 +73,8 @@ class DatabaseRepository {
         findDatabaseById(id)
     }
 
-    fun deleteDatabase(id: String): Boolean = transaction {
-        CustomDatabasesTable.deleteWhere { CustomDatabasesTable.id eq id } > 0
+    fun deleteDatabase(id: String, userId: String): Boolean = transaction {
+        CustomDatabasesTable.deleteWhere { (CustomDatabasesTable.id eq id) and (CustomDatabasesTable.userId eq userId) } > 0
     }
 
     // Column operations
@@ -192,6 +199,7 @@ class DatabaseRepository {
     // Helper methods
     private fun toDatabase(row: ResultRow) = CustomDatabase(
         id = row[CustomDatabasesTable.id],
+        userId = row[CustomDatabasesTable.userId],
         name = row[CustomDatabasesTable.name],
         folderId = row[CustomDatabasesTable.folderId],
         createdAt = row[CustomDatabasesTable.createdAt],
