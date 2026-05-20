@@ -2,6 +2,7 @@ package com.notebox.domain.calendar
 
 import com.notebox.dto.ApiResponse
 import com.notebox.dto.successResponse
+import com.notebox.exception.AuthenticationException
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.*
@@ -22,6 +23,6 @@ class CalendarController(
     private fun getCurrentUserId(): String {
         val authentication = SecurityContextHolder.getContext().authentication
         return authentication?.principal as? String
-            ?: throw IllegalStateException("User not authenticated")
+            ?: throw AuthenticationException("User not authenticated")
     }
 }
