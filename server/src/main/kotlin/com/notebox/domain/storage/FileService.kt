@@ -1,5 +1,6 @@
 package com.notebox.domain.storage
 
+import com.notebox.exception.ValidationException
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import java.util.*
@@ -28,7 +29,7 @@ class FileService(
     fun uploadFile(file: MultipartFile): UploadResult {
         val validationResult = fileValidationService.validateFile(file)
         if (!validationResult.isValid) {
-            throw IllegalArgumentException(validationResult.errorMessage)
+            throw ValidationException(validationResult.errorMessage)
         }
 
         val originalFilename = file.originalFilename ?: "unknown"
@@ -61,10 +62,10 @@ class FileService(
 
     private fun validateKey(key: String) {
         if (key.contains("..") || key.contains("/") || key.contains("\\")) {
-            throw IllegalArgumentException("Invalid file key: path traversal detected")
+            throw ValidationException("Invalid file key: path traversal detected")
         }
         if (!KEY_PATTERN.matches(key)) {
-            throw IllegalArgumentException("Invalid file key format")
+            throw ValidationException("Invalid file key format")
         }
     }
 }

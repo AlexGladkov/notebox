@@ -2,6 +2,7 @@ package com.notebox.domain.tag
 
 import com.notebox.exception.AccessDeniedException
 import com.notebox.exception.NotFoundException
+import com.notebox.exception.ValidationException
 import org.springframework.stereotype.Service
 
 @Service
@@ -40,16 +41,16 @@ class TagService(
 
     fun createTag(userId: String, name: String, color: String?): Tag {
         if (name.isBlank()) {
-            throw IllegalArgumentException("Tag name cannot be blank")
+            throw ValidationException("Tag name cannot be blank")
         }
 
         if (name.length > 100) {
-            throw IllegalArgumentException("Tag name must be less than 100 characters")
+            throw ValidationException("Tag name must be less than 100 characters")
         }
 
         val existingTag = tagRepository.findByUserIdAndName(userId, name)
         if (existingTag != null) {
-            throw IllegalArgumentException("Tag with this name already exists")
+            throw ValidationException("Tag with this name already exists")
         }
 
         val tagColor = color ?: "#e5e7eb"
@@ -58,11 +59,11 @@ class TagService(
 
     fun updateTag(id: String, name: String?, color: String?): Tag? {
         if (name != null && name.isBlank()) {
-            throw IllegalArgumentException("Tag name cannot be blank")
+            throw ValidationException("Tag name cannot be blank")
         }
 
         if (name != null && name.length > 100) {
-            throw IllegalArgumentException("Tag name must be less than 100 characters")
+            throw ValidationException("Tag name must be less than 100 characters")
         }
 
         val tag = tagRepository.findById(id)
@@ -71,7 +72,7 @@ class TagService(
         if (name != null && name != tag.name) {
             val existingTag = tagRepository.findByUserIdAndName(tag.userId, name)
             if (existingTag != null) {
-                throw IllegalArgumentException("Tag with this name already exists")
+                throw ValidationException("Tag with this name already exists")
             }
         }
 

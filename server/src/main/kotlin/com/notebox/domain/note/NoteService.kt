@@ -1,6 +1,9 @@
 package com.notebox.domain.note
 
 import com.notebox.dto.NoteDto
+import com.notebox.exception.NotFoundException
+import com.notebox.exception.ValidationException
+import com.notebox.exception.CircularReferenceException
 import org.springframework.stereotype.Service
 
 @Service
@@ -47,11 +50,11 @@ class NoteService(
         if (parentId != null) {
             // Проверка существования родителя
             noteRepository.findById(parentId)
-                ?: throw IllegalArgumentException("Parent note not found")
+                ?: throw NotFoundException("Parent note with id '$parentId' not found")
 
             val parentDepth = noteRepository.getDepth(parentId)
             if (parentDepth >= MAX_DEPTH) {
-                throw IllegalArgumentException("Maximum nesting depth of $MAX_DEPTH levels exceeded")
+                throw ValidationException("Maximum nesting depth of $MAX_DEPTH levels exceeded")
             }
         }
 
@@ -71,30 +74,30 @@ class NoteService(
     ): Note? {
         // Проверка существования заметки
         val existingNote = noteRepository.findById(id)
-            ?: throw IllegalArgumentException("Note not found")
+            ?: throw NotFoundException("Note with id '$id' not found")
 
         // Валидация изменения parentId (если оно меняется)
         if (parentId != existingNote.parentId) {
             if (parentId != null) {
                 // Проверка существования нового родителя
                 noteRepository.findById(parentId)
-                    ?: throw IllegalArgumentException("Parent note not found")
+                    ?: throw NotFoundException("Parent note with id '$parentId' not found")
 
                 if (id == parentId) {
-                    throw IllegalArgumentException("Note cannot be its own parent")
+                    throw CircularReferenceException("Note cannot be its own parent")
                 }
 
                 // Проверка на циклические ссылки
                 val descendants = noteRepository.findAllDescendants(id)
                 if (descendants.any { it.id == parentId }) {
-                    throw IllegalArgumentException("Cannot set parent to a descendant note")
+                    throw CircularReferenceException("Cannot set parent to a descendant note")
                 }
 
                 // Проверка глубины вложенности
                 val newParentDepth = noteRepository.getDepth(parentId)
                 val noteWithDescendantsDepth = calculateMaxDescendantDepth(id)
                 if (newParentDepth + noteWithDescendantsDepth > MAX_DEPTH) {
-                    throw IllegalArgumentException("This change would exceed maximum nesting depth of $MAX_DEPTH levels")
+                    throw ValidationException("This change would exceed maximum nesting depth of $MAX_DEPTH levels")
                 }
             }
         }
@@ -105,29 +108,29 @@ class NoteService(
     fun moveNote(noteId: String, newParentId: String?): Note? {
         // Проверка существования заметки
         noteRepository.findById(noteId)
-            ?: throw IllegalArgumentException("Note not found")
+            ?: throw NotFoundException("Note with id '$noteId' not found")
 
         // Проверка на циклические ссылки
         if (newParentId != null) {
             // Проверка существования нового родителя
             noteRepository.findById(newParentId)
-                ?: throw IllegalArgumentException("Parent note not found")
+                ?: throw NotFoundException("Parent note with id '$newParentId' not found")
 
             if (noteId == newParentId) {
-                throw IllegalArgumentException("Note cannot be its own parent")
+                throw CircularReferenceException("Note cannot be its own parent")
             }
 
             // Проверка, не является ли новый родитель потомком перемещаемой заметки
             val descendants = noteRepository.findAllDescendants(noteId)
             if (descendants.any { it.id == newParentId }) {
-                throw IllegalArgumentException("Cannot move note to its own descendant")
+                throw CircularReferenceException("Cannot move note to its own descendant")
             }
 
             // Проверка глубины вложенности
             val newParentDepth = noteRepository.getDepth(newParentId)
             val noteWithDescendantsDepth = calculateMaxDescendantDepth(noteId)
             if (newParentDepth + noteWithDescendantsDepth > MAX_DEPTH) {
-                throw IllegalArgumentException("Moving this note would exceed maximum nesting depth of $MAX_DEPTH levels")
+                throw ValidationException("Moving this note would exceed maximum nesting depth of $MAX_DEPTH levels")
             }
         }
 
