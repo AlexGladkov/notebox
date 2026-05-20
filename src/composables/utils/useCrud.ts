@@ -22,7 +22,7 @@ export function useCrud<T extends { id: string }>(
   const loading = ref(false);
   const error = ref<string | null>(null);
 
-  const load = async () => {
+  const load = async (): Promise<void> => {
     try {
       loading.value = true;
       error.value = null;
@@ -36,7 +36,7 @@ export function useCrud<T extends { id: string }>(
     }
   };
 
-  const create = async (data: Partial<T>) => {
+  const create = async (data: Partial<T>): Promise<T> => {
     try {
       loading.value = true;
       error.value = null;
@@ -52,7 +52,7 @@ export function useCrud<T extends { id: string }>(
     }
   };
 
-  const update = async (id: string, data: Partial<T>) => {
+  const update = async (id: string, data: Partial<T>): Promise<T> => {
     try {
       loading.value = true;
       error.value = null;
@@ -73,7 +73,7 @@ export function useCrud<T extends { id: string }>(
     }
   };
 
-  const remove = async (id: string) => {
+  const remove = async (id: string): Promise<void> => {
     try {
       loading.value = true;
       error.value = null;
