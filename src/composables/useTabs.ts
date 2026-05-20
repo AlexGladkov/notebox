@@ -223,8 +223,8 @@ export function useTabs(getNoteById: (id: string) => Note | undefined) {
   };
 
   return {
-    tabs: computed(() => tabs.value) as ReturnType<typeof computed<Tab[]>>,
-    activeTabId: computed(() => activeTabId.value) as ReturnType<typeof computed<string | null>>,
+    tabs: computed(() => tabs.value),
+    activeTabId: computed(() => activeTabId.value),
     openTab,
     closeTab,
     closeOtherTabs,

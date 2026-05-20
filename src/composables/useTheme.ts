@@ -128,7 +128,7 @@ export function useTheme() {
   };
 
   return {
-    themeMode: computed(() => themeMode.value) as ReturnType<typeof computed<ThemeMode>>,
+    themeMode: computed(() => themeMode.value),
     effectiveTheme,
     cycleTheme,
     setTheme,

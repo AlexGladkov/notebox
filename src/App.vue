@@ -81,13 +81,14 @@ import SyncStatusIndicator from './components/SyncStatusIndicator.vue';
 const { initialize: initializeTheme } = useTheme();
 initializeTheme();
 
-// Инициализация offlineStore с network status
-const { isOnline } = useNetworkStatus();
-offlineStore.setNetworkStatusGetter(() => isOnline.value);
-
 // Инициализация отслеживания состояния сети
 onMounted(() => {
   initNetworkStatus();
+
+  // Инициализация offlineStore с network status после initNetworkStatus
+  const { isOnline } = useNetworkStatus();
+  offlineStore.setNetworkStatusGetter(() => isOnline.value);
+
   registerServiceWorker();
 });
 
