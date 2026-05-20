@@ -3,6 +3,7 @@ package com.notebox.config
 import com.notebox.domain.auth.SessionService
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
@@ -22,6 +23,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 @Configuration
 @EnableWebSecurity
 class SecurityConfig {
+
+    @Value("\${cors.allowed-origins:http://localhost:5173,http://localhost:3000}")
+    private lateinit var allowedOrigins: String
 
     @Bean
     fun securityFilterChain(
@@ -46,10 +50,12 @@ class SecurityConfig {
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration = CorsConfiguration()
-        configuration.allowedOriginPatterns = listOf("*")
+        configuration.allowedOrigins = allowedOrigins.split(",").map { it.trim() }
         configuration.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
-        configuration.allowedHeaders = listOf("*")
+        configuration.allowedHeaders = listOf("Content-Type", "Authorization", "X-Requested-With", "Accept")
+        configuration.exposedHeaders = listOf("Content-Disposition")
         configuration.allowCredentials = true
+        configuration.maxAge = 3600L
 
         val source = UrlBasedCorsConfigurationSource()
         source.registerCorsConfiguration("/**", configuration)
