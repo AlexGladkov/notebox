@@ -67,14 +67,14 @@ export const WikiLink = Node.create<WikiLinkOptions, WikiLinkStorage>({
       title: {
         default: '',
         parseHTML: element => element.textContent,
-        renderHTML: attributes => {
+        renderHTML: () => {
           return {};
         },
       },
       broken: {
         default: false,
         parseHTML: element => element.classList.contains('wiki-link-broken'),
-        renderHTML: attributes => {
+        renderHTML: () => {
           return {};
         },
       },
@@ -239,7 +239,7 @@ export const WikiLink = Node.create<WikiLinkOptions, WikiLinkStorage>({
             ]);
           },
 
-          handleClick(view, pos, event) {
+          handleClick(_view, _pos, event) {
             const target = event.target as HTMLElement;
             const wikiLink = target.closest('[data-wiki-link]');
 
