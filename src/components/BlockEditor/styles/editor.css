@@ -1,0 +1,281 @@
+.block-editor-wrapper {
+  position: relative;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.block-editor-content {
+  padding: 2rem;
+  min-height: 100%;
+}
+
+.block-editor-content :deep(.ProseMirror) {
+  min-height: 100%;
+  outline: none;
+}
+
+.dark :deep(.block-editor-content .ProseMirror) {
+  color: #e5e7eb;
+}
+
+.block-editor-content :deep(.ProseMirror p.is-editor-empty:first-child::before) {
+  content: attr(data-placeholder);
+  float: left;
+  color: #9ca3af;
+  pointer-events: none;
+  height: 0;
+}
+
+.dark :deep(.block-editor-content .ProseMirror p.is-editor-empty:first-child::before) {
+  color: #6b7280;
+}
+
+.block-editor-content :deep(.ProseMirror h1) {
+  font-size: 2em;
+  font-weight: 700;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  line-height: 1.2;
+}
+
+.block-editor-content :deep(.ProseMirror h2) {
+  font-size: 1.5em;
+  font-weight: 600;
+  margin-top: 0.8em;
+  margin-bottom: 0.4em;
+  line-height: 1.3;
+}
+
+.block-editor-content :deep(.ProseMirror h3) {
+  font-size: 1.25em;
+  font-weight: 600;
+  margin-top: 0.6em;
+  margin-bottom: 0.3em;
+  line-height: 1.4;
+}
+
+.block-editor-content :deep(.ProseMirror p) {
+  margin: 0.5em 0;
+  line-height: 1.6;
+}
+
+.block-editor-content :deep(.ProseMirror ul),
+.block-editor-content :deep(.ProseMirror ol) {
+  padding-left: 1.5em;
+  margin: 0.5em 0;
+}
+
+.block-editor-content :deep(.ProseMirror ul[data-type="taskList"]) {
+  list-style: none;
+  padding-left: 0;
+}
+
+.block-editor-content :deep(.ProseMirror ul[data-type="taskList"] li) {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5em;
+}
+
+.block-editor-content :deep(.ProseMirror ul[data-type="taskList"] li label) {
+  flex-shrink: 0;
+  margin-top: 0.3em;
+}
+
+.block-editor-content :deep(.ProseMirror ul[data-type="taskList"] li input[type="checkbox"]) {
+  cursor: pointer;
+}
+
+.block-editor-content :deep(.ProseMirror blockquote) {
+  border-left: 4px solid #e5e7eb;
+  padding-left: 1em;
+  color: #6b7280;
+  margin: 1em 0;
+  font-style: italic;
+}
+
+.dark :deep(.block-editor-content .ProseMirror blockquote) {
+  border-left-color: #4b5563;
+  color: #9ca3af;
+}
+
+.block-editor-content :deep(.ProseMirror code) {
+  background-color: #f3f4f6;
+  padding: 0.2em 0.4em;
+  border-radius: 0.25em;
+  font-size: 0.9em;
+  font-family: 'Courier New', monospace;
+}
+
+.dark :deep(.block-editor-content .ProseMirror code) {
+  background-color: #374151;
+  color: #e5e7eb;
+}
+
+.block-editor-content :deep(.ProseMirror pre) {
+  background-color: #1f2937;
+  color: #f3f4f6;
+  padding: 1em;
+  border-radius: 0.5em;
+  overflow-x: auto;
+  margin: 1em 0;
+}
+
+.block-editor-content :deep(.ProseMirror pre code) {
+  background-color: transparent;
+  padding: 0;
+  color: inherit;
+}
+
+.block-editor-content :deep(.ProseMirror hr) {
+  border: none;
+  border-top: 2px solid #e5e7eb;
+  margin: 2em 0;
+}
+
+.dark :deep(.block-editor-content .ProseMirror hr) {
+  border-top-color: #4b5563;
+}
+
+.block-editor-content :deep(.ProseMirror a) {
+  color: #2563eb;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.block-editor-content :deep(.ProseMirror a:hover) {
+  color: #1e40af;
+}
+
+.dark :deep(.block-editor-content .ProseMirror a) {
+  color: #60a5fa;
+}
+
+.dark :deep(.block-editor-content .ProseMirror a:hover) {
+  color: #93c5fd;
+}
+
+.block-editor-content :deep(.ProseMirror mark) {
+  background-color: #fef3c7;
+  padding: 0.1em 0.2em;
+  border-radius: 0.2em;
+}
+
+.dark :deep(.block-editor-content .ProseMirror mark) {
+  background-color: #fef3c7;
+  color: #78350f;
+}
+
+.block-editor-content :deep(.slash-command-active) {
+  background-color: #f3f4f6;
+  border-radius: 0.25em;
+  padding: 0 0.2em;
+}
+
+.dark :deep(.block-editor-content .slash-command-active) {
+  background-color: #374151;
+}
+
+.block-editor-content-wrapper {
+  position: relative;
+  height: 100%;
+}
+
+.block-handle {
+  position: absolute;
+  width: 32px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  font-size: 14px;
+  color: #9ca3af;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  opacity: 0.8;
+  transition: all 0.2s ease;
+  user-select: none;
+  z-index: 50;
+}
+
+.block-handle:hover {
+  opacity: 1;
+  color: #374151;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dark :deep(.block-handle) {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: #9ca3af;
+}
+
+.dark :deep(.block-handle:hover) {
+  color: #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.block-handle:active {
+  cursor: grabbing;
+}
+
+/* Wiki-link styles */
+.block-editor-content :deep(.wiki-link) {
+  background-color: #eff6ff;
+  color: #2563eb;
+  padding: 0.1em 0.3em;
+  border-radius: 0.25em;
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.block-editor-content :deep(.wiki-link:hover) {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.dark :deep(.block-editor-content .wiki-link) {
+  background-color: #1e3a8a;
+  color: #93c5fd;
+}
+
+.dark :deep(.block-editor-content .wiki-link:hover) {
+  background-color: #1e40af;
+  color: #bfdbfe;
+}
+
+/* Broken wiki-link (ссылка на несуществующую страницу) */
+.block-editor-content :deep(.wiki-link-broken) {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.block-editor-content :deep(.wiki-link-broken:hover) {
+  background-color: #fecaca;
+  color: #b91c1c;
+}
+
+.dark :deep(.block-editor-content .wiki-link-broken) {
+  background-color: #7f1d1d;
+  color: #fca5a5;
+}
+
+.dark :deep(.block-editor-content .wiki-link-broken:hover) {
+  background-color: #991b1b;
+  color: #fecaca;
+}
+
+/* Wiki-link input state (while typing [[...) */
+.block-editor-content :deep(.wiki-link-input-active) {
+  background-color: #fef3c7;
+  padding: 0.1em 0.2em;
+  border-radius: 0.25em;
+}
+
+.dark :deep(.block-editor-content .wiki-link-input-active) {
+  background-color: #fef3c7;
+  color: #78350f;
+}
