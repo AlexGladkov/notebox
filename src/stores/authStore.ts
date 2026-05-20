@@ -1,90 +1,64 @@
-import { reactive, computed } from 'vue';
+import { defineStore } from 'pinia';
 import { authService } from '../services/auth/authService';
 import { userApi, type UpdateUserRequest } from '../api/user';
 import type { User } from '../services/auth/types';
 
-interface AuthState {
-  user: User | null;
-  isLoading: boolean;
-  isInitialized: boolean;
-  sessionExpired: boolean;
-}
+export const useAuthStore = defineStore('auth', {
+  state: () => ({
+    user: null as User | null,
+    isLoading: false,
+    isInitialized: false,
+    sessionExpired: false,
+  }),
 
-const state = reactive<AuthState>({
-  user: null,
-  isLoading: false,
-  isInitialized: false,
-  sessionExpired: false
+  getters: {
+    isAuthenticated: (state) => state.user !== null,
+    isDemoUser: (state) => state.user?.email === 'demo@notebox.app',
+  },
+
+  actions: {
+    async checkAuth() {
+      if (this.isLoading) return;
+
+      this.isLoading = true;
+      try {
+        const user = await authService.getCurrentUser();
+        this.user = user;
+        this.sessionExpired = false;
+      } catch (error) {
+        this.user = null;
+      } finally {
+        this.isLoading = false;
+        this.isInitialized = true;
+      }
+    },
+
+    async logout() {
+      try {
+        await authService.logout();
+      } catch (error) {
+        console.error('Logout failed:', error);
+      } finally {
+        this.user = null;
+        this.sessionExpired = false;
+      }
+    },
+
+    setUser(user: User | null) {
+      this.user = user;
+    },
+
+    setSessionExpired(expired: boolean) {
+      this.sessionExpired = expired;
+      if (expired) {
+        this.user = null;
+      }
+    },
+
+    async updateProfile(request: UpdateUserRequest): Promise<User> {
+      const updatedUser = await userApi.updateProfile(request);
+      this.user = updatedUser;
+      return updatedUser;
+    },
+  },
 });
-
-export const authStore = {
-  state: computed(() => state),
-
-  get user() {
-    return computed(() => state.user);
-  },
-
-  get isAuthenticated() {
-    return computed(() => state.user !== null);
-  },
-
-  get isLoading() {
-    return computed(() => state.isLoading);
-  },
-
-  get isInitialized() {
-    return computed(() => state.isInitialized);
-  },
-
-  get sessionExpired() {
-    return computed(() => state.sessionExpired);
-  },
-
-  get isDemoUser() {
-    return computed(() => state.user?.email === 'demo@notebox.app');
-  },
-
-  async checkAuth() {
-    if (state.isLoading) return;
-
-    state.isLoading = true;
-    try {
-      const user = await authService.getCurrentUser();
-      state.user = user;
-      state.sessionExpired = false;
-    } catch (error) {
-      state.user = null;
-    } finally {
-      state.isLoading = false;
-      state.isInitialized = true;
-    }
-  },
-
-  async logout() {
-    try {
-      await authService.logout();
-    } catch (error) {
-      console.error('Logout failed:', error);
-    } finally {
-      state.user = null;
-      state.sessionExpired = false;
-    }
-  },
-
-  setUser(user: User | null) {
-    state.user = user;
-  },
-
-  setSessionExpired(expired: boolean) {
-    state.sessionExpired = expired;
-    if (expired) {
-      state.user = null;
-    }
-  },
-
-  async updateProfile(request: UpdateUserRequest): Promise<User> {
-    const updatedUser = await userApi.updateProfile(request);
-    state.user = updatedUser;
-    return updatedUser;
-  }
-};

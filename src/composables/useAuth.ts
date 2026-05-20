@@ -1,15 +1,19 @@
-import { authStore } from '../stores/authStore';
+import { storeToRefs } from 'pinia';
+import { useAuthStore } from '../stores/authStore';
 
 export function useAuth() {
+  const store = useAuthStore();
+  const { user, isAuthenticated, isLoading, isInitialized, sessionExpired, isDemoUser } = storeToRefs(store);
+
   return {
-    user: authStore.user,
-    isAuthenticated: authStore.isAuthenticated,
-    isLoading: authStore.isLoading,
-    isInitialized: authStore.isInitialized,
-    sessionExpired: authStore.sessionExpired,
-    isDemoUser: authStore.isDemoUser,
-    checkAuth: () => authStore.checkAuth(),
-    logout: () => authStore.logout(),
-    setSessionExpired: (expired: boolean) => authStore.setSessionExpired(expired)
+    user,
+    isAuthenticated,
+    isLoading,
+    isInitialized,
+    sessionExpired,
+    isDemoUser,
+    checkAuth: store.checkAuth,
+    logout: store.logout,
+    setSessionExpired: store.setSessionExpired,
   };
 }
