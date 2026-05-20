@@ -54,7 +54,7 @@ class UserRepository {
         avatarUrl: String? = null,
         themePreference: String? = null
     ): User? = transaction {
-        val existing = findById(id) ?: return@transaction null
+        findById(id) ?: return@transaction null
         val now = Instant.now()
 
         UsersTable.update({ UsersTable.id eq id }) {

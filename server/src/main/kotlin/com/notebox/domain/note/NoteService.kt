@@ -45,7 +45,7 @@ class NoteService(
         // Валидация глубины вложенности
         if (parentId != null) {
             // Проверка существования родителя
-            val parent = noteRepository.findById(parentId)
+            noteRepository.findById(parentId)
                 ?: throw IllegalArgumentException("Parent note not found")
 
             val parentDepth = noteRepository.getDepth(parentId)

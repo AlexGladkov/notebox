@@ -84,7 +84,7 @@ class AuthController(
 
             val redirectUri = "$serverUrl/api/auth/callback/$provider"
 
-            val (user, session) = oauthService.handleCallback(provider, code, redirectUri)
+            val (_, session) = oauthService.handleCallback(provider, code, redirectUri)
 
             // Set session cookie
             val cookie = Cookie(SESSION_COOKIE_NAME, session.id).apply {
@@ -138,7 +138,7 @@ class AuthController(
 
             val redirectUri = "$serverUrl/api/auth/callback/$provider"
 
-            val (user, session) = if (provider == "apple" && id_token != null) {
+            val (_, session) = if (provider == "apple" && id_token != null) {
                 oauthService.handleAppleCallback(code, id_token, redirectUri)
             } else {
                 oauthService.handleCallback(provider, code, redirectUri)
