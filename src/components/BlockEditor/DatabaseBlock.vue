@@ -96,7 +96,10 @@ interface Props {
       databaseId: string;
     };
   };
-  editor: any;
+  editor: {
+    state: any;
+    view: any;
+  };
   getPos: () => number;
   updateAttributes: (attributes: Record<string, any>) => void;
   deleteNode: () => void;
