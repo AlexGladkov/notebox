@@ -14,7 +14,7 @@
   outline: none;
 }
 
-.dark :deep(.block-editor-content .ProseMirror) {
+:deep(.dark .block-editor-content .ProseMirror) {
   color: #e5e7eb;
 }
 
@@ -26,7 +26,7 @@
   height: 0;
 }
 
-.dark :deep(.block-editor-content .ProseMirror p.is-editor-empty:first-child::before) {
+:deep(.dark .block-editor-content .ProseMirror p.is-editor-empty:first-child::before) {
   color: #6b7280;
 }
 
@@ -93,7 +93,7 @@
   font-style: italic;
 }
 
-.dark :deep(.block-editor-content .ProseMirror blockquote) {
+:deep(.dark .block-editor-content .ProseMirror blockquote) {
   border-left-color: #4b5563;
   color: #9ca3af;
 }
@@ -106,7 +106,7 @@
   font-family: 'Courier New', monospace;
 }
 
-.dark :deep(.block-editor-content .ProseMirror code) {
+:deep(.dark .block-editor-content .ProseMirror code) {
   background-color: #374151;
   color: #e5e7eb;
 }
@@ -132,7 +132,7 @@
   margin: 2em 0;
 }
 
-.dark :deep(.block-editor-content .ProseMirror hr) {
+:deep(.dark .block-editor-content .ProseMirror hr) {
   border-top-color: #4b5563;
 }
 
@@ -146,11 +146,11 @@
   color: #1e40af;
 }
 
-.dark :deep(.block-editor-content .ProseMirror a) {
+:deep(.dark .block-editor-content .ProseMirror a) {
   color: #60a5fa;
 }
 
-.dark :deep(.block-editor-content .ProseMirror a:hover) {
+:deep(.dark .block-editor-content .ProseMirror a:hover) {
   color: #93c5fd;
 }
 
@@ -160,7 +160,7 @@
   border-radius: 0.2em;
 }
 
-.dark :deep(.block-editor-content .ProseMirror mark) {
+:deep(.dark .block-editor-content .ProseMirror mark) {
   background-color: #fef3c7;
   color: #78350f;
 }
@@ -171,7 +171,7 @@
   padding: 0 0.2em;
 }
 
-.dark :deep(.block-editor-content .slash-command-active) {
+:deep(.dark .block-editor-content .slash-command-active) {
   background-color: #374151;
 }
 
@@ -205,13 +205,13 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.dark :deep(.block-handle) {
+:deep(.dark .block-handle) {
   background-color: #374151;
   border-color: #4b5563;
   color: #9ca3af;
 }
 
-.dark :deep(.block-handle:hover) {
+:deep(.dark .block-handle:hover) {
   color: #e5e7eb;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
@@ -237,12 +237,12 @@
   color: #1e40af;
 }
 
-.dark :deep(.block-editor-content .wiki-link) {
+:deep(.dark .block-editor-content .wiki-link) {
   background-color: #1e3a8a;
   color: #93c5fd;
 }
 
-.dark :deep(.block-editor-content .wiki-link:hover) {
+:deep(.dark .block-editor-content .wiki-link:hover) {
   background-color: #1e40af;
   color: #bfdbfe;
 }
@@ -258,12 +258,12 @@
   color: #b91c1c;
 }
 
-.dark :deep(.block-editor-content .wiki-link-broken) {
+:deep(.dark .block-editor-content .wiki-link-broken) {
   background-color: #7f1d1d;
   color: #fca5a5;
 }
 
-.dark :deep(.block-editor-content .wiki-link-broken:hover) {
+:deep(.dark .block-editor-content .wiki-link-broken:hover) {
   background-color: #991b1b;
   color: #fecaca;
 }
@@ -275,7 +275,7 @@
   border-radius: 0.25em;
 }
 
-.dark :deep(.block-editor-content .wiki-link-input-active) {
+:deep(.dark .block-editor-content .wiki-link-input-active) {
   background-color: #fef3c7;
   color: #78350f;
 }
