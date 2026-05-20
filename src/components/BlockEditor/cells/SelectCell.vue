@@ -44,7 +44,7 @@
           <Teleport to="body">
             <div
               v-if="colorPickerVisible === option.id"
-              ref="colorPickerPopupRef"
+              :ref="(el) => setColorPickerRef(el)"
               class="color-picker-popup"
               :style="colorPickerStyle"
               @click.stop
@@ -203,6 +203,10 @@ const setSettingsButtonRef = (optionId: string, el: Element | null) => {
   }
 };
 
+const setColorPickerRef = (el: Element | null) => {
+  colorPickerPopupRef.value = el ? (el as HTMLElement) : null;
+};
+
 const handleEscape = (event: KeyboardEvent) => {
   if (event.key === 'Escape') {
     closeMenu();
@@ -301,6 +305,8 @@ onUnmounted(() => {
   if (clickOutsideTimer) {
     clearTimeout(clickOutsideTimer);
   }
+  settingsButtonRefs.value.clear();
+  colorPickerPopupRef.value = null;
 });
 </script>
 
