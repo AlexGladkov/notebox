@@ -14,14 +14,16 @@ import org.springframework.stereotype.Component
 class DemoDatabaseBuilder(
     private val databaseService: DatabaseService
 ) {
-    fun createDemoDatabase(): CustomDatabase {
+    fun createDemoDatabase(userId: String): CustomDatabase {
         val (database, _) = databaseService.createDatabase(
+            userId = userId,
             name = DemoContentData.DATABASE_NAME,
             folderId = null
         )
 
         val titleColumn = databaseService.addColumn(
             databaseId = database.id,
+            userId = userId,
             name = "Название",
             type = ColumnType.TEXT,
             options = null,
@@ -30,6 +32,7 @@ class DemoDatabaseBuilder(
 
         val statusColumn = databaseService.addColumn(
             databaseId = database.id,
+            userId = userId,
             name = "Статус",
             type = ColumnType.SELECT,
             options = listOf(
@@ -42,6 +45,7 @@ class DemoDatabaseBuilder(
 
         val priorityColumn = databaseService.addColumn(
             databaseId = database.id,
+            userId = userId,
             name = "Приоритет",
             type = ColumnType.SELECT,
             options = listOf(
@@ -52,13 +56,14 @@ class DemoDatabaseBuilder(
             position = 2
         )
 
-        createDemoRecords(database.id, titleColumn.id, statusColumn.id, priorityColumn.id)
+        createDemoRecords(database.id, userId, titleColumn.id, statusColumn.id, priorityColumn.id)
 
         return database
     }
 
     private fun createDemoRecords(
         databaseId: String,
+        userId: String,
         titleColumnId: String,
         statusColumnId: String,
         priorityColumnId: String
@@ -73,6 +78,7 @@ class DemoDatabaseBuilder(
         records.forEach { (title, status, priority) ->
             databaseService.createRecord(
                 databaseId = databaseId,
+                userId = userId,
                 data = mapOf(
                     titleColumnId to title,
                     statusColumnId to status,

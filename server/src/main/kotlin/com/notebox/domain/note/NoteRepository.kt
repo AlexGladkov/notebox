@@ -148,12 +148,10 @@ class NoteRepository {
 
         val result = mutableListOf<Note>()
         val connection = TransactionManager.current().connection
-        connection.prepareStatement(sql, false).use { statement ->
-            statement.executeQuery().use { rs ->
-                while (rs.next()) {
-                    result.add(toNoteFromResultSet(rs))
-                }
-            }
+        val statement = connection.prepareStatement(sql, false)
+        val rs = statement.executeQuery()
+        while (rs.next()) {
+            result.add(toNoteFromResultSet(rs))
         }
         result
     }
@@ -181,12 +179,10 @@ class NoteRepository {
 
         var result = 0
         val connection = TransactionManager.current().connection
-        connection.prepareStatement(sql, false).use { statement ->
-            statement.executeQuery().use { rs ->
-                if (rs.next()) {
-                    result = rs.getInt("max_depth")
-                }
-            }
+        val statement = connection.prepareStatement(sql, false)
+        val rs = statement.executeQuery()
+        if (rs.next()) {
+            result = rs.getInt("max_depth")
         }
         result
     }
@@ -219,12 +215,10 @@ class NoteRepository {
 
         val result = mutableListOf<Note>()
         val connection = TransactionManager.current().connection
-        connection.prepareStatement(sql, false).use { statement ->
-            statement.executeQuery().use { rs ->
-                while (rs.next()) {
-                    result.add(toNoteFromResultSet(rs))
-                }
-            }
+        val statement = connection.prepareStatement(sql, false)
+        val rs = statement.executeQuery()
+        while (rs.next()) {
+            result.add(toNoteFromResultSet(rs))
         }
         result
     }

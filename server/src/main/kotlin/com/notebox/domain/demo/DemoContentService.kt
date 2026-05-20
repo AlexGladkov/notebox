@@ -24,17 +24,17 @@ class DemoContentService(
         }
     }
 
-    fun createDemoContent() {
-        logger.info("Creating demo content...")
+    fun createDemoContent(userId: String) {
+        logger.info("Creating demo content for user: $userId")
         try {
             // Phase 1: Создаём заметки
-            val notes = demoNoteBuilder.createDemoNotes()
+            val notes = demoNoteBuilder.createDemoNotes(userId)
 
             // Phase 2: Создаём базу данных
-            val database = demoDatabaseBuilder.createDemoDatabase()
+            val database = demoDatabaseBuilder.createDemoDatabase(userId)
 
             // Phase 3: Обновляем заметки с правильными ссылками
-            demoNoteBuilder.updateNotesWithLinks(notes, database.id)
+            demoNoteBuilder.updateNotesWithLinks(notes, database.id, userId)
 
             logger.info("Demo content created successfully: 5 notes, 1 database with 4 records")
         } catch (e: Exception) {

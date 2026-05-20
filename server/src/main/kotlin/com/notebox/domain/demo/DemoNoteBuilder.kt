@@ -20,32 +20,37 @@ class DemoNoteBuilder(
         val contacts: Note
     )
 
-    fun createDemoNotes(): DemoNotes {
+    fun createDemoNotes(userId: String): DemoNotes {
         val dashboardNote = noteService.createNote(
+            userId = userId,
             title = DemoContentData.DASHBOARD_TITLE,
             content = "{\"type\":\"doc\",\"content\":[]}",
             icon = "🏠"
         )
 
         val goalsNote = noteService.createNote(
+            userId = userId,
             title = DemoContentData.GOALS_TITLE,
             content = DemoContentData.getGoalsContent(),
             icon = "🎯"
         )
 
         val ideasNote = noteService.createNote(
+            userId = userId,
             title = DemoContentData.IDEAS_TITLE,
             content = DemoContentData.getIdeasContent(),
             icon = "💡"
         )
 
         val workNotesNote = noteService.createNote(
+            userId = userId,
             title = DemoContentData.NOTES_TITLE,
             content = "{\"type\":\"doc\",\"content\":[]}",
             icon = "📝"
         )
 
         val contactsNote = noteService.createNote(
+            userId = userId,
             title = DemoContentData.CONTACTS_TITLE,
             content = DemoContentData.getContactsContent(),
             parentId = workNotesNote.id,
@@ -55,7 +60,7 @@ class DemoNoteBuilder(
         return DemoNotes(dashboardNote, goalsNote, ideasNote, workNotesNote, contactsNote)
     }
 
-    fun updateNotesWithLinks(notes: DemoNotes, databaseId: String) {
+    fun updateNotesWithLinks(notes: DemoNotes, databaseId: String, userId: String) {
         val dashboardContent = DemoContentData.getDashboardContent()
             .replace("{{GOALS_ID}}", notes.goals.id)
             .replace("{{IDEAS_ID}}", notes.ideas.id)
@@ -64,6 +69,7 @@ class DemoNoteBuilder(
 
         noteService.updateNote(
             id = notes.dashboard.id,
+            userId = userId,
             title = notes.dashboard.title,
             content = dashboardContent,
             icon = notes.dashboard.icon
@@ -74,6 +80,7 @@ class DemoNoteBuilder(
 
         noteService.updateNote(
             id = notes.workNotes.id,
+            userId = userId,
             title = notes.workNotes.title,
             content = workNotesContent,
             icon = notes.workNotes.icon

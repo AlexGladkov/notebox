@@ -34,7 +34,7 @@ class DemoAuthProvider(
         demoContentService.clearDemoData()
 
         // Создать свежий демо-контент
-        demoContentService.createDemoContent()
+        demoContentService.createDemoContent(demoUser.id)
 
         // Create session for demo user
         val session = sessionService.createSession(demoUser.id)

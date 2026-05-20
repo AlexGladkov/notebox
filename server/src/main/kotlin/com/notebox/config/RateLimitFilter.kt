@@ -56,7 +56,7 @@ class RateLimitFilter : OncePerRequestFilter() {
         if (entry.bucket.tryConsume(1)) {
             filterChain.doFilter(request, response)
         } else {
-            response.status = HttpServletResponse.SC_TOO_MANY_REQUESTS
+            response.status = 429 // HTTP 429 Too Many Requests
             response.contentType = "application/json"
             response.writer.write("""{"error":{"code":"RATE_LIMIT_EXCEEDED","message":"Too many requests"}}""")
         }

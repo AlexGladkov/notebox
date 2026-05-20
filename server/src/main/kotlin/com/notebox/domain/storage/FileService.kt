@@ -30,7 +30,7 @@ class FileService(
     fun uploadFile(file: MultipartFile, userId: String): UploadResult {
         val validationResult = fileValidationService.validateFile(file)
         if (!validationResult.isValid) {
-            throw ValidationException(validationResult.errorMessage)
+            throw ValidationException(validationResult.errorMessage ?: "File validation failed")
         }
 
         val originalFilename = file.originalFilename ?: "unknown"
