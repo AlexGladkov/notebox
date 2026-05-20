@@ -64,7 +64,7 @@ class UserService(
                 accessToken,
                 refreshToken,
                 expiresAt
-            ) ?: throw RuntimeException("Failed to update OAuth account")
+            ) ?: throw IllegalStateException("Failed to update OAuth account: record disappeared")
         }
 
         // Create new OAuth account link

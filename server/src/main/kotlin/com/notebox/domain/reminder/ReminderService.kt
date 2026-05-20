@@ -1,6 +1,7 @@
 package com.notebox.domain.reminder
 
 import com.notebox.domain.note.NoteRepository
+import com.notebox.exception.NotFoundException
 import org.springframework.stereotype.Service
 import java.time.Instant
 
@@ -36,7 +37,7 @@ class ReminderService(
         syncToGoogleCalendar: Boolean = false
     ): Reminder {
         val note = noteRepository.findById(noteId)
-            ?: throw IllegalArgumentException("Note not found")
+            ?: throw NotFoundException("Note with id '$noteId' not found")
 
         val reminderTitle = title ?: note.title
 

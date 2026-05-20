@@ -1,5 +1,6 @@
 package com.notebox.domain.auth
 
+import com.notebox.exception.ValidationException
 import kotlinx.coroutines.runBlocking
 import org.springframework.stereotype.Service
 import java.time.Instant
@@ -16,7 +17,7 @@ class OAuthService(
         return when (providerName.lowercase()) {
             "google" -> googleProvider
             "apple" -> appleProvider
-            else -> throw IllegalArgumentException("Unknown OAuth provider: $providerName")
+            else -> throw ValidationException("Unknown OAuth provider: $providerName")
         }
     }
 

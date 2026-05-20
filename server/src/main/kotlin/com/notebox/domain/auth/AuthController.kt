@@ -2,6 +2,7 @@ package com.notebox.domain.auth
 
 import com.notebox.dto.ApiResponse
 import com.notebox.dto.UpdateUserDto
+import com.notebox.exception.ValidationException
 import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -98,7 +99,7 @@ class AuthController(
             // Redirect to frontend
             response.sendRedirect(frontendUrl)
             return ResponseEntity.status(HttpStatus.FOUND).build()
-        } catch (e: IllegalArgumentException) {
+        } catch (e: ValidationException) {
             logger.error("Invalid OAuth provider: $provider", e)
             response.sendRedirect("$frontendUrl/login?error=invalid_provider")
             return ResponseEntity.status(HttpStatus.FOUND).build()
@@ -156,7 +157,7 @@ class AuthController(
             // Redirect to frontend
             response.sendRedirect(frontendUrl)
             return ResponseEntity.status(HttpStatus.FOUND).build()
-        } catch (e: IllegalArgumentException) {
+        } catch (e: ValidationException) {
             logger.error("Invalid OAuth provider: $provider", e)
             response.sendRedirect("$frontendUrl/login?error=invalid_provider")
             return ResponseEntity.status(HttpStatus.FOUND).build()

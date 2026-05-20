@@ -1,6 +1,7 @@
 package com.notebox.domain.auth
 
 import com.notebox.domain.demo.DemoContentService
+import com.notebox.exception.ValidationException
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
@@ -22,7 +23,7 @@ class DemoAuthProvider(
 
     fun createDemoSession(): Pair<User, Session> {
         if (!demoModeEnabled) {
-            throw IllegalStateException("Demo mode is not enabled")
+            throw ValidationException("Demo mode is not enabled")
         }
 
         // Get or create demo user
