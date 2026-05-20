@@ -1,3 +1,4 @@
+import { computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useRemindersStore } from '../stores/remindersStore';
 
@@ -10,10 +11,10 @@ export function useReminders() {
     loading,
     error,
     fetchReminders: store.fetchReminders,
-    fetchRemindersByNoteId: (noteId: string) => store.getRemindersByNoteId(noteId),
+    fetchRemindersByNoteId: (noteId: string) => computed(() => store.getRemindersByNoteId(noteId)),
     createReminder: store.createReminder,
     updateReminder: store.updateReminder,
     deleteReminder: store.deleteReminder,
-    getUpcomingReminders: () => store.upcomingReminders,
+    getUpcomingReminders: computed(() => store.upcomingReminders),
   };
 }

@@ -34,14 +34,10 @@ export function useDatabases() {
 
     // Batch operations
     batchCreateRecords: async (dbId: string, recordsData: any[]) => {
-      for (const data of recordsData) {
-        await store.createRecord(dbId, data);
-      }
+      await Promise.all(recordsData.map(data => store.createRecord(dbId, data)));
     },
     batchDeleteRecords: async (dbId: string, recordIds: string[]) => {
-      for (const id of recordIds) {
-        await store.deleteRecord(dbId, id);
-      }
+      await Promise.all(recordIds.map(id => store.deleteRecord(dbId, id)));
     },
 
     // View operations
