@@ -115,8 +115,9 @@ class NoteRepository {
     }
 
     fun findAllDescendants(noteId: String): List<Note> = transaction {
-        // Используем прямую подстановку параметра, так как noteId - это UUID строка
-        // и CTE не поддерживается в Exposed DSL
+        // Валидация UUID для предотвращения SQL injection
+        UUID.fromString(noteId) // Throws IllegalArgumentException if invalid
+
         val sql = """
             WITH RECURSIVE descendants AS (
                 SELECT id, title, content, parent_id, icon, backdrop_type, backdrop_value,
@@ -144,6 +145,9 @@ class NoteRepository {
     }
 
     fun getDepth(noteId: String): Int = transaction {
+        // Валидация UUID для предотвращения SQL injection
+        UUID.fromString(noteId) // Throws IllegalArgumentException if invalid
+
         val sql = """
             WITH RECURSIVE ancestors AS (
                 SELECT id, parent_id, 0 as depth
@@ -169,6 +173,9 @@ class NoteRepository {
     }
 
     fun getAncestorPath(noteId: String): List<Note> = transaction {
+        // Валидация UUID для предотвращения SQL injection
+        UUID.fromString(noteId) // Throws IllegalArgumentException if invalid
+
         val sql = """
             WITH RECURSIVE ancestors AS (
                 SELECT id, title, content, parent_id, icon, backdrop_type, backdrop_value,
@@ -264,13 +271,13 @@ class NoteRepository {
         id = rs.getString("id"),
         title = rs.getString("title"),
         content = rs.getString("content"),
-        parentId = rs.getString("parent_id"),
+        parentId = rs.getString("parent_id"),  // getString возвращает null для SQL NULL
         icon = rs.getString("icon"),
         backdropType = rs.getString("backdrop_type"),
         backdropValue = rs.getString("backdrop_value"),
         backdropPositionY = rs.getObject("backdrop_position_y") as? Int,
         color = rs.getString("color"),
-        createdAt = rs.getTimestamp("created_at").toInstant(),
-        updatedAt = rs.getTimestamp("updated_at").toInstant()
+        createdAt = rs.getTimestamp("created_at")?.toInstant() ?: Instant.now(),
+        updatedAt = rs.getTimestamp("updated_at")?.toInstant() ?: Instant.now()
     )
 }
