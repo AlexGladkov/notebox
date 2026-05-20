@@ -59,7 +59,7 @@
           <Teleport to="body">
             <div
               v-if="colorPickerVisible === option.id"
-              ref="colorPickerPopupRef"
+              :ref="(el) => setColorPickerRef(option.id, el)"
               class="color-picker-popup"
               :style="colorPickerStyle"
               @click.stop
@@ -164,7 +164,7 @@ const exactMatchExists = computed(() => {
   return options.value.some(opt => opt.label.toLowerCase() === searchQuery.value.toLowerCase());
 });
 
-const colorPickerPopupRef = ref<HTMLElement | null>(null);
+const colorPickerPopupRefs = ref<Map<string, HTMLElement>>(new Map());
 
 const colorPickerStyle = computed(() => {
   if (!colorPickerVisible.value) return {};
@@ -219,6 +219,14 @@ const setSettingsButtonRef = (optionId: string, el: Element | null) => {
   }
 };
 
+const setColorPickerRef = (optionId: string, el: Element | null) => {
+  if (el) {
+    colorPickerPopupRefs.value.set(optionId, el as HTMLElement);
+  } else {
+    colorPickerPopupRefs.value.delete(optionId);
+  }
+};
+
 const isSelected = (optionId: string) => {
   return selectedValues.value.includes(optionId);
 };
@@ -241,7 +249,9 @@ const handleClickOutside = (event: MouseEvent) => {
 
   // Проверяем, что клик не внутри меню и не внутри ColorPicker
   const isInsideMenu = menuElement.value && menuElement.value.contains(target);
-  const isInsideColorPicker = colorPickerPopupRef.value && colorPickerPopupRef.value.contains(target);
+  const isInsideColorPicker = Array.from(colorPickerPopupRefs.value.values()).some(
+    (el) => el && el.contains(target)
+  );
 
   if (!isInsideMenu && !isInsideColorPicker) {
     closeMenu();
