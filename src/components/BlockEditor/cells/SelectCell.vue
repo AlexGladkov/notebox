@@ -44,6 +44,7 @@
           <Teleport to="body">
             <div
               v-if="colorPickerVisible === option.id"
+              ref="colorPickerPopupRef"
               class="color-picker-popup"
               :style="colorPickerStyle"
               @click.stop
@@ -147,6 +148,8 @@ const exactMatchExists = computed(() => {
   return options.value.some(opt => opt.label.toLowerCase() === searchQuery.value.toLowerCase());
 });
 
+const colorPickerPopupRef = ref<HTMLElement | null>(null);
+
 const colorPickerStyle = computed(() => {
   if (!colorPickerVisible.value) return {};
 
@@ -154,15 +157,25 @@ const colorPickerStyle = computed(() => {
   if (!button) return {};
 
   const rect = button.getBoundingClientRect();
+  const viewportWidth = window.innerWidth;
+  const pickerWidth = 180; // Примерная ширина ColorPicker
+
+  // Проверяем, хватает ли места справа
+  let left = rect.right + 8;
+  if (left + pickerWidth > viewportWidth) {
+    // Если не хватает, показываем слева от кнопки
+    left = rect.left - pickerWidth - 8;
+  }
+
   return {
     position: 'fixed',
     top: `${rect.top}px`,
-    left: `${rect.right + 8}px`,
+    left: `${left}px`,
     zIndex: 10000
   };
 });
 
-const setSettingsButtonRef = (optionId: string, el: any) => {
+const setSettingsButtonRef = (optionId: string, el: Element | null) => {
   if (el) {
     settingsButtonRefs.value.set(optionId, el as HTMLElement);
   } else {
@@ -176,9 +189,21 @@ const handleEscape = (event: KeyboardEvent) => {
   }
 };
 
+const handleScroll = () => {
+  // Закрываем ColorPicker при скролле, чтобы избежать рассинхронизации позиции
+  if (colorPickerVisible.value !== null) {
+    colorPickerVisible.value = null;
+  }
+};
+
 const handleClickOutside = (event: MouseEvent) => {
   const target = event.target as Node;
-  if (menuElement.value && !menuElement.value.contains(target)) {
+
+  // Проверяем, что клик не внутри меню и не внутри ColorPicker
+  const isInsideMenu = menuElement.value && menuElement.value.contains(target);
+  const isInsideColorPicker = colorPickerPopupRef.value && colorPickerPopupRef.value.contains(target);
+
+  if (!isInsideMenu && !isInsideColorPicker) {
     closeMenu();
   }
 };
@@ -190,6 +215,7 @@ const toggleMenu = async () => {
     await nextTick();
     searchInput.value?.focus();
     document.addEventListener('keydown', handleEscape);
+    document.addEventListener('scroll', handleScroll, true); // capture phase для всех скроллов
     clickOutsideTimer = setTimeout(() => {
       document.addEventListener('click', handleClickOutside);
     }, 0);
@@ -204,6 +230,7 @@ const closeMenu = () => {
   colorPickerVisible.value = null;
   document.removeEventListener('keydown', handleEscape);
   document.removeEventListener('click', handleClickOutside);
+  document.removeEventListener('scroll', handleScroll, true);
   if (clickOutsideTimer) {
     clearTimeout(clickOutsideTimer);
     clickOutsideTimer = null;
@@ -250,6 +277,7 @@ const updateOptionColor = (optionId: string, color: string) => {
 onUnmounted(() => {
   document.removeEventListener('keydown', handleEscape);
   document.removeEventListener('click', handleClickOutside);
+  document.removeEventListener('scroll', handleScroll, true);
   if (clickOutsideTimer) {
     clearTimeout(clickOutsideTimer);
   }
