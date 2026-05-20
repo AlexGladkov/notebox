@@ -1,6 +1,7 @@
 package com.notebox.dto
 
 import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
 
 data class ReminderDto(
@@ -25,6 +26,7 @@ data class CreateReminderRequest(
 
     val remindAt: Long,
 
+    @field:Pattern(regexp = "^(NONE|DAILY|WEEKLY|MONTHLY|YEARLY)$", message = "Invalid repeat type")
     val repeatType: String? = "NONE",
 
     val repeatEndAt: Long? = null,
@@ -38,6 +40,7 @@ data class UpdateReminderRequest(
 
     val remindAt: Long?,
 
+    @field:Pattern(regexp = "^(NONE|DAILY|WEEKLY|MONTHLY|YEARLY)$", message = "Invalid repeat type")
     val repeatType: String?,
 
     val repeatEndAt: Long?

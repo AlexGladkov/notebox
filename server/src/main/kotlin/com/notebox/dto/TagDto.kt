@@ -1,6 +1,7 @@
 package com.notebox.dto
 
 import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Size
 
 data class TagDto(
@@ -27,5 +28,6 @@ data class UpdateTagRequest(
 )
 
 data class SetNoteTagsRequest(
+    @field:NotNull(message = "Tag IDs list cannot be null")
     val tagIds: List<String>
 )

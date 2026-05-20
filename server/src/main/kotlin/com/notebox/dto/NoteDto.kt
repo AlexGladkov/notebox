@@ -1,5 +1,6 @@
 package com.notebox.dto
 
+import com.notebox.validation.ValidUuid
 import jakarta.validation.constraints.Max
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotBlank
@@ -75,5 +76,6 @@ data class UpdateNoteRequest(
 )
 
 data class MoveNoteRequest(
+    @field:ValidUuid(fieldName = "parentId")
     val parentId: String? = null
 )
