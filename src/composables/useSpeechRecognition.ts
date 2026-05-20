@@ -46,12 +46,12 @@ export function useSpeechRecognition() {
 
   let recognition: SpeechRecognition | null = null;
 
-  const checkSupport = () => {
+  const checkSupport = (): boolean => {
     isSupported.value = 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
     return isSupported.value;
   };
 
-  const initialize = () => {
+  const initialize = (): boolean => {
     if (!checkSupport()) {
       error.value = 'Web Speech API не поддерживается в этом браузере';
       return false;
@@ -126,7 +126,7 @@ export function useSpeechRecognition() {
     }
   };
 
-  const start = () => {
+  const start = (): boolean => {
     if (!recognition) {
       if (!initialize()) {
         return false;
@@ -150,7 +150,7 @@ export function useSpeechRecognition() {
     }
   };
 
-  const stop = () => {
+  const stop = (): void => {
     if (recognition && isListening.value) {
       try {
         recognition.stop();
@@ -160,7 +160,7 @@ export function useSpeechRecognition() {
     }
   };
 
-  const reset = () => {
+  const reset = (): void => {
     transcript.value = '';
     interimTranscript.value = '';
     error.value = null;
