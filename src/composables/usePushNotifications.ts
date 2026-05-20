@@ -1,5 +1,6 @@
 import { ref, onMounted } from 'vue';
 import { notificationsApi } from '../api/notifications';
+import { getErrorMessage } from '../types/composables';
 
 export function usePushNotifications() {
   const isSupported = ref(false);
@@ -8,29 +9,29 @@ export function usePushNotifications() {
   const vapidPublicKey = ref<string>('');
   const error = ref<string | null>(null);
 
-  const checkSupport = () => {
+  const checkSupport = (): void => {
     isSupported.value = 'serviceWorker' in navigator && 'PushManager' in window;
   };
 
-  const checkPermission = () => {
+  const checkPermission = (): void => {
     if (!isSupported.value) return;
     isGranted.value = Notification.permission === 'granted';
   };
 
-  const loadVapidKey = async () => {
+  const loadVapidKey = async (): Promise<void> => {
     try {
       const response = await notificationsApi.getVapidPublicKey();
       isConfigured.value = response.configured;
       if (response.publicKey) {
         vapidPublicKey.value = response.publicKey;
       }
-    } catch (e: any) {
-      console.error('Failed to load VAPID key:', e);
-      error.value = e.message;
+    } catch (err: unknown) {
+      console.error('Failed to load VAPID key:', err);
+      error.value = getErrorMessage(err);
     }
   };
 
-  const requestPermission = async () => {
+  const requestPermission = async (): Promise<boolean> => {
     if (!isSupported.value) {
       error.value = 'Push-уведомления не поддерживаются в этом браузере';
       return false;
@@ -40,14 +41,14 @@ export function usePushNotifications() {
       const permission = await Notification.requestPermission();
       isGranted.value = permission === 'granted';
       return isGranted.value;
-    } catch (e: any) {
-      error.value = e.message;
-      console.error('Failed to request notification permission:', e);
+    } catch (err: unknown) {
+      error.value = getErrorMessage(err);
+      console.error('Failed to request notification permission:', err);
       return false;
     }
   };
 
-  const urlBase64ToUint8Array = (base64String: string) => {
+  const urlBase64ToUint8Array = (base64String: string): Uint8Array => {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
     const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
     const rawData = window.atob(base64);
@@ -58,7 +59,7 @@ export function usePushNotifications() {
     return outputArray;
   };
 
-  const subscribe = async () => {
+  const subscribe = async (): Promise<PushSubscription | null> => {
     if (!isSupported.value || !isGranted.value || !isConfigured.value) {
       return null;
     }
@@ -87,14 +88,14 @@ export function usePushNotifications() {
       });
 
       return subscription;
-    } catch (e: any) {
-      error.value = e.message;
-      console.error('Failed to subscribe to push notifications:', e);
+    } catch (err: unknown) {
+      error.value = getErrorMessage(err);
+      console.error('Failed to subscribe to push notifications:', err);
       return null;
     }
   };
 
-  const unsubscribe = async () => {
+  const unsubscribe = async (): Promise<void> => {
     if (!isSupported.value) return;
 
     try {
@@ -107,9 +108,9 @@ export function usePushNotifications() {
         });
         await subscription.unsubscribe();
       }
-    } catch (e: any) {
-      error.value = e.message;
-      console.error('Failed to unsubscribe from push notifications:', e);
+    } catch (err: unknown) {
+      error.value = getErrorMessage(err);
+      console.error('Failed to unsubscribe from push notifications:', err);
     }
   };
 
