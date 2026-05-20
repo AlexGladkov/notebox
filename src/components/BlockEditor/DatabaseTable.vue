@@ -150,7 +150,7 @@ const handleCreateOption = (column: Column, newOption: SelectOption) => {
   emit('updateColumn', column.id, column.name, column.type, updatedOptions);
 };
 
-const handleUpdateOptionColor = (column: Column, { 0: optionId, 1: color }: [string, string]) => {
+const handleUpdateOptionColor = (column: Column, [optionId, color]: [string, string]) => {
   // Update the color of the option in the column's options array
   const updatedOptions = (column.options || []).map(opt =>
     opt.id === optionId ? { ...opt, color } : opt

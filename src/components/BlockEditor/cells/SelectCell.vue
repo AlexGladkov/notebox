@@ -103,14 +103,18 @@ const getColorNameFromHex = (hex: string): string => {
   return color ? color.name : 'gray';
 };
 
-const getOptionStyle = (colorNameOrHex: string) => {
+const getOptionStyle = (colorNameOrHex: string | undefined) => {
+  if (!colorNameOrHex) {
+    colorNameOrHex = 'gray';
+  }
+
   let colorName = colorNameOrHex;
 
   if (colorNameOrHex.startsWith('#')) {
     colorName = getColorNameFromHex(colorNameOrHex);
   }
 
-  const palette = TAG_COLOR_PALETTE.find(c => c.name === colorName) || TAG_COLOR_PALETTE[0];
+  const palette = TAG_COLOR_PALETTE.find(c => c.name === colorName) || TAG_COLOR_PALETTE.find(c => c.name === 'gray')!;
   const isDark = effectiveTheme.value === 'dark';
 
   return {
@@ -169,6 +173,7 @@ const toggleMenu = async () => {
 const closeMenu = () => {
   menuVisible.value = false;
   searchQuery.value = '';
+  colorPickerVisible.value = null;
   document.removeEventListener('keydown', handleEscape);
   document.removeEventListener('click', handleClickOutside);
   if (clickOutsideTimer) {

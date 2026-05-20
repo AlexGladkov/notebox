@@ -60,6 +60,7 @@
         <!-- Custom dropdown для SELECT с цветами -->
         <div
           v-if="selectedColumnType === 'SELECT'"
+          ref="customSelectElement"
           class="custom-select"
           @click="toggleValueDropdown"
         >
@@ -143,7 +144,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onUnmounted } from 'vue';
 import type { Column, ColumnType } from '../../types';
 import type { DatabaseFilter } from '../../types/database';
 import { TAG_COLOR_PALETTE } from '../../types/database';
@@ -160,6 +161,7 @@ const emit = defineEmits<{
 
 const menuVisible = ref(false);
 const valueDropdownVisible = ref(false);
+const customSelectElement = ref<HTMLElement | null>(null);
 const selectedColumnId = ref<string | null>(props.modelValue?.columnId || null);
 const selectedOperator = ref<DatabaseFilter['operator']>(props.modelValue?.operator || 'equals');
 const selectedValue = ref<any>(props.modelValue?.value || '');
@@ -186,10 +188,14 @@ const getColorNameFromHex = (hex: string): string => {
   return color ? color.name : 'gray';
 };
 
-const getOptionStyle = (colorNameOrHex: string) => {
+const getOptionStyle = (colorNameOrHex: string | undefined) => {
+  if (!colorNameOrHex) {
+    colorNameOrHex = 'gray';
+  }
+
   let colorName = colorNameOrHex;
 
-  if (colorNameOrHex?.startsWith('#')) {
+  if (colorNameOrHex.startsWith('#')) {
     colorName = getColorNameFromHex(colorNameOrHex);
   }
 
@@ -267,15 +273,34 @@ const toggleMenu = () => {
 const closeMenu = () => {
   menuVisible.value = false;
   valueDropdownVisible.value = false;
+  document.removeEventListener('click', handleClickOutsideValueDropdown);
+};
+
+const handleClickOutsideValueDropdown = (event: MouseEvent) => {
+  const target = event.target as Node;
+  if (customSelectElement.value && !customSelectElement.value.contains(target)) {
+    valueDropdownVisible.value = false;
+    document.removeEventListener('click', handleClickOutsideValueDropdown);
+  }
 };
 
 const toggleValueDropdown = () => {
-  valueDropdownVisible.value = !valueDropdownVisible.value;
+  if (!valueDropdownVisible.value) {
+    valueDropdownVisible.value = true;
+    // Add click outside listener after a brief delay to avoid immediate close
+    setTimeout(() => {
+      document.addEventListener('click', handleClickOutsideValueDropdown);
+    }, 0);
+  } else {
+    valueDropdownVisible.value = false;
+    document.removeEventListener('click', handleClickOutsideValueDropdown);
+  }
 };
 
 const selectValue = (value: string) => {
   selectedValue.value = value;
   valueDropdownVisible.value = false;
+  document.removeEventListener('click', handleClickOutsideValueDropdown);
 };
 
 const handleApply = () => {
@@ -301,6 +326,10 @@ const handleClear = () => {
   emit('update:modelValue', null);
   closeMenu();
 };
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutsideValueDropdown);
+});
 </script>
 
 <style scoped>

@@ -101,10 +101,14 @@ const getColorNameFromHex = (hex: string): string => {
   return color ? color.name : 'gray';
 };
 
-const getOptionStyle = (colorNameOrHex: string) => {
+const getOptionStyle = (colorNameOrHex: string | undefined) => {
+  if (!colorNameOrHex) {
+    colorNameOrHex = 'gray';
+  }
+
   let colorName = colorNameOrHex;
 
-  if (colorNameOrHex?.startsWith('#')) {
+  if (colorNameOrHex.startsWith('#')) {
     colorName = getColorNameFromHex(colorNameOrHex);
   }
 
