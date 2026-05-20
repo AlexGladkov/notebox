@@ -105,23 +105,29 @@ class SessionAuthenticationFilter(
 
         val sessionId = getSessionIdFromCookies(request)
 
-        if (sessionId != null) {
-            val session = sessionService.getSession(sessionId)
-            if (session == null || !sessionService.validateSession(sessionId)) {
-                response.status = HttpServletResponse.SC_UNAUTHORIZED
-                response.contentType = "application/json"
-                response.writer.write("""{"error":{"code":"SESSION_EXPIRED","message":"Session expired"}}""")
-                return
-            }
-
-            // Устанавливаем authentication в SecurityContext для авторизации запроса
-            val authentication = UsernamePasswordAuthenticationToken(
-                session.userId,  // principal
-                null,            // credentials
-                emptyList()      // authorities
-            )
-            SecurityContextHolder.getContext().authentication = authentication
+        if (sessionId == null) {
+            // Нет сессии - запрещаем доступ к защищенному эндпоинту
+            response.status = HttpServletResponse.SC_UNAUTHORIZED
+            response.contentType = "application/json"
+            response.writer.write("""{"error":{"code":"UNAUTHORIZED","message":"Authentication required"}}""")
+            return
         }
+
+        val session = sessionService.getSession(sessionId)
+        if (session == null || !sessionService.validateSession(sessionId)) {
+            response.status = HttpServletResponse.SC_UNAUTHORIZED
+            response.contentType = "application/json"
+            response.writer.write("""{"error":{"code":"SESSION_EXPIRED","message":"Session expired"}}""")
+            return
+        }
+
+        // Устанавливаем authentication в SecurityContext для авторизации запроса
+        val authentication = UsernamePasswordAuthenticationToken(
+            session.userId,  // principal
+            null,            // credentials
+            emptyList()      // authorities
+        )
+        SecurityContextHolder.getContext().authentication = authentication
 
         filterChain.doFilter(request, response)
     }
