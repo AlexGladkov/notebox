@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue';
+import { ref, computed, type Ref } from 'vue';
 import type { Note } from '../types';
 
 export interface Tab {
@@ -9,17 +9,36 @@ export interface Tab {
 
 const MAX_TABS = 50;
 
-// Глобальное состояние вкладок
-const tabs = ref<Tab[]>([]);
-const activeTabId = ref<string | null>(null);
-let tabCounter = 0;
+type TabsStoreInstance = {
+  tabs: Ref<Tab[]>;
+  activeTabId: Ref<string | null>;
+  tabCounter: { value: number };
+};
+
+let _instance: TabsStoreInstance | null = null;
+
+function createTabsStore(): TabsStoreInstance {
+  const tabs = ref<Tab[]>([]);
+  const activeTabId = ref<string | null>(null);
+  const tabCounter = { value: 0 };
+
+  return { tabs, activeTabId, tabCounter };
+}
+
+function getInstance(): TabsStoreInstance {
+  if (!_instance) {
+    _instance = createTabsStore();
+  }
+  return _instance;
+}
 
 export function useTabs(getNoteById: (id: string) => Note | undefined) {
+  const { tabs, activeTabId, tabCounter } = getInstance();
   /**
    * Генерирует уникальный ID для вкладки
    */
   const generateTabId = (): string => {
-    return `tab-${Date.now()}-${tabCounter++}`;
+    return `tab-${Date.now()}-${tabCounter.value++}`;
   };
 
   /**
@@ -204,8 +223,8 @@ export function useTabs(getNoteById: (id: string) => Note | undefined) {
   };
 
   return {
-    tabs: computed(() => tabs.value),
-    activeTabId: computed(() => activeTabId.value),
+    tabs: computed(() => tabs.value) as ReturnType<typeof computed<Tab[]>>,
+    activeTabId: computed(() => activeTabId.value) as ReturnType<typeof computed<string | null>>,
     openTab,
     closeTab,
     closeOtherTabs,

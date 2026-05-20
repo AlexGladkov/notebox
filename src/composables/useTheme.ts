@@ -1,14 +1,34 @@
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, type Ref } from 'vue';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 
 const STORAGE_KEY = 'notebox-theme';
 
-const themeMode = ref<ThemeMode>('system');
-const systemPrefersDark = ref(false);
-let isInitialized = false;
+type ThemeStoreInstance = {
+  themeMode: Ref<ThemeMode>;
+  systemPrefersDark: Ref<boolean>;
+  isInitialized: { value: boolean };
+};
+
+let _instance: ThemeStoreInstance | null = null;
+
+function createThemeStore(): ThemeStoreInstance {
+  const themeMode = ref<ThemeMode>('system');
+  const systemPrefersDark = ref(false);
+  const isInitialized = { value: false };
+
+  return { themeMode, systemPrefersDark, isInitialized };
+}
+
+function getInstance(): ThemeStoreInstance {
+  if (!_instance) {
+    _instance = createThemeStore();
+  }
+  return _instance;
+}
 
 export function useTheme() {
+  const { themeMode, systemPrefersDark, isInitialized } = getInstance();
   const effectiveTheme = computed<'light' | 'dark'>(() => {
     if (themeMode.value === 'system') {
       return systemPrefersDark.value ? 'dark' : 'light';
@@ -88,7 +108,7 @@ export function useTheme() {
   };
 
   const initialize = () => {
-    if (isInitialized) return;
+    if (isInitialized.value) return;
 
     loadTheme();
     initSystemThemeListener();
@@ -104,11 +124,11 @@ export function useTheme() {
       saveTheme();
     });
 
-    isInitialized = true;
+    isInitialized.value = true;
   };
 
   return {
-    themeMode: computed(() => themeMode.value),
+    themeMode: computed(() => themeMode.value) as ReturnType<typeof computed<ThemeMode>>,
     effectiveTheme,
     cycleTheme,
     setTheme,
