@@ -32,6 +32,7 @@
             {{ option.label }}
           </span>
           <button
+            :ref="(el) => setSettingsButtonRef(option.id, el)"
             class="option-settings-btn"
             @click.stop="toggleColorPicker(option.id)"
             title="Изменить цвет"
@@ -40,16 +41,19 @@
           </button>
 
           <!-- Color Picker Submenu -->
-          <div
-            v-if="colorPickerVisible === option.id"
-            class="color-picker-container"
-            @click.stop
-          >
-            <ColorPicker
-              :selected-color="option.color"
-              @select="(color) => updateOptionColor(option.id, color)"
-            />
-          </div>
+          <Teleport to="body">
+            <div
+              v-if="colorPickerVisible === option.id"
+              class="color-picker-popup"
+              :style="colorPickerStyle"
+              @click.stop
+            >
+              <ColorPicker
+                :selected-color="option.color"
+                @select="(color) => updateOptionColor(option.id, color)"
+              />
+            </div>
+          </Teleport>
         </div>
 
         <div v-if="searchQuery && !exactMatchExists" class="menu-option create" @click="createOption">
@@ -91,6 +95,7 @@ const searchQuery = ref('');
 const searchInput = ref<HTMLInputElement | null>(null);
 const menuElement = ref<HTMLElement | null>(null);
 const colorPickerVisible = ref<string | null>(null);
+const settingsButtonRefs = ref<Map<string, HTMLElement>>(new Map());
 let clickOutsideTimer: ReturnType<typeof setTimeout> | null = null;
 
 const { effectiveTheme } = useTheme();
@@ -141,6 +146,29 @@ const filteredOptions = computed(() => {
 const exactMatchExists = computed(() => {
   return options.value.some(opt => opt.label.toLowerCase() === searchQuery.value.toLowerCase());
 });
+
+const colorPickerStyle = computed(() => {
+  if (!colorPickerVisible.value) return {};
+
+  const button = settingsButtonRefs.value.get(colorPickerVisible.value);
+  if (!button) return {};
+
+  const rect = button.getBoundingClientRect();
+  return {
+    position: 'fixed',
+    top: `${rect.top}px`,
+    left: `${rect.right + 8}px`,
+    zIndex: 10000
+  };
+});
+
+const setSettingsButtonRef = (optionId: string, el: any) => {
+  if (el) {
+    settingsButtonRefs.value.set(optionId, el as HTMLElement);
+  } else {
+    settingsButtonRefs.value.delete(optionId);
+  }
+};
 
 const handleEscape = (event: KeyboardEvent) => {
   if (event.key === 'Escape') {
@@ -332,14 +360,6 @@ onUnmounted(() => {
   color: #e5e7eb;
 }
 
-.color-picker-container {
-  position: absolute;
-  left: 100%;
-  top: 0;
-  margin-left: 8px;
-  z-index: 1001;
-}
-
 .menu-option.create {
   color: #3b82f6;
   font-weight: 500;
@@ -354,6 +374,11 @@ onUnmounted(() => {
 .create-icon {
   font-size: 18px;
   font-weight: 600;
+}
+
+.color-picker-popup {
+  position: fixed;
+  z-index: 10000;
 }
 
 /* Dark theme */
