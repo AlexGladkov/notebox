@@ -115,12 +115,14 @@ class NoteRepository {
     }
 
     fun findAllDescendants(noteId: String): List<Note> = transaction {
+        // Используем прямую подстановку параметра, так как noteId - это UUID строка
+        // и CTE не поддерживается в Exposed DSL
         val sql = """
             WITH RECURSIVE descendants AS (
                 SELECT id, title, content, parent_id, icon, backdrop_type, backdrop_value,
                        backdrop_position_y, color, created_at, updated_at
                 FROM notes
-                WHERE parent_id = ?
+                WHERE parent_id = '$noteId'
 
                 UNION ALL
 
@@ -133,13 +135,9 @@ class NoteRepository {
         """.trimIndent()
 
         val result = mutableListOf<Note>()
-        val connection = TransactionManager.current().connection
-        connection.prepareStatement(sql).use { stmt ->
-            stmt.setString(1, noteId)
-            stmt.executeQuery().use { rs ->
-                while (rs.next()) {
-                    result.add(toNoteFromResultSet(rs))
-                }
+        exec(sql) { rs ->
+            while (rs.next()) {
+                result.add(toNoteFromResultSet(rs))
             }
         }
         result
@@ -150,7 +148,7 @@ class NoteRepository {
             WITH RECURSIVE ancestors AS (
                 SELECT id, parent_id, 0 as depth
                 FROM notes
-                WHERE id = ?
+                WHERE id = '$noteId'
 
                 UNION ALL
 
@@ -162,13 +160,9 @@ class NoteRepository {
         """.trimIndent()
 
         var result = 0
-        val connection = TransactionManager.current().connection
-        connection.prepareStatement(sql).use { stmt ->
-            stmt.setString(1, noteId)
-            stmt.executeQuery().use { rs ->
-                if (rs.next()) {
-                    result = rs.getInt("max_depth")
-                }
+        exec(sql) { rs ->
+            if (rs.next()) {
+                result = rs.getInt("max_depth")
             }
         }
         result
@@ -180,7 +174,7 @@ class NoteRepository {
                 SELECT id, title, content, parent_id, icon, backdrop_type, backdrop_value,
                        backdrop_position_y, color, created_at, updated_at, 0 as depth
                 FROM notes
-                WHERE id = ?
+                WHERE id = '$noteId'
 
                 UNION ALL
 
@@ -196,13 +190,9 @@ class NoteRepository {
         """.trimIndent()
 
         val result = mutableListOf<Note>()
-        val connection = TransactionManager.current().connection
-        connection.prepareStatement(sql).use { stmt ->
-            stmt.setString(1, noteId)
-            stmt.executeQuery().use { rs ->
-                while (rs.next()) {
-                    result.add(toNoteFromResultSet(rs))
-                }
+        exec(sql) { rs ->
+            while (rs.next()) {
+                result.add(toNoteFromResultSet(rs))
             }
         }
         result
