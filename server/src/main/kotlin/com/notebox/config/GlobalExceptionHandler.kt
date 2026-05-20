@@ -72,6 +72,14 @@ class GlobalExceptionHandler {
             .body(errorResponse("CIRCULAR_REFERENCE", ex.message ?: "Circular reference detected"))
     }
 
+    @ExceptionHandler(RateLimitException::class)
+    fun handleRateLimitException(ex: RateLimitException): ResponseEntity<ApiResponse<Nothing>> {
+        logger.warn("Rate limit exceeded: {}", ex.message)
+        return ResponseEntity
+            .status(HttpStatus.TOO_MANY_REQUESTS)
+            .body(errorResponse("RATE_LIMIT_EXCEEDED", ex.message ?: "Too many requests"))
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun handleValidationExceptions(ex: MethodArgumentNotValidException): ResponseEntity<ApiResponse<Nothing>> {
         val errors = ex.bindingResult.fieldErrors

@@ -30,7 +30,8 @@ class SecurityConfig {
     @Bean
     fun securityFilterChain(
         http: HttpSecurity,
-        sessionAuthenticationFilter: SessionAuthenticationFilter
+        sessionAuthenticationFilter: SessionAuthenticationFilter,
+        rateLimitFilter: RateLimitFilter
     ): SecurityFilterChain {
         http
             .csrf { it.disable() }
@@ -42,6 +43,7 @@ class SecurityConfig {
                     .requestMatchers("/api/config").permitAll()
                     .anyRequest().authenticated()
             }
+            .addFilterBefore(rateLimitFilter, SessionAuthenticationFilter::class.java)
             .addFilterBefore(sessionAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
 
         return http.build()

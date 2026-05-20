@@ -57,6 +57,9 @@ dependencies {
     implementation("com.google.apis:google-api-services-calendar:v3-rev20230825-2.0.0")
     implementation("com.google.auth:google-auth-library-oauth2-http:1.19.0")
 
+    // Rate Limiting
+    implementation("com.bucket4j:bucket4j-core:8.7.0")
+
     // Development
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 
