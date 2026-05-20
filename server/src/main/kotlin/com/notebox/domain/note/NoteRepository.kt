@@ -2,6 +2,7 @@ package com.notebox.domain.note
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.springframework.stereotype.Repository
@@ -131,11 +132,16 @@ class NoteRepository {
             SELECT * FROM descendants
         """.trimIndent()
 
-        TransactionManager.current().exec(sql, listOf(StringColumnType() to noteId)) { rs ->
-            generateSequence {
-                if (rs.next()) toNoteFromResultSet(rs) else null
-            }.toList()
-        } ?: emptyList()
+        val result = mutableListOf<Note>()
+        TransactionManager.current().exec(sql) { stmt ->
+            stmt.setString(1, noteId)
+            stmt.executeQuery().use { rs ->
+                while (rs.next()) {
+                    result.add(toNoteFromResultSet(rs))
+                }
+            }
+        }
+        result
     }
 
     fun getDepth(noteId: String): Int = transaction {
@@ -154,9 +160,16 @@ class NoteRepository {
             SELECT MAX(depth) as max_depth FROM ancestors
         """.trimIndent()
 
-        TransactionManager.current().exec(sql, listOf(StringColumnType() to noteId)) { rs ->
-            if (rs.next()) rs.getInt("max_depth") else 0
-        } ?: 0
+        var result = 0
+        TransactionManager.current().exec(sql) { stmt ->
+            stmt.setString(1, noteId)
+            stmt.executeQuery().use { rs ->
+                if (rs.next()) {
+                    result = rs.getInt("max_depth")
+                }
+            }
+        }
+        result
     }
 
     fun getAncestorPath(noteId: String): List<Note> = transaction {
@@ -180,11 +193,16 @@ class NoteRepository {
             FROM ancestors ORDER BY depth DESC
         """.trimIndent()
 
-        TransactionManager.current().exec(sql, listOf(StringColumnType() to noteId)) { rs ->
-            generateSequence {
-                if (rs.next()) toNoteFromResultSet(rs) else null
-            }.toList()
-        } ?: emptyList()
+        val result = mutableListOf<Note>()
+        TransactionManager.current().exec(sql) { stmt ->
+            stmt.setString(1, noteId)
+            stmt.executeQuery().use { rs ->
+                while (rs.next()) {
+                    result.add(toNoteFromResultSet(rs))
+                }
+            }
+        }
+        result
     }
 
     fun updateParentId(noteId: String, newParentId: String?): Boolean = transaction {
