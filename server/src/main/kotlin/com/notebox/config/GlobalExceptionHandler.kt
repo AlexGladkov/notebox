@@ -5,6 +5,7 @@ import com.notebox.dto.errorResponse
 import com.notebox.exception.CircularReferenceException
 import com.notebox.exception.InvalidRequestException
 import com.notebox.exception.ResourceNotFoundException
+import jakarta.validation.ConstraintViolationException
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -45,6 +46,17 @@ class GlobalExceptionHandler {
     fun handleValidationExceptions(ex: MethodArgumentNotValidException): ResponseEntity<ApiResponse<Nothing>> {
         val errors = ex.bindingResult.fieldErrors
             .joinToString(", ") { "${it.field}: ${it.defaultMessage}" }
+
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(errorResponse("VALIDATION_ERROR", errors))
+    }
+
+    @ExceptionHandler(ConstraintViolationException::class)
+    fun handleConstraintViolation(ex: ConstraintViolationException): ResponseEntity<ApiResponse<Nothing>> {
+        val errors = ex.constraintViolations.joinToString(", ") {
+            "${it.propertyPath}: ${it.message}"
+        }
 
         return ResponseEntity
             .status(HttpStatus.BAD_REQUEST)
