@@ -74,7 +74,7 @@ const filteredNotes = computed(() => {
 const menuStyle = computed(() => {
   // Позиционирование будет настроено через JS после рендеринга
   return {
-    position: 'fixed',
+    position: 'fixed' as const,
     zIndex: 1000,
   };
 });
