@@ -9,7 +9,6 @@ import com.notebox.domain.notification.PushSubscriptionsTable
 import com.notebox.domain.reminder.RemindersTable
 import com.notebox.domain.tag.TagsTable
 import com.notebox.domain.tag.NoteTagsTable
-import com.notebox.migration.FolderToNoteMigration
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -21,8 +20,7 @@ import javax.sql.DataSource
 
 @Configuration
 class DatabaseInitializer(
-    private val dataSource: DataSource,
-    private val folderToNoteMigration: FolderToNoteMigration
+    private val dataSource: DataSource
 ) {
     private val logger = LoggerFactory.getLogger(DatabaseInitializer::class.java)
 
@@ -44,14 +42,6 @@ class DatabaseInitializer(
             )
         }
 
-        // Выполняем миграцию папок в страницы
-        try {
-            logger.info("Запуск миграции папок в страницы...")
-            // Временно отключено для тестирования
-            // folderToNoteMigration.fullMigration()
-            logger.info("Миграция пропущена (отключена для тестирования)")
-        } catch (e: Exception) {
-            logger.warn("Миграция не выполнена или уже была выполнена ранее: ${e.message}")
-        }
+        logger.info("Database initialization completed")
     }
 }
