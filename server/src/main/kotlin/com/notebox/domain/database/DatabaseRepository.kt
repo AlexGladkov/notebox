@@ -113,7 +113,7 @@ class DatabaseRepository {
         options: List<SelectOptionDto>?,
         position: Int
     ): Column? = transaction {
-        val exists = ColumnsTable.select { ColumnsTable.id eq id }.count() > 0
+        val exists = ColumnsTable.select { ColumnsTable.id eq id }.any()
         if (!exists) return@transaction null
 
         ColumnsTable.update({ ColumnsTable.id eq id }) {
@@ -158,7 +158,7 @@ class DatabaseRepository {
     }
 
     fun updateRecord(id: String, data: Map<String, Any?>): Record? = transaction {
-        val exists = RecordsTable.select { RecordsTable.id eq id }.count() > 0
+        val exists = RecordsTable.select { RecordsTable.id eq id }.any()
         if (!exists) return@transaction null
 
         val now = Instant.now()

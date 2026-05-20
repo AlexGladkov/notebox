@@ -44,7 +44,7 @@ class FolderRepository {
     }
 
     fun update(id: String, name: String, parentId: String?): Folder? = transaction {
-        val exists = FoldersTable.select { FoldersTable.id eq id }.count() > 0
+        val exists = FoldersTable.select { FoldersTable.id eq id }.any()
         if (!exists) return@transaction null
 
         val now = Instant.now()

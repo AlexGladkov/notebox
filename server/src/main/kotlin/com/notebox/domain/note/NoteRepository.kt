@@ -257,7 +257,7 @@ class NoteRepository {
         icon = rs.getString("icon"),
         backdropType = rs.getString("backdrop_type"),
         backdropValue = rs.getString("backdrop_value"),
-        backdropPositionY = rs.getInt("backdrop_position_y"),
+        backdropPositionY = rs.getObject("backdrop_position_y") as? Int,
         color = rs.getString("color"),
         createdAt = rs.getTimestamp("created_at").toInstant(),
         updatedAt = rs.getTimestamp("updated_at").toInstant()
