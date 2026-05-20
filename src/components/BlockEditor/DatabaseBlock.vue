@@ -86,7 +86,7 @@ import KanbanBoard from './KanbanBoard.vue';
 import CsvImportDialog from './CsvImportDialog.vue';
 import type { ImportData } from './CsvImportDialog.vue';
 import { useDatabases } from '../../composables/useDatabases';
-import { exportToCsv, downloadCsv, generateCsvFilename } from '../../utils/csvExporter';
+import { useDatabaseFiltering, useDatabaseImport, useDatabaseExport } from './Database/composables';
 import type { Column, ColumnType, SelectOption, Record } from '../../types';
 import type { DatabaseView, DatabaseFilter, DatabaseSort } from '../../types/database';
 
@@ -163,106 +163,15 @@ const currentView = computed(() => {
   return views.value.find(v => v.id === currentViewId.value) || views.value[0];
 });
 
-const filteredRecords = computed(() => {
-  let records = [...databaseRecords.value];
-
-  // Apply filter
-  if (currentFilter.value) {
-    records = applyFilter(records, currentFilter.value);
-  }
-
-  // Apply search
-  if (searchQuery.value) {
-    records = applySearch(records, searchQuery.value);
-  }
-
-  // Apply sort
-  if (currentSort.value) {
-    records = applySort(records, currentSort.value);
-  }
-
-  return records;
-});
-
-const applyFilter = (records: Record[], filter: DatabaseFilter): Record[] => {
-  return records.filter(record => {
-    const value = record.data[filter.columnId];
-    const column = database.value?.columns.find(c => c.id === filter.columnId);
-
-    switch (filter.operator) {
-      case 'isEmpty':
-        return value === null || value === undefined || value === '';
-      case 'isNotEmpty':
-        return value !== null && value !== undefined && value !== '';
-      case 'equals':
-        // Для Select/MultiSelect колонок нужно сравнивать label
-        if (column && (column.type === 'SELECT' || column.type === 'MULTI_SELECT')) {
-          if (!value) return false;
-          const option = column.options?.find(o => o.id === value);
-          return option?.label === filter.value;
-        }
-        return value === filter.value;
-      case 'contains':
-        // Для Select/MultiSelect также ищем по label
-        if (column && (column.type === 'SELECT' || column.type === 'MULTI_SELECT')) {
-          if (!value) return false;
-          const option = column.options?.find(o => o.id === value);
-          return option?.label.toLowerCase().includes(String(filter.value).toLowerCase());
-        }
-        return String(value).toLowerCase().includes(String(filter.value).toLowerCase());
-      case 'gt':
-        return Number(value) > Number(filter.value);
-      case 'lt':
-        return Number(value) < Number(filter.value);
-      case 'gte':
-        return Number(value) >= Number(filter.value);
-      case 'lte':
-        return Number(value) <= Number(filter.value);
-      default:
-        return true;
-    }
-  });
-};
-
-const applySearch = (records: Record[], query: string): Record[] => {
-  const lowerQuery = query.toLowerCase();
-  return records.filter(record => {
-    return Object.entries(record.data).some(([columnId, value]) => {
-      if (value === null || value === undefined) return false;
-
-      // Find column to check if it's SELECT or MULTI_SELECT
-      const column = database.value?.columns.find(c => c.id === columnId);
-      if (column && (column.type === 'SELECT' || column.type === 'MULTI_SELECT')) {
-        // Search in option labels
-        if (column.type === 'SELECT') {
-          const option = column.options?.find(o => o.id === value);
-          return option?.label.toLowerCase().includes(lowerQuery);
-        } else if (column.type === 'MULTI_SELECT' && Array.isArray(value)) {
-          return value.some(optionId => {
-            const option = column.options?.find(o => o.id === optionId);
-            return option?.label.toLowerCase().includes(lowerQuery);
-          });
-        }
-      }
-
-      // Search in plain text values
-      return String(value).toLowerCase().includes(lowerQuery);
-    });
-  });
-};
-
-const applySort = (records: Record[], sort: DatabaseSort): Record[] => {
-  return [...records].sort((a, b) => {
-    const aValue = a.data[sort.columnId];
-    const bValue = b.data[sort.columnId];
-
-    if (aValue === null || aValue === undefined) return 1;
-    if (bValue === null || bValue === undefined) return -1;
-
-    const comparison = aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
-    return sort.direction === 'asc' ? comparison : -comparison;
-  });
-};
+// Use database filtering composable
+const databaseColumns = computed(() => database.value?.columns || []);
+const { filteredRecords } = useDatabaseFiltering(
+  databaseRecords,
+  databaseColumns,
+  currentFilter,
+  currentSort,
+  searchQuery
+);
 
 const loadData = async () => {
   if (!props.node.attrs.databaseId) {
@@ -475,6 +384,11 @@ const handleUpdateView = async (updates: Partial<DatabaseView>) => {
   }
 };
 
+// Use database export composable
+const { handleExport: exportDatabase } = useDatabaseExport({
+  showToast,
+});
+
 const handleImportClick = () => {
   showImportDialog.value = true;
 };
@@ -484,19 +398,18 @@ const handleExport = () => {
     showToast('База данных не загружена', true);
     return;
   }
-
-  try {
-    // Экспортируем отфильтрованные записи
-    const recordsToExport = filteredRecords.value;
-    const csvContent = exportToCsv(database.value.columns, recordsToExport);
-    const filename = generateCsvFilename(database.value.name);
-    downloadCsv(csvContent, filename, 'utf-8-bom');
-    showToast(`Экспортировано записей: ${recordsToExport.length}`);
-  } catch (err) {
-    console.error('Failed to export CSV:', err);
-    showToast('Не удалось экспортировать CSV', true);
-  }
+  exportDatabase(database.value.name, database.value.columns, filteredRecords.value);
 };
+
+// Use database import composable
+const { handleImport: importDatabase } = useDatabaseImport({
+  addColumn,
+  updateColumn,
+  batchCreateRecords,
+  batchDeleteRecords,
+  getRecordsByDatabaseId,
+  showToast,
+});
 
 const handleImport = async (importData: ImportData) => {
   if (!database.value) {
@@ -504,142 +417,14 @@ const handleImport = async (importData: ImportData) => {
     return;
   }
 
-  try {
-    // Создаём новые колонки если нужно
-    const columnIdMap = new Map<string, string>(); // Map временный ID -> реальный ID
+  const success = await importDatabase(
+    props.node.attrs.databaseId,
+    database.value.columns,
+    importData
+  );
 
-    if (importData.newColumns && importData.newColumns.length > 0 && importData.tempColumnIds) {
-      const createdColumns = [];
-      for (const newCol of importData.newColumns) {
-        const column = await addColumn(
-          props.node.attrs.databaseId,
-          newCol.name,
-          newCol.type
-        );
-        if (!column) {
-          throw new Error(`Не удалось создать колонку: ${newCol.name}`);
-        }
-        createdColumns.push(column);
-      }
-
-      // Создаем маппинг временных ID на реальные ID
-      for (const [tempId, colIndex] of importData.tempColumnIds.entries()) {
-        const realColumn = createdColumns[colIndex];
-        if (realColumn) {
-          columnIdMap.set(tempId, realColumn.id);
-        }
-      }
-    }
-
-    // Обрабатываем SELECT поля - создаём недостающие опции
-    const selectColumnsToUpdate = new Map<string, { column: Column; newOptions: Set<string> }>();
-
-    for (const record of importData.records) {
-      for (const [tempColumnId, value] of Object.entries(record)) {
-        const actualColumnId = columnIdMap.get(tempColumnId) || tempColumnId;
-        const column = database.value.columns.find(c => c.id === actualColumnId);
-
-        if (column && (column.type === 'SELECT' || column.type === 'MULTI_SELECT')) {
-          // Проверяем, есть ли строковые значения (не ID)
-          const values = column.type === 'MULTI_SELECT' && Array.isArray(value) ? value : [value];
-
-          for (const val of values) {
-            if (typeof val === 'string' && val) {
-              // Это строка, а не ID - нужно создать опцию
-              const existingOption = column.options?.find(opt => opt.id === val || opt.label.toLowerCase() === val.toLowerCase());
-              if (!existingOption) {
-                // Добавляем в список новых опций для этой колонки
-                if (!selectColumnsToUpdate.has(actualColumnId)) {
-                  selectColumnsToUpdate.set(actualColumnId, { column, newOptions: new Set() });
-                }
-                selectColumnsToUpdate.get(actualColumnId)!.newOptions.add(val);
-              }
-            }
-          }
-        }
-      }
-    }
-
-    // Создаём новые опции для SELECT колонок
-    const optionIdMap = new Map<string, string>(); // Map label -> новый ID опции
-    for (const [columnId, { column, newOptions }] of selectColumnsToUpdate.entries()) {
-      const colors = ['blue', 'green', 'red', 'yellow', 'purple', 'pink', 'orange'];
-      const updatedOptions = [...(column.options || [])];
-
-      for (const label of newOptions) {
-        const newOptionId = `opt-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        const color = colors[updatedOptions.length % colors.length];
-        updatedOptions.push({ id: newOptionId, label, color });
-        optionIdMap.set(`${columnId}:${label}`, newOptionId);
-      }
-
-      // Обновляем колонку с новыми опциями
-      await updateColumn(
-        props.node.attrs.databaseId,
-        columnId,
-        column.name,
-        column.type,
-        updatedOptions
-      );
-    }
-
-    // Преобразуем записи с учётом новых колонок и опций
-    const recordsToImport = importData.records.map(record => {
-      const transformedRecord: { [columnId: string]: any } = {};
-      for (const [tempColumnId, value] of Object.entries(record)) {
-        const actualColumnId = columnIdMap.get(tempColumnId) || tempColumnId;
-        const column = database.value.columns.find(c => c.id === actualColumnId);
-
-        let transformedValue = value;
-
-        // Преобразуем строковые значения SELECT полей в ID опций
-        if (column && (column.type === 'SELECT' || column.type === 'MULTI_SELECT')) {
-          if (column.type === 'SELECT' && typeof value === 'string') {
-            // Ищем опцию по label или берём ID из карты новых опций
-            const existingOption = column.options?.find(opt => opt.label.toLowerCase() === value.toLowerCase());
-            transformedValue = existingOption?.id || optionIdMap.get(`${actualColumnId}:${value}`) || value;
-          } else if (column.type === 'MULTI_SELECT' && Array.isArray(value)) {
-            transformedValue = value.map(val => {
-              if (typeof val === 'string') {
-                const existingOption = column.options?.find(opt => opt.label.toLowerCase() === val.toLowerCase());
-                return existingOption?.id || optionIdMap.get(`${actualColumnId}:${val}`) || val;
-              }
-              return val;
-            });
-          }
-        }
-
-        transformedRecord[actualColumnId] = transformedValue;
-      }
-      return transformedRecord;
-    });
-
-    // Если режим "заменить" - удаляем существующие записи
-    if (importData.mode === 'replace') {
-      const existingRecords = getRecordsByDatabaseId(props.node.attrs.databaseId);
-      if (existingRecords.length > 0) {
-        const confirmed = confirm(
-          `Вы уверены, что хотите удалить все существующие записи (${existingRecords.length}) и заменить их импортированными данными?`
-        );
-        if (!confirmed) {
-          showImportDialog.value = false;
-          return;
-        }
-        await batchDeleteRecords(
-          props.node.attrs.databaseId,
-          existingRecords.map(r => r.id)
-        );
-      }
-    }
-
-    // Создаём новые записи
-    await batchCreateRecords(props.node.attrs.databaseId, recordsToImport);
-
-    showToast(`Успешно импортировано записей: ${recordsToImport.length}`);
+  if (success) {
     showImportDialog.value = false;
-  } catch (err) {
-    console.error('Failed to import CSV:', err);
-    showToast('Не удалось импортировать CSV', true);
   }
 };
 
