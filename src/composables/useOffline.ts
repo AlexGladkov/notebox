@@ -19,7 +19,7 @@ export function useOffline() {
   const hasPendingChanges = computed(() => syncState.value.pendingCount > 0);
   const hasError = computed(() => syncState.value.status === 'error');
 
-  async function updateSyncState() {
+  async function updateSyncState(): Promise<void> {
     try {
       const pendingCount = await syncQueue.getPendingCount();
       const lastSyncTime = await indexedDbService.getMetadata('lastSyncTime');
@@ -36,7 +36,7 @@ export function useOffline() {
     }
   }
 
-  async function sync() {
+  async function sync(): Promise<void> {
     if (!isOnline.value) {
       console.log('Cannot sync: offline');
       return;
@@ -52,7 +52,7 @@ export function useOffline() {
     }
   }
 
-  async function fullSync() {
+  async function fullSync(): Promise<void> {
     if (!isOnline.value) {
       console.log('Cannot sync: offline');
       return;

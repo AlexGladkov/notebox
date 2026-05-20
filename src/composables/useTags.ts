@@ -8,7 +8,7 @@ export function useTags() {
   const loading = ref(false);
   const error = ref<string | null>(null);
 
-  const loadTags = async () => {
+  const loadTags = async (): Promise<void> => {
     loading.value = true;
     error.value = null;
     try {
@@ -62,7 +62,7 @@ export function useTags() {
     }
   };
 
-  const deleteTag = async (id: string) => {
+  const deleteTag = async (id: string): Promise<void> => {
     try {
       await tagsApi.delete(id);
       tags.value = tags.value.filter(t => t.id !== id);
@@ -72,7 +72,7 @@ export function useTags() {
     }
   };
 
-  const setNoteTags = async (noteId: string, tagIds: string[]) => {
+  const setNoteTags = async (noteId: string, tagIds: string[]): Promise<void> => {
     try {
       await tagsApi.setNoteTags(noteId, tagIds);
     } catch (err) {
@@ -94,7 +94,7 @@ export function useTags() {
     return color ? color.name : 'gray';
   };
 
-  const getTagColors = (colorNameOrHex: string, isDark: boolean) => {
+  const getTagColors = (colorNameOrHex: string, isDark: boolean): { background: string; text: string } => {
     let colorName = colorNameOrHex;
 
     // Если передан hex-код, конвертируем в имя цвета (для обратной совместимости)

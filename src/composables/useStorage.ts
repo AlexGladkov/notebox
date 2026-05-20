@@ -46,7 +46,7 @@ export function useStorage() {
   const error = ref<string | null>(null);
   const { isOnline } = useNetworkStatus();
 
-  const loadNotes = async () => {
+  const loadNotes = async (): Promise<void> => {
     try {
       loading.value = true;
       error.value = null;
@@ -114,7 +114,7 @@ export function useStorage() {
     }
   };
 
-  const loadFromStorage = async () => {
+  const loadFromStorage = async (): Promise<void> => {
     await loadNotes();
   };
 

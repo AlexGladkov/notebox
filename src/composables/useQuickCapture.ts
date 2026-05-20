@@ -1,7 +1,7 @@
 import { ref } from 'vue';
 import { useStorage } from './useStorage';
 import { useNotes } from './useNotes';
-import type { CapturedItem, CaptureType, RelatedNote } from '../types';
+import type { CapturedItem, CaptureType, RelatedNote, Note } from '../types';
 import { aiApi } from '../api/ai';
 
 const INBOX_TITLE = '📥 Inbox';
@@ -28,7 +28,7 @@ export function useQuickCapture() {
   const isProcessing = ref(false);
   const lastError = ref<string | null>(null);
 
-  async function getOrCreateInbox() {
+  async function getOrCreateInbox(): Promise<Note> {
     // ВСЕГДА ищем в IndexedDB (источник истины), не в notes.value
     // т.к. notes.value может быть не синхронизирован или устаревшим
     const { offlineStore } = await import('../services/offline/offlineStore');
