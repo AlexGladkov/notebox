@@ -1,14 +1,8 @@
 export { apiClient, ApiError } from './client';
-export { foldersApi } from './folders';
 export { notesApi } from './notes';
 export { databasesApi } from './databases';
 export { filesApi } from './files';
 export { tagsApi } from './tags';
-
-export type {
-  CreateFolderRequest,
-  UpdateFolderRequest,
-} from './folders';
 
 export type {
   CreateNoteRequest,
