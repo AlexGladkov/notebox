@@ -1,97 +1,57 @@
-import { computed, ref, type Ref, type ComputedRef } from 'vue';
-import type { Folder } from '../types';
+import { computed, type ComputedRef } from 'vue';
+import { storeToRefs } from 'pinia';
+import type { Note } from '../types';
 import type { UseFoldersReturn } from '../types/composables';
-import { getErrorMessage } from '../types/composables';
-import { foldersApi } from '../api';
+import { useNotesStore } from '../stores/notesStore';
 
-export function useFolders(folders: Ref<Folder[]>): UseFoldersReturn {
-  const loading = ref(false);
-  const error = ref<string | null>(null);
+export function useFolders(): UseFoldersReturn {
+  const store = useNotesStore();
+  const { loading, error } = storeToRefs(store);
 
-  const createFolder = async (name: string, parentId: string | null = null): Promise<Folder> => {
-    loading.value = true;
-    error.value = null;
-    try {
-      const newFolder = await foldersApi.create({ name, parentId });
-      folders.value.push(newFolder);
-      return newFolder;
-    } catch (err) {
-      const message = getErrorMessage(err);
-      error.value = `Не удалось создать папку: ${message}`;
-      console.error('Failed to create folder:', err);
-      throw err;
-    } finally {
-      loading.value = false;
-    }
+  // Папки теперь реализованы как заметки (Note), поэтому folders = notes
+  const folders = computed(() => store.notes);
+
+  const createFolder = async (name: string, parentId: string | null = null): Promise<Note> => {
+    // Создаём заметку, которая будет папкой (просто заметка с пустым content)
+    return store.createNote({ title: name, content: '', parentId });
   };
 
   const updateFolder = async (id: string, name: string): Promise<void> => {
-    const folder = folders.value.find(f => f.id === id);
+    const folder = store.getNoteById(id);
     if (!folder) {
       throw new Error('Folder not found');
     }
 
-    loading.value = true;
-    error.value = null;
-    try {
-      const updatedFolder = await foldersApi.update(id, { name, parentId: folder.parentId });
-      const index = folders.value.findIndex(f => f.id === id);
-      if (index !== -1) {
-        folders.value[index] = updatedFolder;
-      }
-    } catch (err) {
-      const message = getErrorMessage(err);
-      error.value = `Не удалось обновить папку: ${message}`;
-      console.error('Failed to update folder:', err);
-      throw err;
-    } finally {
-      loading.value = false;
-    }
+    await store.updateNote(id, { title: name });
   };
 
   const deleteFolder = async (id: string): Promise<string[]> => {
-    loading.value = true;
-    error.value = null;
-    try {
-      await foldersApi.delete(id);
+    // Получаем всех потомков для возврата их IDs
+    const descendants = store.getAllDescendants(id);
+    const idsToDelete = [id, ...descendants.map(d => d.id)];
 
-      // Remove folder and its descendants from local state
-      const getAllDescendantIds = (folderId: string): string[] => {
-        const children = folders.value.filter(f => f.parentId === folderId);
-        const descendants = [folderId];
-        children.forEach(child => {
-          descendants.push(...getAllDescendantIds(child.id));
-        });
-        return descendants;
-      };
+    // Удаляем папку (и всех потомков через cascade)
+    await store.deleteNote(id, true);
 
-      const idsToDelete = getAllDescendantIds(id);
-      folders.value = folders.value.filter(f => !idsToDelete.includes(f.id));
-      return idsToDelete;
-    } catch (err) {
-      const message = getErrorMessage(err);
-      error.value = `Не удалось удалить папку: ${message}`;
-      console.error('Failed to delete folder:', err);
-      throw err;
-    } finally {
-      loading.value = false;
-    }
+    return idsToDelete;
   };
 
-  const getFolderById = (id: string): Folder | undefined => {
-    return folders.value.find(f => f.id === id);
+  const getFolderById = (id: string): Note | undefined => {
+    return store.getNoteById(id);
   };
 
-  const getChildFolders = (parentId: string | null): ComputedRef<Folder[]> => {
+  const getChildFolders = (parentId: string | null): ComputedRef<Note[]> => {
     return computed(() =>
-      folders.value.filter(f => f.parentId === parentId)
-        .sort((a, b) => a.name.localeCompare(b.name))
+      store.notes
+        .filter(n => n.parentId === parentId)
+        .sort((a, b) => a.title.localeCompare(b.title))
     );
   };
 
   const getRootFolders = computed(() =>
-    folders.value.filter(f => f.parentId === null)
-      .sort((a, b) => a.name.localeCompare(b.name))
+    store.notes
+      .filter(n => !n.parentId)
+      .sort((a, b) => a.title.localeCompare(b.title))
   );
 
   return {
