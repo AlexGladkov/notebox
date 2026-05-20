@@ -2,6 +2,8 @@ package com.notebox.domain.auth
 
 import com.notebox.dto.ApiResponse
 import com.notebox.dto.UpdateUserDto
+import com.notebox.exception.AuthenticationException
+import com.notebox.exception.NotFoundException
 import com.notebox.exception.ValidationException
 import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletRequest
@@ -171,16 +173,13 @@ class AuthController(
     @GetMapping("/me")
     fun getCurrentUser(request: HttpServletRequest): ResponseEntity<ApiResponse<*>> {
         val sessionId = getSessionIdFromCookies(request)
-            ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.error<Nothing>("UNAUTHORIZED", "Not authenticated"))
+            ?: throw AuthenticationException("Not authenticated")
 
         val userId = sessionService.getUserIdFromSession(sessionId)
-            ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.error<Nothing>("SESSION_EXPIRED", "Session expired"))
+            ?: throw AuthenticationException("Session expired")
 
         val user = userService.findById(userId)
-            ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.error<Nothing>("USER_NOT_FOUND", "User not found"))
+            ?: throw NotFoundException("User with id '$userId' not found")
 
         return ResponseEntity.ok(ApiResponse.success(user.toDto()))
     }
@@ -191,20 +190,17 @@ class AuthController(
         request: HttpServletRequest
     ): ResponseEntity<ApiResponse<*>> {
         val sessionId = getSessionIdFromCookies(request)
-            ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.error<Nothing>("UNAUTHORIZED", "Not authenticated"))
+            ?: throw AuthenticationException("Not authenticated")
 
         val userId = sessionService.getUserIdFromSession(sessionId)
-            ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.error<Nothing>("SESSION_EXPIRED", "Session expired"))
+            ?: throw AuthenticationException("Session expired")
 
         val updatedUser = userService.updateUser(
             userId,
             name = updateDto.name,
             avatarUrl = updateDto.avatarUrl,
             themePreference = updateDto.themePreference
-        ) ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
-            .body(ApiResponse.error<Nothing>("USER_NOT_FOUND", "User not found"))
+        ) ?: throw NotFoundException("User with id '$userId' not found")
 
         return ResponseEntity.ok(ApiResponse.success(updatedUser.toDto()))
     }
