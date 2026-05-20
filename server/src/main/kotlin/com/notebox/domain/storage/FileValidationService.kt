@@ -61,8 +61,8 @@ class FileValidationService {
     }
 
     fun isValidFileType(inputStream: InputStream, extension: String): Boolean {
-        val buffer = ByteArray(8)
-        inputStream.mark(8)
+        val buffer = ByteArray(12)
+        inputStream.mark(12)
         val bytesRead = inputStream.read(buffer)
         inputStream.reset()
 
@@ -76,7 +76,11 @@ class FileValidationService {
                      buffer[2] == 0x46.toByte()
             "pdf" -> buffer[0] == 0x25.toByte() && buffer[1] == 0x50.toByte() &&
                      buffer[2] == 0x44.toByte() && buffer[3] == 0x46.toByte()
-            "webp" -> String(buffer.sliceArray(8..11), Charsets.US_ASCII) == "WEBP"
+            "webp" -> bytesRead >= 12 &&
+                     buffer[0] == 0x52.toByte() && buffer[1] == 0x49.toByte() &&
+                     buffer[2] == 0x46.toByte() && buffer[3] == 0x46.toByte() &&
+                     buffer[8] == 0x57.toByte() && buffer[9] == 0x45.toByte() &&
+                     buffer[10] == 0x42.toByte() && buffer[11] == 0x50.toByte()
             else -> true
         }
     }
