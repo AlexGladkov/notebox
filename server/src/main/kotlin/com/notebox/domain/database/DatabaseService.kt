@@ -5,9 +5,15 @@ import com.notebox.dto.RecordDto
 import com.notebox.dto.SelectOptionDto
 import org.springframework.stereotype.Service
 
+/**
+ * Сервис для управления пользовательскими базами данных.
+ * Отвечает только за операции с CustomDatabase, делегирует операции с колонками и записями.
+ */
 @Service
 class DatabaseService(
-    private val databaseRepository: DatabaseRepository
+    private val databaseRepository: DatabaseRepository,
+    private val columnService: ColumnService,
+    private val recordService: RecordService
 ) {
 
     // CustomDatabase operations
@@ -21,7 +27,7 @@ class DatabaseService(
 
     fun getDatabaseById(id: String): Pair<CustomDatabase, List<Column>>? {
         val database = databaseRepository.findDatabaseById(id) ?: return null
-        val columns = databaseRepository.findColumnsByDatabaseId(id)
+        val columns = columnService.getColumnsByDatabaseId(id)
         return database to columns
     }
 
@@ -32,7 +38,7 @@ class DatabaseService(
 
     fun updateDatabase(id: String, name: String, folderId: String?): Pair<CustomDatabase, List<Column>>? {
         val database = databaseRepository.updateDatabase(id, name, folderId) ?: return null
-        val columns = databaseRepository.findColumnsByDatabaseId(id)
+        val columns = columnService.getColumnsByDatabaseId(id)
         return database to columns
     }
 
@@ -40,16 +46,14 @@ class DatabaseService(
         return databaseRepository.deleteDatabase(id)
     }
 
-    // Column operations
+    // Делегация к ColumnService (для обратной совместимости)
     fun addColumn(
         databaseId: String,
         name: String,
         type: ColumnType,
         options: List<SelectOptionDto>?,
         position: Int
-    ): Column {
-        return databaseRepository.createColumn(databaseId, name, type, options, position)
-    }
+    ): Column = columnService.addColumn(databaseId, name, type, options, position)
 
     fun updateColumn(
         id: String,
@@ -57,61 +61,21 @@ class DatabaseService(
         type: ColumnType,
         options: List<SelectOptionDto>?,
         position: Int
-    ): Column? {
-        return databaseRepository.updateColumn(id, name, type, options, position)
-    }
+    ): Column? = columnService.updateColumn(id, name, type, options, position)
 
-    fun deleteColumn(id: String): Boolean {
-        return databaseRepository.deleteColumn(id)
-    }
+    fun deleteColumn(id: String): Boolean = columnService.deleteColumn(id)
 
-    // Record operations
-    fun getRecordsByDatabaseId(databaseId: String): List<RecordDto> {
-        return databaseRepository.findRecordsByDatabaseId(databaseId).map { record ->
-            RecordDto(
-                id = record.id,
-                databaseId = record.databaseId,
-                data = record.data,
-                createdAt = record.createdAt.toEpochMilli(),
-                updatedAt = record.updatedAt.toEpochMilli()
-            )
-        }
-    }
+    // Делегация к RecordService (для обратной совместимости)
+    fun getRecordsByDatabaseId(databaseId: String): List<RecordDto> =
+        recordService.getRecordsByDatabaseId(databaseId)
 
-    fun getRecordById(id: String): RecordDto? {
-        val record = databaseRepository.findRecordById(id) ?: return null
-        return RecordDto(
-            id = record.id,
-            databaseId = record.databaseId,
-            data = record.data,
-            createdAt = record.createdAt.toEpochMilli(),
-            updatedAt = record.updatedAt.toEpochMilli()
-        )
-    }
+    fun getRecordById(id: String): RecordDto? = recordService.getRecordById(id)
 
-    fun createRecord(databaseId: String, data: Map<String, Any?>): RecordDto {
-        val record = databaseRepository.createRecord(databaseId, data)
-        return RecordDto(
-            id = record.id,
-            databaseId = record.databaseId,
-            data = record.data,
-            createdAt = record.createdAt.toEpochMilli(),
-            updatedAt = record.updatedAt.toEpochMilli()
-        )
-    }
+    fun createRecord(databaseId: String, data: Map<String, Any?>): RecordDto =
+        recordService.createRecord(databaseId, data)
 
-    fun updateRecord(id: String, data: Map<String, Any?>): RecordDto? {
-        val record = databaseRepository.updateRecord(id, data) ?: return null
-        return RecordDto(
-            id = record.id,
-            databaseId = record.databaseId,
-            data = record.data,
-            createdAt = record.createdAt.toEpochMilli(),
-            updatedAt = record.updatedAt.toEpochMilli()
-        )
-    }
+    fun updateRecord(id: String, data: Map<String, Any?>): RecordDto? =
+        recordService.updateRecord(id, data)
 
-    fun deleteRecord(id: String): Boolean {
-        return databaseRepository.deleteRecord(id)
-    }
+    fun deleteRecord(id: String): Boolean = recordService.deleteRecord(id)
 }
