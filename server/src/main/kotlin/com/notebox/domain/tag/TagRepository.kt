@@ -21,6 +21,13 @@ class TagRepository {
             .singleOrNull()
     }
 
+    fun findByIds(ids: List<String>): List<Tag> = transaction {
+        if (ids.isEmpty()) return@transaction emptyList()
+
+        TagsTable.select { TagsTable.id inList ids }
+            .map { toTag(it) }
+    }
+
     fun findByUserIdAndName(userId: String, name: String): Tag? = transaction {
         TagsTable.select {
             (TagsTable.userId eq userId) and (TagsTable.name.lowerCase() eq name.lowercase())
@@ -66,15 +73,26 @@ class TagRepository {
             .map { toTag(it) }
     }
 
+    fun findTagsForNoteIds(noteIds: List<String>): Map<String, List<Tag>> = transaction {
+        if (noteIds.isEmpty()) return@transaction emptyMap()
+
+        (TagsTable innerJoin NoteTagsTable)
+            .select { NoteTagsTable.noteId inList noteIds }
+            .groupBy { it[NoteTagsTable.noteId] }
+            .mapValues { (_, rows) ->
+                rows.map { toTag(it) }
+            }
+    }
+
     fun setNoteTags(noteId: String, tagIds: List<String>): Unit = transaction {
         // Удаляем существующие связи
         NoteTagsTable.deleteWhere { NoteTagsTable.noteId eq noteId }
 
-        // Добавляем новые связи
-        tagIds.forEach { tagId ->
-            NoteTagsTable.insert {
-                it[NoteTagsTable.noteId] = noteId
-                it[NoteTagsTable.tagId] = tagId
+        // Добавляем новые связи batch-операцией
+        if (tagIds.isNotEmpty()) {
+            NoteTagsTable.batchInsert(tagIds) { tagId ->
+                this[NoteTagsTable.noteId] = noteId
+                this[NoteTagsTable.tagId] = tagId
             }
         }
     }
