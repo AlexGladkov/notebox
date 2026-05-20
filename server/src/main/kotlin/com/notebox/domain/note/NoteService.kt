@@ -143,7 +143,7 @@ class NoteService(
         }
 
         noteRepository.updateParentId(noteId, userId, newParentId)
-        return noteRepository.findById(noteId)
+        return noteRepository.findByIdAndUserId(noteId, userId)
     }
 
     fun deleteNote(id: String, userId: String, cascadeDelete: Boolean = true): Boolean {

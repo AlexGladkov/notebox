@@ -14,7 +14,8 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/api/tags")
 class TagController(
-    private val tagService: TagService
+    private val tagService: TagService,
+    private val noteService: com.notebox.domain.note.NoteService
 ) : BaseController() {
 
     @GetMapping
@@ -65,6 +66,10 @@ class TagController(
         @Valid @RequestBody request: SetNoteTagsRequest
     ): ResponseEntity<ApiResponse<List<TagDto>>> {
         val userId = getCurrentUserId()
+        // Проверка ownership заметки
+        noteService.getNoteById(noteId, userId)
+            ?: throw NotFoundException("Note with id '$noteId' not found")
+        // Проверка ownership тегов
         tagService.verifyTagsOwnership(request.tagIds, userId)
         tagService.setNoteTags(noteId, request.tagIds)
         val tags = tagService.getNoteTags(noteId).map { it.toDto() }
@@ -73,6 +78,10 @@ class TagController(
 
     @GetMapping("/notes/{noteId}/tags")
     fun getNoteTags(@PathVariable @ValidUuid(fieldName = "noteId") noteId: String): ResponseEntity<ApiResponse<List<TagDto>>> {
+        val userId = getCurrentUserId()
+        // Проверка ownership заметки
+        noteService.getNoteById(noteId, userId)
+            ?: throw NotFoundException("Note with id '$noteId' not found")
         val tags = tagService.getNoteTags(noteId).map { it.toDto() }
         return ResponseEntity.ok(successResponse(tags))
     }
