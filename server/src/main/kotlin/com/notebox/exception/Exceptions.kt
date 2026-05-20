@@ -1,7 +1,41 @@
 package com.notebox.exception
 
-class ResourceNotFoundException(message: String) : RuntimeException(message)
+/**
+ * Базовый класс для всех доменных исключений.
+ */
+sealed class DomainException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
 
-class InvalidRequestException(message: String) : RuntimeException(message)
+/**
+ * Ресурс не найден (HTTP 404).
+ */
+class NotFoundException(message: String) : DomainException(message)
 
-class CircularReferenceException(message: String) : RuntimeException(message)
+/**
+ * Доступ запрещён (HTTP 403).
+ */
+class AccessDeniedException(message: String) : DomainException(message)
+
+/**
+ * Ошибка валидации входных данных (HTTP 400).
+ */
+class ValidationException(message: String) : DomainException(message)
+
+/**
+ * Пользователь не аутентифицирован (HTTP 401).
+ */
+class AuthenticationException(message: String) : DomainException(message)
+
+/**
+ * Ошибка OAuth провайдера (HTTP 401 или 502).
+ */
+class OAuthException(message: String, cause: Throwable? = null) : DomainException(message, cause)
+
+/**
+ * Циклическая ссылка (HTTP 400).
+ */
+class CircularReferenceException(message: String) : DomainException(message)
+
+/**
+ * Ошибка внешнего сервиса (HTTP 502).
+ */
+class ExternalServiceException(message: String, cause: Throwable? = null) : DomainException(message, cause)
