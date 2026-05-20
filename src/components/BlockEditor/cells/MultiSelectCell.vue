@@ -174,18 +174,38 @@ const colorPickerStyle = computed(() => {
 
   const rect = button.getBoundingClientRect();
   const viewportWidth = window.innerWidth;
-  const pickerWidth = 180; // Примерная ширина ColorPicker
+  const viewportHeight = window.innerHeight;
 
-  // Проверяем, хватает ли места справа
+  // Реальная ширина ColorPicker: 4 * 32px (swatches) + 3 * 6px (gaps) + 2 * 8px (padding) + 2px (border)
+  const pickerWidth = 164;
+  // Реальная высота ColorPicker: header (~28px) + 2 ряда * 32px + gap 6px + 2 * 8px (padding) + 2px (border)
+  const pickerHeight = 106;
+
+  // Горизонтальное позиционирование: справа от кнопки, но не выходим за viewport
   let left = rect.right + 8;
   if (left + pickerWidth > viewportWidth) {
-    // Если не хватает, показываем слева от кнопки
+    // Если не хватает места справа, показываем слева от кнопки
     left = rect.left - pickerWidth - 8;
+    // Если и слева не хватает, прижимаем к правому краю viewport
+    if (left < 0) {
+      left = viewportWidth - pickerWidth - 8;
+    }
+  }
+
+  // Вертикальное позиционирование: выравниваем по верху кнопки, но не выходим за viewport
+  let top = rect.top;
+  if (top + pickerHeight > viewportHeight) {
+    // Если не хватает места снизу, показываем выше
+    top = rect.bottom - pickerHeight;
+    // Если и сверху не хватает, прижимаем к нижнему краю viewport
+    if (top < 0) {
+      top = viewportHeight - pickerHeight - 8;
+    }
   }
 
   return {
     position: 'fixed',
-    top: `${rect.top}px`,
+    top: `${top}px`,
     left: `${left}px`,
     zIndex: 10000
   };
