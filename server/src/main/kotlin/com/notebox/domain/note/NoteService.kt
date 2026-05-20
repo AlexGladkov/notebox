@@ -38,7 +38,7 @@ class NoteService(
     }
 
     private fun verifyNoteOwnership(noteId: String, userId: String) {
-        val note = noteRepository.findByIdAndUserId(noteId, userId)
+        noteRepository.findByIdAndUserId(noteId, userId)
             ?: throw AccessDeniedException("Access denied to note: $noteId")
     }
 
