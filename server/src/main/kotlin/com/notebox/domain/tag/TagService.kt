@@ -1,5 +1,7 @@
 package com.notebox.domain.tag
 
+import com.notebox.exception.AccessDeniedException
+import com.notebox.exception.NotFoundException
 import org.springframework.stereotype.Service
 
 @Service
@@ -13,6 +15,26 @@ class TagService(
 
     fun getTagById(id: String): Tag? {
         return tagRepository.findById(id)
+    }
+
+    fun getTagByIdForUser(id: String, userId: String): Tag? {
+        val tag = getTagById(id) ?: return null
+        if (tag.userId != userId) {
+            throw AccessDeniedException("Access denied to tag: $id")
+        }
+        return tag
+    }
+
+    fun verifyTagOwnership(tagId: String, userId: String) {
+        val tag = getTagById(tagId)
+            ?: throw NotFoundException("Tag not found: $tagId")
+        if (tag.userId != userId) {
+            throw AccessDeniedException("Access denied to tag: $tagId")
+        }
+    }
+
+    fun verifyTagsOwnership(tagIds: List<String>, userId: String) {
+        tagIds.forEach { verifyTagOwnership(it, userId) }
     }
 
     fun createTag(userId: String, name: String, color: String?): Tag {
