@@ -5,7 +5,8 @@ import org.springframework.stereotype.Service
 
 @Service
 class NoteService(
-    private val noteRepository: NoteRepository
+    private val noteRepository: NoteRepository,
+    private val noteDtoMapper: NoteDtoMapper
 ) {
 
     companion object {
@@ -152,53 +153,20 @@ class NoteService(
         return 1 + (children.maxOfOrNull { calculateMaxDescendantDepth(it.id) } ?: 0)
     }
 
-    fun getAllNotesWithTags(): List<NoteDto> {
-        val notes = noteRepository.findAll()
-        val noteIds = notes.map { it.id }
-        val tagsMap = noteRepository.findTagsForNotes(noteIds)
+    fun getAllNotesWithTags(): List<NoteDto> =
+        noteDtoMapper.toDtoList(noteRepository.findAll())
 
-        return notes.map { note ->
-            val tags = tagsMap[note.id]?.map { it.toDto() } ?: emptyList()
-            note.toDto(tags)
-        }
-    }
-
-    fun getRootNotesWithTags(): List<NoteDto> {
-        val notes = noteRepository.findRootNotes()
-        val noteIds = notes.map { it.id }
-        val tagsMap = noteRepository.findTagsForNotes(noteIds)
-
-        return notes.map { note ->
-            val tags = tagsMap[note.id]?.map { it.toDto() } ?: emptyList()
-            note.toDto(tags)
-        }
-    }
+    fun getRootNotesWithTags(): List<NoteDto> =
+        noteDtoMapper.toDtoList(noteRepository.findRootNotes())
 
     fun getNoteByIdWithTags(id: String): NoteDto? {
         val note = noteRepository.findById(id) ?: return null
-        val tags = noteRepository.findTagsByNoteId(id).map { it.toDto() }
-        return note.toDto(tags)
+        return noteDtoMapper.toDto(note)
     }
 
-    fun getChildrenWithTags(parentId: String): List<NoteDto> {
-        val children = noteRepository.findByParentId(parentId)
-        val noteIds = children.map { it.id }
-        val tagsMap = noteRepository.findTagsForNotes(noteIds)
+    fun getChildrenWithTags(parentId: String): List<NoteDto> =
+        noteDtoMapper.toDtoList(noteRepository.findByParentId(parentId))
 
-        return children.map { note ->
-            val tags = tagsMap[note.id]?.map { it.toDto() } ?: emptyList()
-            note.toDto(tags)
-        }
-    }
-
-    fun getAncestorPathWithTags(noteId: String): List<NoteDto> {
-        val path = noteRepository.getAncestorPath(noteId)
-        val noteIds = path.map { it.id }
-        val tagsMap = noteRepository.findTagsForNotes(noteIds)
-
-        return path.map { note ->
-            val tags = tagsMap[note.id]?.map { it.toDto() } ?: emptyList()
-            note.toDto(tags)
-        }
-    }
+    fun getAncestorPathWithTags(noteId: String): List<NoteDto> =
+        noteDtoMapper.toDtoList(noteRepository.getAncestorPath(noteId))
 }
