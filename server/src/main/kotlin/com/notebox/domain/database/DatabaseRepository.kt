@@ -53,7 +53,7 @@ class DatabaseRepository {
     }
 
     fun updateDatabase(id: String, name: String, folderId: String?): CustomDatabase? = transaction {
-        val exists = CustomDatabasesTable.select { CustomDatabasesTable.id eq id }.count() > 0
+        val exists = CustomDatabasesTable.select { CustomDatabasesTable.id eq id }.any()
         if (!exists) return@transaction null
 
         val now = Instant.now()
