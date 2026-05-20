@@ -2,6 +2,7 @@ package com.notebox.domain.auth
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.notebox.exception.OAuthException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.FormBody
@@ -72,16 +73,16 @@ class AppleOAuthProvider(
 
         httpClient.newCall(request).execute().use { response ->
             val responseBody = response.body?.string()
-                ?: throw RuntimeException("Empty response body from Apple token endpoint")
+                ?: throw OAuthException("Empty response body from Apple token endpoint")
 
             if (!response.isSuccessful) {
-                throw RuntimeException("Failed to exchange code with Apple (${response.code}): $responseBody")
+                throw OAuthException("Failed to exchange code with Apple (${response.code}): $responseBody")
             }
 
             val tokenResponse = try {
                 objectMapper.readValue(responseBody, AppleTokenResponse::class.java)
             } catch (e: Exception) {
-                throw RuntimeException("Failed to parse Apple token response: ${e.message}", e)
+                throw OAuthException("Failed to parse Apple token response: ${e.message}", e)
             }
 
             OAuthTokens(
@@ -103,29 +104,29 @@ class AppleOAuthProvider(
         // Decode JWT - this is simplified, in production use a proper JWT library
         val parts = idToken.split(".")
         if (parts.size != 3) {
-            throw RuntimeException("Invalid Apple ID token format: expected 3 parts, got ${parts.size}")
+            throw OAuthException("Invalid Apple ID token format: expected 3 parts, got ${parts.size}")
         }
 
         val payload = try {
             String(Base64.getUrlDecoder().decode(parts[1]))
         } catch (e: Exception) {
-            throw RuntimeException("Failed to decode Apple ID token payload: ${e.message}", e)
+            throw OAuthException("Failed to decode Apple ID token payload: ${e.message}", e)
         }
 
         val payloadMap = try {
             @Suppress("UNCHECKED_CAST")
             objectMapper.readValue(payload, Map::class.java) as Map<String, Any>
         } catch (e: Exception) {
-            throw RuntimeException("Failed to parse Apple ID token JSON: ${e.message}", e)
+            throw OAuthException("Failed to parse Apple ID token JSON: ${e.message}", e)
         }
 
         val sub = payloadMap["sub"] as? String
-            ?: throw RuntimeException("Missing 'sub' field in Apple ID token")
+            ?: throw OAuthException("Missing 'sub' field in Apple ID token")
         val email = payloadMap["email"] as? String
-            ?: throw RuntimeException("Missing 'email' field in Apple ID token")
+            ?: throw OAuthException("Missing 'email' field in Apple ID token")
 
         if (email.isBlank()) {
-            throw RuntimeException("Email cannot be empty from Apple OAuth response")
+            throw OAuthException("Email cannot be empty from Apple OAuth response")
         }
 
         return OAuthUserInfo(

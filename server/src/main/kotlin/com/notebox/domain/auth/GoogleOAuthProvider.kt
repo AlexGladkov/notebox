@@ -2,6 +2,7 @@ package com.notebox.domain.auth
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.notebox.exception.OAuthException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.FormBody
@@ -73,16 +74,16 @@ class GoogleOAuthProvider(
 
         httpClient.newCall(request).execute().use { response ->
             val responseBody = response.body?.string()
-                ?: throw RuntimeException("Empty response body from Google token endpoint")
+                ?: throw OAuthException("Empty response body from Google token endpoint")
 
             if (!response.isSuccessful) {
-                throw RuntimeException("Failed to exchange code with Google (${response.code}): $responseBody")
+                throw OAuthException("Failed to exchange code with Google (${response.code}): $responseBody")
             }
 
             val tokenResponse = try {
                 objectMapper.readValue(responseBody, GoogleTokenResponse::class.java)
             } catch (e: Exception) {
-                throw RuntimeException("Failed to parse Google token response: ${e.message}", e)
+                throw OAuthException("Failed to parse Google token response: ${e.message}", e)
             }
 
             OAuthTokens(
@@ -102,20 +103,20 @@ class GoogleOAuthProvider(
 
         httpClient.newCall(request).execute().use { response ->
             val responseBody = response.body?.string()
-                ?: throw RuntimeException("Empty response body from Google userinfo endpoint")
+                ?: throw OAuthException("Empty response body from Google userinfo endpoint")
 
             if (!response.isSuccessful) {
-                throw RuntimeException("Failed to get user info from Google (${response.code}): $responseBody")
+                throw OAuthException("Failed to get user info from Google (${response.code}): $responseBody")
             }
 
             val userInfo = try {
                 objectMapper.readValue(responseBody, GoogleUserInfoResponse::class.java)
             } catch (e: Exception) {
-                throw RuntimeException("Failed to parse Google userinfo response: ${e.message}", e)
+                throw OAuthException("Failed to parse Google userinfo response: ${e.message}", e)
             }
 
             if (userInfo.email.isBlank()) {
-                throw RuntimeException("Email cannot be empty from Google OAuth response")
+                throw OAuthException("Email cannot be empty from Google OAuth response")
             }
 
             OAuthUserInfo(
