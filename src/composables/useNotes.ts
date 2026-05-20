@@ -1,10 +1,14 @@
-import { computed, ref, type Ref } from 'vue';
+import { computed, ref, type Ref, type ComputedRef } from 'vue';
 import type { Note } from '../types';
+import type { UseNotesReturn } from '../types/composables';
+import { getErrorMessage } from '../types/composables';
 import { offlineStore } from '../services/offline/offlineStore';
 import { indexedDbService } from '../services/offline/indexedDb';
 import { notesApi } from '../api';
 
-export function useNotes(notes: Ref<Note[]>) {
+export function useNotes(notes: Ref<Note[]>): UseNotesReturn {
+  const loading = ref(false);
+  const error = ref<string | null>(null);
   const expandedNotes = ref<Set<string>>(new Set());
 
   // Загрузка состояния сворачивания из localStorage
@@ -30,7 +34,9 @@ export function useNotes(notes: Ref<Note[]>) {
 
   loadExpandedState();
 
-  const createNote = async (title: string, parentId?: string | null) => {
+  const createNote = async (title: string, parentId?: string | null): Promise<Note> => {
+    loading.value = true;
+    error.value = null;
     try {
       // Используем offlineStore, который автоматически управляет синхронизацией
       const newNote = await offlineStore.createNote({
@@ -41,17 +47,23 @@ export function useNotes(notes: Ref<Note[]>) {
       notes.value.push(newNote);
       return newNote;
     } catch (err) {
+      const message = getErrorMessage(err);
+      error.value = `Не удалось создать заметку: ${message}`;
       console.error('Failed to create note:', err);
       throw err;
+    } finally {
+      loading.value = false;
     }
   };
 
-  const updateNote = async (id: string, updates: Partial<Omit<Note, 'id' | 'createdAt'>>) => {
+  const updateNote = async (id: string, updates: Partial<Omit<Note, 'id' | 'createdAt'>>): Promise<void> => {
     const note = notes.value.find(n => n.id === id);
     if (!note) {
       throw new Error('Note not found');
     }
 
+    loading.value = true;
+    error.value = null;
     try {
       // Используем offlineStore для обновления
       const updatedNote = await offlineStore.updateNote(id, {
@@ -69,12 +81,18 @@ export function useNotes(notes: Ref<Note[]>) {
         notes.value[index] = updatedNote;
       }
     } catch (err) {
+      const message = getErrorMessage(err);
+      error.value = `Не удалось обновить заметку: ${message}`;
       console.error('Failed to update note:', err);
       throw err;
+    } finally {
+      loading.value = false;
     }
   };
 
-  const deleteNote = async (id: string, cascadeDelete: boolean = true) => {
+  const deleteNote = async (id: string, cascadeDelete: boolean = true): Promise<void> => {
+    loading.value = true;
+    error.value = null;
     try {
       if (cascadeDelete) {
         // Получаем всех потомков для удаления из UI
@@ -97,16 +115,20 @@ export function useNotes(notes: Ref<Note[]>) {
         notes.value = notes.value.filter(n => n.id !== id);
       }
     } catch (err) {
+      const message = getErrorMessage(err);
+      error.value = `Не удалось удалить заметку: ${message}`;
       console.error('Failed to delete note:', err);
       throw err;
+    } finally {
+      loading.value = false;
     }
   };
 
-  const getNoteById = (id: string) => {
+  const getNoteById = (id: string): Note | undefined => {
     return notes.value.find(n => n.id === id);
   };
 
-  const getRootNotes = () => {
+  const getRootNotes = (): ComputedRef<Note[]> => {
     return computed(() =>
       notes.value
         .filter(n => !n.parentId)
@@ -114,7 +136,7 @@ export function useNotes(notes: Ref<Note[]>) {
     );
   };
 
-  const getChildren = (parentId: string) => {
+  const getChildren = (parentId: string): ComputedRef<Note[]> => {
     return computed(() =>
       notes.value
         .filter(n => n.parentId === parentId)
@@ -141,15 +163,23 @@ export function useNotes(notes: Ref<Note[]>) {
   };
 
   const getNotePath = async (noteId: string): Promise<Note[]> => {
+    loading.value = true;
+    error.value = null;
     try {
       return await notesApi.getPath(noteId);
     } catch (err) {
+      const message = getErrorMessage(err);
+      error.value = `Не удалось получить путь заметки: ${message}`;
       console.error('Failed to get note path:', err);
       throw err;
+    } finally {
+      loading.value = false;
     }
   };
 
-  const moveNote = async (noteId: string, targetParentId: string | null) => {
+  const moveNote = async (noteId: string, targetParentId: string | null): Promise<void> => {
+    loading.value = true;
+    error.value = null;
     try {
       // Используем offlineStore для перемещения
       const updatedNote = await offlineStore.moveNote(noteId, targetParentId);
@@ -158,12 +188,16 @@ export function useNotes(notes: Ref<Note[]>) {
         notes.value[index] = updatedNote;
       }
     } catch (err) {
+      const message = getErrorMessage(err);
+      error.value = `Не удалось переместить заметку: ${message}`;
       console.error('Failed to move note:', err);
       throw err;
+    } finally {
+      loading.value = false;
     }
   };
 
-  const toggleNoteExpanded = (noteId: string) => {
+  const toggleNoteExpanded = (noteId: string): void => {
     if (expandedNotes.value.has(noteId)) {
       expandedNotes.value.delete(noteId);
     } else {
@@ -172,17 +206,17 @@ export function useNotes(notes: Ref<Note[]>) {
     saveExpandedState();
   };
 
-  const expandNote = (noteId: string) => {
+  const expandNote = (noteId: string): void => {
     expandedNotes.value.add(noteId);
     saveExpandedState();
   };
 
-  const collapseNote = (noteId: string) => {
+  const collapseNote = (noteId: string): void => {
     expandedNotes.value.delete(noteId);
     saveExpandedState();
   };
 
-  const expandAllAncestors = (noteId: string) => {
+  const expandAllAncestors = (noteId: string): void => {
     let currentId: string | null | undefined = noteId;
 
     while (currentId) {
@@ -200,6 +234,8 @@ export function useNotes(notes: Ref<Note[]>) {
   };
 
   return {
+    loading,
+    error,
     createNote,
     updateNote,
     deleteNote,
