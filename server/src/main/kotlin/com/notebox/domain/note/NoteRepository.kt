@@ -133,7 +133,8 @@ class NoteRepository {
         """.trimIndent()
 
         val result = mutableListOf<Note>()
-        TransactionManager.current().exec(sql) { stmt ->
+        val connection = TransactionManager.current().connection
+        connection.prepareStatement(sql).use { stmt ->
             stmt.setString(1, noteId)
             stmt.executeQuery().use { rs ->
                 while (rs.next()) {
@@ -161,7 +162,8 @@ class NoteRepository {
         """.trimIndent()
 
         var result = 0
-        TransactionManager.current().exec(sql) { stmt ->
+        val connection = TransactionManager.current().connection
+        connection.prepareStatement(sql).use { stmt ->
             stmt.setString(1, noteId)
             stmt.executeQuery().use { rs ->
                 if (rs.next()) {
@@ -194,7 +196,8 @@ class NoteRepository {
         """.trimIndent()
 
         val result = mutableListOf<Note>()
-        TransactionManager.current().exec(sql) { stmt ->
+        val connection = TransactionManager.current().connection
+        connection.prepareStatement(sql).use { stmt ->
             stmt.setString(1, noteId)
             stmt.executeQuery().use { rs ->
                 while (rs.next()) {
