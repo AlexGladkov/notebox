@@ -1,11 +1,9 @@
 package com.notebox.domain.note
 
-import com.notebox.domain.tag.NoteTagsTable
-import com.notebox.domain.tag.Tag
-import com.notebox.domain.tag.TagsTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.springframework.stereotype.Repository
 import java.time.Instant
 import java.util.*
@@ -92,6 +90,19 @@ class NoteRepository {
         NotesTable.deleteWhere { NotesTable.id eq id } > 0
     }
 
+    fun findByIds(ids: List<String>): List<Note> = transaction {
+        if (ids.isEmpty()) return@transaction emptyList()
+
+        NotesTable.select { NotesTable.id inList ids }
+            .map { toNote(it) }
+    }
+
+    fun deleteByIds(ids: List<String>): Int = transaction {
+        if (ids.isEmpty()) return@transaction 0
+
+        NotesTable.deleteWhere { NotesTable.id inList ids }
+    }
+
     fun findByParentId(parentId: String?): List<Note> = transaction {
         if (parentId == null) {
             NotesTable.select { NotesTable.parentId.isNull() }
@@ -103,43 +114,77 @@ class NoteRepository {
     }
 
     fun findAllDescendants(noteId: String): List<Note> = transaction {
-        val descendants = mutableListOf<Note>()
-        val queue = mutableListOf(noteId)
+        val sql = """
+            WITH RECURSIVE descendants AS (
+                SELECT id, title, content, parent_id, icon, backdrop_type, backdrop_value,
+                       backdrop_position_y, color, created_at, updated_at
+                FROM notes
+                WHERE parent_id = ?
 
-        while (queue.isNotEmpty()) {
-            val currentId = queue.removeAt(0)
-            val children = findByParentId(currentId)
-            descendants.addAll(children)
-            queue.addAll(children.map { it.id })
-        }
+                UNION ALL
 
-        descendants
+                SELECT n.id, n.title, n.content, n.parent_id, n.icon, n.backdrop_type,
+                       n.backdrop_value, n.backdrop_position_y, n.color, n.created_at, n.updated_at
+                FROM notes n
+                INNER JOIN descendants d ON n.parent_id = d.id
+            )
+            SELECT * FROM descendants
+        """.trimIndent()
+
+        TransactionManager.current().exec(sql, listOf(StringColumnType() to noteId)) { rs ->
+            generateSequence {
+                if (rs.next()) toNoteFromResultSet(rs) else null
+            }.toList()
+        } ?: emptyList()
     }
 
     fun getDepth(noteId: String): Int = transaction {
-        var depth = 0
-        var currentId: String? = noteId
+        val sql = """
+            WITH RECURSIVE ancestors AS (
+                SELECT id, parent_id, 0 as depth
+                FROM notes
+                WHERE id = ?
 
-        while (currentId != null) {
-            val note = findById(currentId) ?: break
-            currentId = note.parentId
-            if (currentId != null) depth++
-        }
+                UNION ALL
 
-        depth
+                SELECT n.id, n.parent_id, a.depth + 1
+                FROM notes n
+                INNER JOIN ancestors a ON n.id = a.parent_id
+            )
+            SELECT MAX(depth) as max_depth FROM ancestors
+        """.trimIndent()
+
+        TransactionManager.current().exec(sql, listOf(StringColumnType() to noteId)) { rs ->
+            if (rs.next()) rs.getInt("max_depth") else 0
+        } ?: 0
     }
 
     fun getAncestorPath(noteId: String): List<Note> = transaction {
-        val path = mutableListOf<Note>()
-        var currentId: String? = noteId
+        val sql = """
+            WITH RECURSIVE ancestors AS (
+                SELECT id, title, content, parent_id, icon, backdrop_type, backdrop_value,
+                       backdrop_position_y, color, created_at, updated_at, 0 as depth
+                FROM notes
+                WHERE id = ?
 
-        while (currentId != null) {
-            val note = findById(currentId) ?: break
-            path.add(0, note)
-            currentId = note.parentId
-        }
+                UNION ALL
 
-        path
+                SELECT n.id, n.title, n.content, n.parent_id, n.icon, n.backdrop_type,
+                       n.backdrop_value, n.backdrop_position_y, n.color, n.created_at, n.updated_at,
+                       a.depth + 1
+                FROM notes n
+                INNER JOIN ancestors a ON n.id = a.parent_id
+            )
+            SELECT id, title, content, parent_id, icon, backdrop_type, backdrop_value,
+                   backdrop_position_y, color, created_at, updated_at
+            FROM ancestors ORDER BY depth DESC
+        """.trimIndent()
+
+        TransactionManager.current().exec(sql, listOf(StringColumnType() to noteId)) { rs ->
+            generateSequence {
+                if (rs.next()) toNoteFromResultSet(rs) else null
+            }.toList()
+        } ?: emptyList()
     }
 
     fun updateParentId(noteId: String, newParentId: String?): Boolean = transaction {
@@ -162,26 +207,20 @@ class NoteRepository {
     fun deleteWithDescendants(noteId: String): Int = transaction {
         val descendants = findAllDescendants(noteId)
         val allIds = listOf(noteId) + descendants.map { it.id }
-        var deletedCount = 0
-        allIds.forEach { id ->
-            deletedCount += NotesTable.deleteWhere { NotesTable.id eq id }
-        }
-        deletedCount
+
+        if (allIds.isEmpty()) return@transaction 0
+
+        NotesTable.deleteWhere { NotesTable.id inList allIds }
     }
 
     fun orphanChildren(noteId: String): Int = transaction {
         val note = findById(noteId) ?: return@transaction 0
-        val children = findByParentId(noteId)
-
         val now = Instant.now()
-        children.forEach { child ->
-            NotesTable.update({ NotesTable.id eq child.id }) {
-                it[parentId] = note.parentId
-                it[updatedAt] = now
-            }
-        }
 
-        children.size
+        NotesTable.update({ NotesTable.parentId eq noteId }) {
+            it[parentId] = note.parentId
+            it[updatedAt] = now
+        }
     }
 
     /**
@@ -196,41 +235,6 @@ class NoteRepository {
         NotesTable.deleteAll()
     }
 
-    fun findTagsByNoteId(noteId: String): List<Tag> = transaction {
-        (TagsTable innerJoin NoteTagsTable)
-            .select { NoteTagsTable.noteId eq noteId }
-            .map { row ->
-                Tag(
-                    id = row[TagsTable.id],
-                    userId = row[TagsTable.userId],
-                    name = row[TagsTable.name],
-                    color = row[TagsTable.color],
-                    createdAt = row[TagsTable.createdAt]
-                )
-            }
-    }
-
-    fun findTagsForNotes(noteIds: List<String>): Map<String, List<Tag>> = transaction {
-        if (noteIds.isEmpty()) return@transaction emptyMap()
-
-        val tagsForNotes = (TagsTable innerJoin NoteTagsTable)
-            .select { NoteTagsTable.noteId inList noteIds }
-            .groupBy { it[NoteTagsTable.noteId] }
-            .mapValues { (_, rows) ->
-                rows.map { row ->
-                    Tag(
-                        id = row[TagsTable.id],
-                        userId = row[TagsTable.userId],
-                        name = row[TagsTable.name],
-                        color = row[TagsTable.color],
-                        createdAt = row[TagsTable.createdAt]
-                    )
-                }
-            }
-
-        tagsForNotes
-    }
-
     private fun toNote(row: ResultRow) = Note(
         id = row[NotesTable.id],
         title = row[NotesTable.title],
@@ -243,5 +247,19 @@ class NoteRepository {
         color = row[NotesTable.color],
         createdAt = row[NotesTable.createdAt],
         updatedAt = row[NotesTable.updatedAt]
+    )
+
+    private fun toNoteFromResultSet(rs: java.sql.ResultSet) = Note(
+        id = rs.getString("id"),
+        title = rs.getString("title"),
+        content = rs.getString("content"),
+        parentId = rs.getString("parent_id"),
+        icon = rs.getString("icon"),
+        backdropType = rs.getString("backdrop_type"),
+        backdropValue = rs.getString("backdrop_value"),
+        backdropPositionY = rs.getInt("backdrop_position_y"),
+        color = rs.getString("color"),
+        createdAt = rs.getTimestamp("created_at").toInstant(),
+        updatedAt = rs.getTimestamp("updated_at").toInstant()
     )
 }
