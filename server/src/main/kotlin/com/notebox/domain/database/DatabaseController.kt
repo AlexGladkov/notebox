@@ -1,12 +1,14 @@
 package com.notebox.domain.database
 
 import com.notebox.dto.*
-import com.notebox.util.ValidationUtils
+import com.notebox.validation.ValidUuid
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
 
+@Validated
 @RestController
 @RequestMapping("/api/databases")
 class DatabaseController(
@@ -21,8 +23,7 @@ class DatabaseController(
     }
 
     @GetMapping("/{id}")
-    fun getDatabaseById(@PathVariable id: String): ResponseEntity<ApiResponse<CustomDatabaseDto>> {
-        ValidationUtils.validateUUID(id, "id")
+    fun getDatabaseById(@PathVariable @ValidUuid(fieldName = "id") id: String): ResponseEntity<ApiResponse<CustomDatabaseDto>> {
         val (database, columns) = databaseService.getDatabaseById(id)
             ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(errorResponse("NOT_FOUND", "Database not found"))
@@ -32,9 +33,6 @@ class DatabaseController(
 
     @PostMapping
     fun createDatabase(@Valid @RequestBody request: CreateDatabaseRequest): ResponseEntity<ApiResponse<CustomDatabaseDto>> {
-        if (request.folderId != null) {
-            ValidationUtils.validateUUID(request.folderId, "folderId")
-        }
         val (database, columns) = databaseService.createDatabase(request.name, request.folderId)
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(successResponse(database.toDto(columns)))
@@ -42,13 +40,9 @@ class DatabaseController(
 
     @PutMapping("/{id}")
     fun updateDatabase(
-        @PathVariable id: String,
+        @PathVariable @ValidUuid(fieldName = "id") id: String,
         @Valid @RequestBody request: UpdateDatabaseRequest
     ): ResponseEntity<ApiResponse<CustomDatabaseDto>> {
-        ValidationUtils.validateUUID(id, "id")
-        if (request.folderId != null) {
-            ValidationUtils.validateUUID(request.folderId, "folderId")
-        }
         val (database, columns) = databaseService.updateDatabase(id, request.name, request.folderId)
             ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(errorResponse("NOT_FOUND", "Database not found"))
@@ -57,8 +51,7 @@ class DatabaseController(
     }
 
     @DeleteMapping("/{id}")
-    fun deleteDatabase(@PathVariable id: String): ResponseEntity<Void> {
-        ValidationUtils.validateUUID(id, "id")
+    fun deleteDatabase(@PathVariable @ValidUuid(fieldName = "id") id: String): ResponseEntity<Void> {
         databaseService.deleteDatabase(id)
         return ResponseEntity.noContent().build()
     }
@@ -66,10 +59,9 @@ class DatabaseController(
     // Column endpoints
     @PostMapping("/{id}/columns")
     fun addColumn(
-        @PathVariable id: String,
+        @PathVariable @ValidUuid(fieldName = "id") id: String,
         @Valid @RequestBody request: CreateColumnRequest
     ): ResponseEntity<ApiResponse<ColumnDto>> {
-        ValidationUtils.validateUUID(id, "id")
         val column = databaseService.addColumn(
             id,
             request.name,
@@ -83,12 +75,10 @@ class DatabaseController(
 
     @PutMapping("/{id}/columns/{columnId}")
     fun updateColumn(
-        @PathVariable id: String,
-        @PathVariable columnId: String,
+        @PathVariable @ValidUuid(fieldName = "id") id: String,
+        @PathVariable @ValidUuid(fieldName = "columnId") columnId: String,
         @Valid @RequestBody request: UpdateColumnRequest
     ): ResponseEntity<ApiResponse<ColumnDto>> {
-        ValidationUtils.validateUUID(id, "id")
-        ValidationUtils.validateUUID(columnId, "columnId")
         val column = databaseService.updateColumn(
             columnId,
             request.name,
@@ -103,29 +93,25 @@ class DatabaseController(
 
     @DeleteMapping("/{id}/columns/{columnId}")
     fun deleteColumn(
-        @PathVariable id: String,
-        @PathVariable columnId: String
+        @PathVariable @ValidUuid(fieldName = "id") id: String,
+        @PathVariable @ValidUuid(fieldName = "columnId") columnId: String
     ): ResponseEntity<Void> {
-        ValidationUtils.validateUUID(id, "id")
-        ValidationUtils.validateUUID(columnId, "columnId")
         databaseService.deleteColumn(columnId)
         return ResponseEntity.noContent().build()
     }
 
     // Record endpoints
     @GetMapping("/{id}/records")
-    fun getRecords(@PathVariable id: String): ResponseEntity<ApiResponse<List<RecordDto>>> {
-        ValidationUtils.validateUUID(id, "id")
+    fun getRecords(@PathVariable @ValidUuid(fieldName = "id") id: String): ResponseEntity<ApiResponse<List<RecordDto>>> {
         val records = databaseService.getRecordsByDatabaseId(id)
         return ResponseEntity.ok(successResponse(records))
     }
 
     @PostMapping("/{id}/records")
     fun createRecord(
-        @PathVariable id: String,
+        @PathVariable @ValidUuid(fieldName = "id") id: String,
         @Valid @RequestBody request: CreateRecordRequest
     ): ResponseEntity<ApiResponse<RecordDto>> {
-        ValidationUtils.validateUUID(id, "id")
         val record = databaseService.createRecord(id, request.data)
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(successResponse(record))
@@ -133,12 +119,10 @@ class DatabaseController(
 
     @PutMapping("/{id}/records/{recordId}")
     fun updateRecord(
-        @PathVariable id: String,
-        @PathVariable recordId: String,
+        @PathVariable @ValidUuid(fieldName = "id") id: String,
+        @PathVariable @ValidUuid(fieldName = "recordId") recordId: String,
         @Valid @RequestBody request: UpdateRecordRequest
     ): ResponseEntity<ApiResponse<RecordDto>> {
-        ValidationUtils.validateUUID(id, "id")
-        ValidationUtils.validateUUID(recordId, "recordId")
         val record = databaseService.updateRecord(recordId, request.data)
             ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(errorResponse("NOT_FOUND", "Record not found"))
@@ -148,11 +132,9 @@ class DatabaseController(
 
     @DeleteMapping("/{id}/records/{recordId}")
     fun deleteRecord(
-        @PathVariable id: String,
-        @PathVariable recordId: String
+        @PathVariable @ValidUuid(fieldName = "id") id: String,
+        @PathVariable @ValidUuid(fieldName = "recordId") recordId: String
     ): ResponseEntity<Void> {
-        ValidationUtils.validateUUID(id, "id")
-        ValidationUtils.validateUUID(recordId, "recordId")
         databaseService.deleteRecord(recordId)
         return ResponseEntity.noContent().build()
     }

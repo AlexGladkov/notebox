@@ -1,14 +1,16 @@
 package com.notebox.domain.reminder
 
 import com.notebox.dto.*
-import com.notebox.util.ValidationUtils
+import com.notebox.validation.ValidUuid
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
 import java.time.Instant
 
+@Validated
 @RestController
 @RequestMapping("/api/reminders")
 class ReminderController(
@@ -23,8 +25,7 @@ class ReminderController(
     }
 
     @GetMapping("/{id}")
-    fun getReminderById(@PathVariable id: String): ResponseEntity<ApiResponse<ReminderDto>> {
-        ValidationUtils.validateUUID(id, "id")
+    fun getReminderById(@PathVariable @ValidUuid(fieldName = "id") id: String): ResponseEntity<ApiResponse<ReminderDto>> {
         val userId = getCurrentUserId()
         val reminder = reminderService.getReminderById(id, userId)
             ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -34,8 +35,7 @@ class ReminderController(
     }
 
     @GetMapping("/note/{noteId}")
-    fun getRemindersByNoteId(@PathVariable noteId: String): ResponseEntity<ApiResponse<List<ReminderDto>>> {
-        ValidationUtils.validateUUID(noteId, "noteId")
+    fun getRemindersByNoteId(@PathVariable @ValidUuid(fieldName = "noteId") noteId: String): ResponseEntity<ApiResponse<List<ReminderDto>>> {
         val userId = getCurrentUserId()
         val reminders = reminderService.getRemindersByNoteId(noteId, userId)
         return ResponseEntity.ok(successResponse(reminders.map { it.toDto() }))
@@ -54,7 +54,6 @@ class ReminderController(
     fun createReminder(
         @Valid @RequestBody request: CreateReminderRequest
     ): ResponseEntity<ApiResponse<ReminderDto>> {
-        ValidationUtils.validateUUID(request.noteId, "noteId")
         val userId = getCurrentUserId()
 
         try {
@@ -79,10 +78,9 @@ class ReminderController(
 
     @PutMapping("/{id}")
     fun updateReminder(
-        @PathVariable id: String,
+        @PathVariable @ValidUuid(fieldName = "id") id: String,
         @Valid @RequestBody request: UpdateReminderRequest
     ): ResponseEntity<ApiResponse<ReminderDto>> {
-        ValidationUtils.validateUUID(id, "id")
         val userId = getCurrentUserId()
 
         try {
@@ -105,8 +103,7 @@ class ReminderController(
     }
 
     @DeleteMapping("/{id}")
-    fun deleteReminder(@PathVariable id: String): ResponseEntity<Void> {
-        ValidationUtils.validateUUID(id, "id")
+    fun deleteReminder(@PathVariable @ValidUuid(fieldName = "id") id: String): ResponseEntity<Void> {
         val userId = getCurrentUserId()
 
         val deleted = reminderService.deleteReminder(id, userId)

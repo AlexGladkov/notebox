@@ -1,5 +1,6 @@
 package com.notebox.dto
 
+import com.notebox.validation.ValidUuidList
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Size
@@ -29,5 +30,6 @@ data class UpdateTagRequest(
 
 data class SetNoteTagsRequest(
     @field:NotNull(message = "Tag IDs list cannot be null")
+    @field:ValidUuidList
     val tagIds: List<String>
 )

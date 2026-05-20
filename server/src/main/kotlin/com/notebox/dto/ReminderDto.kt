@@ -1,5 +1,6 @@
 package com.notebox.dto
 
+import com.notebox.validation.ValidUuid
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
@@ -19,6 +20,7 @@ data class ReminderDto(
 
 data class CreateReminderRequest(
     @field:NotBlank(message = "Note ID cannot be blank")
+    @field:ValidUuid(fieldName = "noteId")
     val noteId: String,
 
     @field:Size(max = 500, message = "Title must be less than 500 characters")

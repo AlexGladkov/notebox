@@ -1,5 +1,6 @@
 package com.notebox.dto
 
+import com.notebox.validation.ValidUuid
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 
@@ -17,6 +18,7 @@ data class CreateDatabaseRequest(
     @field:Size(max = 255, message = "Name must be less than 255 characters")
     val name: String,
 
+    @field:ValidUuid(fieldName = "folderId")
     val folderId: String?
 )
 
@@ -25,5 +27,6 @@ data class UpdateDatabaseRequest(
     @field:Size(max = 255, message = "Name must be less than 255 characters")
     val name: String,
 
+    @field:ValidUuid(fieldName = "folderId")
     val folderId: String?
 )

@@ -2,13 +2,15 @@ package com.notebox.domain.tag
 
 import com.notebox.domain.auth.SessionService
 import com.notebox.dto.*
-import com.notebox.util.ValidationUtils
+import com.notebox.validation.ValidUuid
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
 
+@Validated
 @RestController
 @RequestMapping("/api/tags")
 class TagController(
@@ -32,11 +34,9 @@ class TagController(
 
     @GetMapping("/{id}")
     fun getTagById(
-        @PathVariable id: String,
+        @PathVariable @ValidUuid(fieldName = "id") id: String,
         request: HttpServletRequest
     ): ResponseEntity<ApiResponse<TagDto>> {
-        ValidationUtils.validateUUID(id, "id")
-
         val userId = getUserIdFromRequest(request)
             ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(errorResponse("UNAUTHORIZED", "Not authenticated"))
@@ -75,12 +75,10 @@ class TagController(
 
     @PutMapping("/{id}")
     fun updateTag(
-        @PathVariable id: String,
+        @PathVariable @ValidUuid(fieldName = "id") id: String,
         @Valid @RequestBody request: UpdateTagRequest,
         httpRequest: HttpServletRequest
     ): ResponseEntity<ApiResponse<TagDto>> {
-        ValidationUtils.validateUUID(id, "id")
-
         val userId = getUserIdFromRequest(httpRequest)
             ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(errorResponse("UNAUTHORIZED", "Not authenticated"))
@@ -109,11 +107,9 @@ class TagController(
 
     @DeleteMapping("/{id}")
     fun deleteTag(
-        @PathVariable id: String,
+        @PathVariable @ValidUuid(fieldName = "id") id: String,
         httpRequest: HttpServletRequest
     ): ResponseEntity<ApiResponse<*>> {
-        ValidationUtils.validateUUID(id, "id")
-
         val userId = getUserIdFromRequest(httpRequest)
             ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(errorResponse<Nothing>("UNAUTHORIZED", "Not authenticated"))
@@ -134,13 +130,10 @@ class TagController(
 
     @PutMapping("/notes/{noteId}/tags")
     fun setNoteTags(
-        @PathVariable noteId: String,
+        @PathVariable @ValidUuid(fieldName = "noteId") noteId: String,
         @Valid @RequestBody request: SetNoteTagsRequest,
         httpRequest: HttpServletRequest
     ): ResponseEntity<ApiResponse<List<TagDto>>> {
-        ValidationUtils.validateUUID(noteId, "noteId")
-        request.tagIds.forEach { ValidationUtils.validateUUID(it, "tagId") }
-
         val userId = getUserIdFromRequest(httpRequest)
             ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(errorResponse("UNAUTHORIZED", "Not authenticated"))
@@ -163,8 +156,7 @@ class TagController(
     }
 
     @GetMapping("/notes/{noteId}/tags")
-    fun getNoteTags(@PathVariable noteId: String): ResponseEntity<ApiResponse<List<TagDto>>> {
-        ValidationUtils.validateUUID(noteId, "noteId")
+    fun getNoteTags(@PathVariable @ValidUuid(fieldName = "noteId") noteId: String): ResponseEntity<ApiResponse<List<TagDto>>> {
         val tags = tagService.getNoteTags(noteId).map { it.toDto() }
         return ResponseEntity.ok(successResponse(tags))
     }

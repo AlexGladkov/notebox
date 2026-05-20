@@ -1,12 +1,14 @@
 package com.notebox.domain.note
 
 import com.notebox.dto.*
-import com.notebox.util.ValidationUtils
+import com.notebox.validation.ValidUuid
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
 
+@Validated
 @RestController
 @RequestMapping("/api/notes")
 class NoteController(
@@ -26,8 +28,7 @@ class NoteController(
     }
 
     @GetMapping("/{id}")
-    fun getNoteById(@PathVariable id: String): ResponseEntity<ApiResponse<NoteDto>> {
-        ValidationUtils.validateUUID(id, "id")
+    fun getNoteById(@PathVariable @ValidUuid(fieldName = "id") id: String): ResponseEntity<ApiResponse<NoteDto>> {
         val noteDto = noteService.getNoteByIdWithTags(id)
             ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(errorResponse("NOT_FOUND", "Note not found"))
@@ -37,9 +38,6 @@ class NoteController(
 
     @PostMapping
     fun createNote(@Valid @RequestBody request: CreateNoteRequest): ResponseEntity<ApiResponse<NoteDto>> {
-        if (request.parentId != null) {
-            ValidationUtils.validateUUID(request.parentId, "parentId")
-        }
         try {
             val note = noteService.createNote(
                 request.title,
@@ -64,13 +62,9 @@ class NoteController(
 
     @PutMapping("/{id}")
     fun updateNote(
-        @PathVariable id: String,
+        @PathVariable @ValidUuid(fieldName = "id") id: String,
         @Valid @RequestBody request: UpdateNoteRequest
     ): ResponseEntity<ApiResponse<NoteDto>> {
-        ValidationUtils.validateUUID(id, "id")
-        if (request.parentId != null) {
-            ValidationUtils.validateUUID(request.parentId, "parentId")
-        }
         noteService.updateNote(
             id,
             request.title,
@@ -93,38 +87,31 @@ class NoteController(
 
     @DeleteMapping("/{id}")
     fun deleteNote(
-        @PathVariable id: String,
+        @PathVariable @ValidUuid(fieldName = "id") id: String,
         @RequestParam(required = false, defaultValue = "cascade") action: String
     ): ResponseEntity<Void> {
-        ValidationUtils.validateUUID(id, "id")
         val cascadeDelete = action == "cascade"
         noteService.deleteNote(id, cascadeDelete)
         return ResponseEntity.noContent().build()
     }
 
     @GetMapping("/{id}/children")
-    fun getChildren(@PathVariable id: String): ResponseEntity<ApiResponse<List<NoteDto>>> {
-        ValidationUtils.validateUUID(id, "id")
+    fun getChildren(@PathVariable @ValidUuid(fieldName = "id") id: String): ResponseEntity<ApiResponse<List<NoteDto>>> {
         val children = noteService.getChildrenWithTags(id)
         return ResponseEntity.ok(successResponse(children))
     }
 
     @GetMapping("/{id}/path")
-    fun getPath(@PathVariable id: String): ResponseEntity<ApiResponse<List<NoteDto>>> {
-        ValidationUtils.validateUUID(id, "id")
+    fun getPath(@PathVariable @ValidUuid(fieldName = "id") id: String): ResponseEntity<ApiResponse<List<NoteDto>>> {
         val path = noteService.getAncestorPathWithTags(id)
         return ResponseEntity.ok(successResponse(path))
     }
 
     @PutMapping("/{id}/move")
     fun moveNote(
-        @PathVariable id: String,
-        @RequestBody request: MoveNoteRequest
+        @PathVariable @ValidUuid(fieldName = "id") id: String,
+        @Valid @RequestBody request: MoveNoteRequest
     ): ResponseEntity<ApiResponse<NoteDto>> {
-        ValidationUtils.validateUUID(id, "id")
-        if (request.parentId != null) {
-            ValidationUtils.validateUUID(request.parentId, "parentId")
-        }
         try {
             noteService.moveNote(id, request.parentId)
                 ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
