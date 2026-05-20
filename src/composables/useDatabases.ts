@@ -1,59 +1,52 @@
-import { computed } from 'vue';
-import {
-  useDatabasesCrud,
-  useColumnsCrud,
-  useRecordsCrud,
-  useRecordsBatch,
-  useViewsCrud,
-} from './database';
+import { storeToRefs } from 'pinia';
+import { useDatabasesStore } from '../stores/databasesStore';
 
 export function useDatabases() {
-  const databasesCrud = useDatabasesCrud();
-  const columnsCrud = useColumnsCrud(databasesCrud.databases);
-  const recordsCrud = useRecordsCrud();
-  const recordsBatch = useRecordsBatch(recordsCrud.records);
-  const viewsCrud = useViewsCrud(databasesCrud.databases);
+  const store = useDatabasesStore();
+  const { databases, records, loading, error } = storeToRefs(store);
 
   return {
     // State
-    databases: databasesCrud.databases,
-    records: recordsCrud.records,
-    loading: computed(() => databasesCrud.loading.value || recordsCrud.loading.value),
-    error: computed(() =>
-      databasesCrud.error.value ||
-      columnsCrud.error.value ||
-      recordsCrud.error.value ||
-      recordsBatch.error.value ||
-      viewsCrud.error.value
-    ),
+    databases,
+    records,
+    loading,
+    error,
 
     // Database operations
-    loadDatabases: databasesCrud.loadDatabases,
-    loadDatabase: databasesCrud.loadDatabase,
-    createDatabase: databasesCrud.createDatabase,
-    updateDatabase: databasesCrud.updateDatabase,
-    deleteDatabase: databasesCrud.deleteDatabase,
-    getDatabaseById: databasesCrud.getDatabaseById,
+    loadDatabases: store.loadDatabases,
+    loadDatabase: store.loadDatabase,
+    createDatabase: store.createDatabase,
+    updateDatabase: store.updateDatabase,
+    deleteDatabase: store.deleteDatabase,
+    getDatabaseById: store.getDatabaseById,
 
     // Column operations
-    addColumn: columnsCrud.addColumn,
-    updateColumn: columnsCrud.updateColumn,
-    deleteColumn: columnsCrud.deleteColumn,
+    addColumn: store.addColumn,
+    updateColumn: store.updateColumn,
+    deleteColumn: store.deleteColumn,
 
     // Record operations
-    loadRecords: recordsCrud.loadRecords,
-    createRecord: recordsCrud.createRecord,
-    updateRecord: recordsCrud.updateRecord,
-    deleteRecord: recordsCrud.deleteRecord,
-    getRecordsByDatabaseId: recordsCrud.getRecordsByDatabaseId,
+    loadRecords: store.loadRecords,
+    createRecord: store.createRecord,
+    updateRecord: store.updateRecord,
+    deleteRecord: store.deleteRecord,
+    getRecordsByDatabaseId: store.getRecordsByDatabaseId,
 
     // Batch operations
-    batchCreateRecords: recordsBatch.batchCreateRecords,
-    batchDeleteRecords: recordsBatch.batchDeleteRecords,
+    batchCreateRecords: async (dbId: string, recordsData: any[]) => {
+      for (const data of recordsData) {
+        await store.createRecord(dbId, data);
+      }
+    },
+    batchDeleteRecords: async (dbId: string, recordIds: string[]) => {
+      for (const id of recordIds) {
+        await store.deleteRecord(dbId, id);
+      }
+    },
 
     // View operations
-    createView: viewsCrud.createView,
-    updateView: viewsCrud.updateView,
-    deleteView: viewsCrud.deleteView,
+    createView: store.createView,
+    updateView: store.updateView,
+    deleteView: store.deleteView,
   };
 }
