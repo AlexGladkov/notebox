@@ -25,7 +25,6 @@ export interface UseNotesReturn extends AsyncState {
   updateNote: (id: string, updates: Partial<Omit<Note, 'id' | 'createdAt'>>) => Promise<void>;
   deleteNote: (id: string, cascadeDelete?: boolean) => Promise<void>;
   getNoteById: (id: string) => Note | undefined;
-  getRootNotes: () => ComputedRef<Note[]>;
   getChildren: (parentId: string) => ComputedRef<Note[]>;
   getAllDescendants: (noteId: string) => Note[];
   getChildrenCount: (noteId: string) => number;
@@ -36,13 +35,4 @@ export interface UseNotesReturn extends AsyncState {
   expandNote: (noteId: string) => void;
   collapseNote: (noteId: string) => void;
   expandAllAncestors: (noteId: string) => void;
-}
-
-export interface UseFoldersReturn extends AsyncState {
-  createFolder: (name: string, parentId?: string | null) => Promise<Note>;
-  updateFolder: (id: string, name: string) => Promise<void>;
-  deleteFolder: (id: string) => Promise<string[]>;
-  getFolderById: (id: string) => Note | undefined;
-  getChildFolders: (parentId: string | null) => ComputedRef<Note[]>;
-  getRootFolders: ComputedRef<Note[]>;
 }

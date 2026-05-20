@@ -16,10 +16,6 @@ export function useNotes(): UseNotesReturn {
     return store.getNoteById(id);
   };
 
-  const getRootNotes = (): ComputedRef<Note[]> => {
-    return computed(() => store.rootNotes);
-  };
-
   const getChildren = (parentId: string): ComputedRef<Note[]> => {
     return computed(() => store.getChildNotes(parentId));
   };
@@ -39,7 +35,6 @@ export function useNotes(): UseNotesReturn {
     updateNote: store.updateNote,
     deleteNote: store.deleteNote,
     getNoteById,
-    getRootNotes,
     getChildren,
     getAllDescendants,
     getChildrenCount,

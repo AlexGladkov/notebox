@@ -47,11 +47,6 @@ export const useNotesStore = defineStore('notes', {
   }),
 
   getters: {
-    rootNotes: (state) =>
-      state.notes
-        .filter(n => !n.parentId)
-        .sort((a, b) => a.title.localeCompare(b.title)),
-
     getNoteById: (state) => (id: string) =>
       state.notes.find(n => n.id === id),
 
