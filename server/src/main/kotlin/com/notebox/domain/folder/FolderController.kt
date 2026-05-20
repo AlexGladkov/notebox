@@ -1,6 +1,7 @@
 package com.notebox.domain.folder
 
 import com.notebox.dto.*
+import com.notebox.exception.NotFoundException
 import com.notebox.validation.ValidUuid
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
@@ -24,8 +25,7 @@ class FolderController(
     @GetMapping("/{id}")
     fun getFolderById(@PathVariable @ValidUuid(fieldName = "id") id: String): ResponseEntity<ApiResponse<FolderDto>> {
         val folder = folderService.getFolderById(id)
-            ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(errorResponse("NOT_FOUND", "Folder not found"))
+            ?: throw NotFoundException("Folder with id '$id' not found")
 
         return ResponseEntity.ok(successResponse(folder.toDto()))
     }
@@ -43,8 +43,7 @@ class FolderController(
         @Valid @RequestBody request: UpdateFolderRequest
     ): ResponseEntity<ApiResponse<FolderDto>> {
         val folder = folderService.updateFolder(id, request.name, request.parentId)
-            ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(errorResponse("NOT_FOUND", "Folder not found"))
+            ?: throw NotFoundException("Folder with id '$id' not found")
 
         return ResponseEntity.ok(successResponse(folder.toDto()))
     }

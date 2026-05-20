@@ -1,6 +1,7 @@
 package com.notebox.domain.database
 
 import com.notebox.dto.*
+import com.notebox.exception.NotFoundException
 import com.notebox.validation.ValidUuid
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
@@ -25,8 +26,7 @@ class DatabaseController(
     @GetMapping("/{id}")
     fun getDatabaseById(@PathVariable @ValidUuid(fieldName = "id") id: String): ResponseEntity<ApiResponse<CustomDatabaseDto>> {
         val (database, columns) = databaseService.getDatabaseById(id)
-            ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(errorResponse("NOT_FOUND", "Database not found"))
+            ?: throw NotFoundException("Database with id '$id' not found")
 
         return ResponseEntity.ok(successResponse(database.toDto(columns)))
     }
@@ -44,8 +44,7 @@ class DatabaseController(
         @Valid @RequestBody request: UpdateDatabaseRequest
     ): ResponseEntity<ApiResponse<CustomDatabaseDto>> {
         val (database, columns) = databaseService.updateDatabase(id, request.name, request.folderId)
-            ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(errorResponse("NOT_FOUND", "Database not found"))
+            ?: throw NotFoundException("Database with id '$id' not found")
 
         return ResponseEntity.ok(successResponse(database.toDto(columns)))
     }
@@ -85,8 +84,7 @@ class DatabaseController(
             request.type,
             request.options,
             request.position
-        ) ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
-            .body(errorResponse("NOT_FOUND", "Column not found"))
+        ) ?: throw NotFoundException("Column with id '$columnId' not found")
 
         return ResponseEntity.ok(successResponse(column.toDto()))
     }
@@ -124,8 +122,7 @@ class DatabaseController(
         @Valid @RequestBody request: UpdateRecordRequest
     ): ResponseEntity<ApiResponse<RecordDto>> {
         val record = databaseService.updateRecord(recordId, request.data)
-            ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(errorResponse("NOT_FOUND", "Record not found"))
+            ?: throw NotFoundException("Record with id '$recordId' not found")
 
         return ResponseEntity.ok(successResponse(record))
     }
