@@ -27,7 +27,8 @@ class FileController(
 
     @PostMapping("/upload")
     fun uploadFile(@RequestParam("file") file: MultipartFile): ResponseEntity<ApiResponse<UploadFileResponse>> {
-        val result = fileService.uploadFile(file)
+        val userId = getCurrentUserId()
+        val result = fileService.uploadFile(file, userId)
         val response = UploadFileResponse(
             fileId = result.fileId,
             filename = result.filename,
@@ -40,13 +41,15 @@ class FileController(
 
     @GetMapping("/{key}")
     fun getFileUrl(@PathVariable key: String): ResponseEntity<ApiResponse<GetFileUrlResponse>> {
-        val url = fileService.getFileUrl(key)
+        val userId = getCurrentUserId()
+        val url = fileService.getFileUrl(key, userId)
         return ResponseEntity.ok(successResponse(GetFileUrlResponse(url)))
     }
 
     @DeleteMapping("/{key}")
     fun deleteFile(@PathVariable key: String): ResponseEntity<Void> {
-        fileService.deleteFile(key)
+        val userId = getCurrentUserId()
+        fileService.deleteFile(key, userId)
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build()
     }
 }
