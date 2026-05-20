@@ -87,7 +87,7 @@ import CsvImportDialog from './CsvImportDialog.vue';
 import type { ImportData } from './CsvImportDialog.vue';
 import { useDatabases } from '../../composables/useDatabases';
 import { useDatabaseFiltering, useDatabaseImport, useDatabaseExport } from './Database/composables';
-import type { Column, ColumnType, SelectOption, Record } from '../../types';
+import type { ColumnType, SelectOption, Record } from '../../types';
 import type { DatabaseView, DatabaseFilter, DatabaseSort } from '../../types/database';
 
 interface Props {
@@ -343,7 +343,8 @@ const handleDeleteRecord = async (recordId: string) => {
 
 const handleAddColumn = async (name: string, type: ColumnType, options?: SelectOption[]) => {
   try {
-    await addColumn(props.node.attrs.databaseId, name, type, options);
+    const position = database.value?.columns.length || 0;
+    await addColumn(props.node.attrs.databaseId, { name, type, position, options });
   } catch (err) {
     console.error('Failed to add column:', err);
     showToast('Не удалось добавить колонку', true);
@@ -357,7 +358,7 @@ const handleUpdateColumn = async (
   options?: SelectOption[]
 ) => {
   try {
-    await updateColumn(props.node.attrs.databaseId, columnId, name, type, options);
+    await updateColumn(props.node.attrs.databaseId, columnId, { name, type, options });
   } catch (err) {
     console.error('Failed to update column:', err);
     showToast('Не удалось обновить колонку', true);
@@ -404,10 +405,20 @@ const handleExport = () => {
   exportDatabase(database.value.name, database.value.columns, filteredRecords.value);
 };
 
+// Wrapper functions for import composable to adapt signatures
+const addColumnForImport = async (databaseId: string, name: string, type: ColumnType, options?: SelectOption[]) => {
+  const position = database.value?.columns.length || 0;
+  return addColumn(databaseId, { name, type, position, options });
+};
+
+const updateColumnForImport = async (databaseId: string, columnId: string, name: string, type: ColumnType, options?: SelectOption[]) => {
+  await updateColumn(databaseId, columnId, { name, type, options });
+};
+
 // Use database import composable
 const { handleImport: importDatabase } = useDatabaseImport({
-  addColumn,
-  updateColumn,
+  addColumn: addColumnForImport,
+  updateColumn: updateColumnForImport,
   batchCreateRecords,
   batchDeleteRecords,
   getRecordsByDatabaseId,

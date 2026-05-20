@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
-import type { CustomDatabase, Record, RecordData, Column } from '../types';
-import type { DatabaseView, ColumnType } from '../types/database';
+import type { CustomDatabase, Record, RecordData, Column, ColumnType } from '../types';
+import type { DatabaseView } from '../types/database';
 import { databasesApi } from '../api/databases';
 
 export const useDatabasesStore = defineStore('databases', {
@@ -251,11 +251,10 @@ export const useDatabasesStore = defineStore('databases', {
           id: `view-${Date.now()}`,
           name: view.name || 'New View',
           type: view.type || 'table',
-          filters: view.filters || [],
-          sorts: view.sorts || [],
+          filter: view.filter,
+          sort: view.sort,
           visibleColumns: view.visibleColumns || database.columns.map(c => c.id),
-          groupBy: view.groupBy,
-          createdAt: Date.now(),
+          kanban: view.kanban,
         };
 
         if (!database.views) database.views = [];

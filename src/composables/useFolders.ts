@@ -9,7 +9,6 @@ export function useFolders(): UseFoldersReturn {
   const { loading, error } = storeToRefs(store);
 
   // Папки теперь реализованы как заметки (Note), поэтому folders = notes
-  const folders = computed(() => store.notes);
 
   const createFolder = async (name: string, parentId: string | null = null): Promise<Note> => {
     // Создаём заметку, которая будет папкой (просто заметка с пустым content)
@@ -43,15 +42,15 @@ export function useFolders(): UseFoldersReturn {
   const getChildFolders = (parentId: string | null): ComputedRef<Note[]> => {
     return computed(() =>
       store.notes
-        .filter(n => n.parentId === parentId)
-        .sort((a, b) => a.title.localeCompare(b.title))
+        .filter((n: Note) => n.parentId === parentId)
+        .sort((a: Note, b: Note) => a.title.localeCompare(b.title))
     );
   };
 
   const getRootFolders = computed(() =>
     store.notes
-      .filter(n => !n.parentId)
-      .sort((a, b) => a.title.localeCompare(b.title))
+      .filter((n: Note) => !n.parentId)
+      .sort((a: Note, b: Note) => a.title.localeCompare(b.title))
   );
 
   return {

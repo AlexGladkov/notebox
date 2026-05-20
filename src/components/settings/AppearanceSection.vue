@@ -71,9 +71,10 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue';
 import { useTheme, type ThemeMode } from '../../composables/useTheme';
-import { authStore } from '../../stores/authStore';
+import { useAuthStore } from '../../stores/authStore';
 
 const { themeMode, effectiveTheme, setTheme } = useTheme();
+const authStore = useAuthStore();
 const currentTheme = ref<ThemeMode>(themeMode.value);
 const error = ref<string | null>(null);
 

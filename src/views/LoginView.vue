@@ -26,10 +26,11 @@ import OAuthButton from '../components/auth/OAuthButton.vue';
 import DemoButton from '../components/auth/DemoButton.vue';
 import { oauthService } from '../services/auth/oauthService';
 import { authService } from '../services/auth/authService';
-import { authStore } from '../stores/authStore';
+import { useAuthStore } from '../stores/authStore';
 
 const route = useRoute();
 const router = useRouter();
+const authStore = useAuthStore();
 const error = ref<string | null>(null);
 const demoModeEnabled = ref<boolean>(true);
 

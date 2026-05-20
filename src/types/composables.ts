@@ -39,10 +39,10 @@ export interface UseNotesReturn extends AsyncState {
 }
 
 export interface UseFoldersReturn extends AsyncState {
-  createFolder: (name: string, parentId?: string | null) => Promise<Folder>;
+  createFolder: (name: string, parentId?: string | null) => Promise<Note>;
   updateFolder: (id: string, name: string) => Promise<void>;
   deleteFolder: (id: string) => Promise<string[]>;
-  getFolderById: (id: string) => Folder | undefined;
-  getChildFolders: (parentId: string | null) => ComputedRef<Folder[]>;
-  getRootFolders: ComputedRef<Folder[]>;
+  getFolderById: (id: string) => Note | undefined;
+  getChildFolders: (parentId: string | null) => ComputedRef<Note[]>;
+  getRootFolders: ComputedRef<Note[]>;
 }

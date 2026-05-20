@@ -32,7 +32,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import type { User } from '../../services/auth/types';
-import { authStore } from '../../stores/authStore';
+import { useAuthStore } from '../../stores/authStore';
 import SettingsSidebar from './SettingsSidebar.vue';
 import ProfileSection from './ProfileSection.vue';
 import AppearanceSection from './AppearanceSection.vue';
@@ -48,6 +48,7 @@ const emit = defineEmits<{
 }>();
 
 const router = useRouter();
+const authStore = useAuthStore();
 const activeSection = ref('profile');
 
 const currentSectionComponent = computed(() => {

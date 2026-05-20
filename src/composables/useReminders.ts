@@ -11,7 +11,7 @@ export function useReminders() {
     loading,
     error,
     fetchReminders: store.fetchReminders,
-    fetchRemindersByNoteId: (noteId: string) => computed(() => store.getRemindersByNoteId(noteId)),
+    fetchRemindersByNoteId: (noteId: string) => store.getRemindersByNoteId(noteId),
     createReminder: store.createReminder,
     updateReminder: store.updateReminder,
     deleteReminder: store.deleteReminder,

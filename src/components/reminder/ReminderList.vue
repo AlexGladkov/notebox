@@ -105,17 +105,17 @@ const filteredReminders = computed(() => {
   let filtered = reminders.value;
 
   if (currentFilter.value === 'today') {
-    filtered = filtered.filter(r => {
+    filtered = filtered.filter((r: Reminder) => {
       return r.remindAt >= today.getTime() && r.remindAt < todayEnd.getTime();
     });
   } else if (currentFilter.value === 'week') {
-    filtered = filtered.filter(r => {
+    filtered = filtered.filter((r: Reminder) => {
       return r.remindAt >= today.getTime() && r.remindAt < weekEnd.getTime();
     });
   }
 
   // Сортировка: сначала непросроченные (по возрастанию времени), затем просроченные
-  return filtered.sort((a, b) => {
+  return filtered.sort((a: Reminder, b: Reminder) => {
     const aOverdue = a.remindAt < now && !a.notificationSent;
     const bOverdue = b.remindAt < now && !b.notificationSent;
 

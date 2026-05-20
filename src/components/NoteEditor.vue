@@ -103,7 +103,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onBeforeUnmount, onMounted } from 'vue';
+import { ref, watch, onBeforeUnmount } from 'vue';
 import type { Note, Tag } from '../types';
 import type { Reminder } from '../types/reminder';
 import EmptyState from './EmptyState.vue';
@@ -151,13 +151,13 @@ const reminderModalVisible = ref(false);
 
 watch(
   () => props.note,
-  async (newNote) => {
+  (newNote) => {
     if (newNote) {
       localTitle.value = newNote.title;
       localContent.value = newNote.content;
 
       // Загружаем напоминание для заметки
-      const reminders = await fetchRemindersByNoteId(newNote.id);
+      const reminders = fetchRemindersByNoteId(newNote.id);
       noteReminder.value = reminders.length > 0 ? reminders[0] : null;
     } else {
       localTitle.value = '';
@@ -176,11 +176,11 @@ const closeReminderModal = () => {
   reminderModalVisible.value = false;
 };
 
-const handleReminderSaved = async (reminder: Reminder) => {
+const handleReminderSaved = (reminder: Reminder) => {
   noteReminder.value = reminder;
   // Обновляем список напоминаний
   if (props.note) {
-    const reminders = await fetchRemindersByNoteId(props.note.id);
+    const reminders = fetchRemindersByNoteId(props.note.id);
     noteReminder.value = reminders.length > 0 ? reminders[0] : null;
   }
 };

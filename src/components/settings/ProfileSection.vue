@@ -69,13 +69,14 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import type { User } from '../../services/auth/types';
-import { authStore } from '../../stores/authStore';
+import { useAuthStore } from '../../stores/authStore';
 import AvatarUpload from './AvatarUpload.vue';
 
 const props = defineProps<{
   user: User;
 }>();
 
+const authStore = useAuthStore();
 const name = ref(props.user.name);
 const avatarUrl = ref<string | null>(props.user.avatarUrl);
 const isSaving = ref(false);

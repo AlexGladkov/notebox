@@ -22,13 +22,14 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
-import { authStore } from '../../stores/authStore';
+import { useAuthStore } from '../../stores/authStore';
 
 defineProps<{
   isOpen: boolean;
 }>();
 
 const router = useRouter();
+const authStore = useAuthStore();
 
 function handleLogin() {
   authStore.setSessionExpired(false);

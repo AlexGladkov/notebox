@@ -188,7 +188,7 @@ const colorPickerStyle = computed(() => {
   }
 
   return {
-    position: 'fixed',
+    position: 'fixed' as const,
     top: `${top}px`,
     left: `${left}px`,
     zIndex: 10000

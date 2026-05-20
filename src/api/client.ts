@@ -1,5 +1,5 @@
 import type { ApiResponse } from '../types';
-import { authStore } from '../stores/authStore';
+import { useAuthStore } from '../stores/authStore';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL ?? '';
 
@@ -32,6 +32,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
     // Handle 401 Unauthorized
     if (response.status === 401) {
       if (errorCode === 'SESSION_EXPIRED') {
+        const authStore = useAuthStore();
         authStore.setSessionExpired(true);
       }
     }
