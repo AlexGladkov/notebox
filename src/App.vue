@@ -137,8 +137,8 @@ const {
   updateNote,
   deleteNote,
   getNoteById,
-  getAllDescendants,
-  getChildrenCount,
+  getAllDescendants: _getAllDescendants,
+  getChildrenCount: _getChildrenCount,
   toggleNoteExpanded,
   expandAllAncestors,
 } = useNotes();
@@ -228,33 +228,8 @@ const handleUpdateNote = async (updates: { title?: string; content?: string }) =
   }
 };
 
-const handleDeleteNote = (noteId: string, cascadeDelete: boolean = true) => {
-  const note = getNoteById(noteId);
-  if (!note) return;
 
-  const childrenCount = getChildrenCount(noteId);
-
-  if (childrenCount > 0) {
-    // Показываем диалог для заметок с детьми
-    showDeleteNoteWithChildrenDialog(noteId, childrenCount);
-  } else {
-    // Обычное подтверждение удаления
-    confirmDialog.show = true;
-    confirmDialog.title = 'Удалить страницу?';
-    confirmDialog.message = `Вы уверены, что хотите удалить страницу "${note.title}"?`;
-    confirmDialog.action = async () => {
-      try {
-        await deleteNote(noteId, cascadeDelete);
-        // Закрываем вкладки удаленной заметки
-        removeTabsByNoteId(noteId);
-      } catch (error) {
-        console.error('Не удалось удалить заметку:', error);
-      }
-    };
-  }
-};
-
-const showDeleteNoteWithChildrenDialog = (noteId: string, childrenCount: number) => {
+const _showDeleteNoteWithChildrenDialog = (noteId: string, childrenCount: number) => {
   const note = getNoteById(noteId);
   if (!note) return;
 

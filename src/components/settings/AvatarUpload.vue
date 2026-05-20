@@ -3,7 +3,7 @@
     <div class="avatar-container">
       <img
         v-if="previewUrl || currentAvatar"
-        :src="previewUrl || currentAvatar"
+        :src="previewUrl || currentAvatar || undefined"
         alt="Avatar"
         class="avatar-preview"
       />

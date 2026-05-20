@@ -54,7 +54,7 @@
                 :record-id="record.id"
                 @update="handleCellUpdate(record.id, column.id, $event)"
                 @create-option="handleCreateOption(column, $event)"
-                @update-option-color="handleUpdateOptionColor(column, $event)"
+                @update-option-color="(optionId, color) => handleUpdateOptionColor(column, optionId, color)"
               />
             </div>
           </td>
@@ -150,7 +150,7 @@ const handleCreateOption = (column: Column, newOption: SelectOption) => {
   emit('updateColumn', column.id, column.name, column.type, updatedOptions);
 };
 
-const handleUpdateOptionColor = (column: Column, [optionId, color]: [string, string]) => {
+const handleUpdateOptionColor = (column: Column, optionId: string, color: string) => {
   // Update the color of the option in the column's options array
   const updatedOptions = (column.options || []).map(opt =>
     opt.id === optionId ? { ...opt, color } : opt

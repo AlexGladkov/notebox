@@ -145,7 +145,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onUnmounted } from 'vue';
-import type { Column, ColumnType } from '../../types';
+import type { Column } from '../../types';
 import type { DatabaseFilter } from '../../types/database';
 import { TAG_COLOR_PALETTE } from '../../types/database';
 import { useTheme } from '../../composables/useTheme';

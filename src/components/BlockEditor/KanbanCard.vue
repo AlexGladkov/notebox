@@ -69,7 +69,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import type { Record, CustomDatabase, SelectOption } from '../../types';
+import type { Record, CustomDatabase, SelectOption, ColumnType } from '../../types';
 import { TAG_COLOR_PALETTE } from '../../types/database';
 import { useTheme } from '../../composables/useTheme';
 
@@ -187,7 +187,7 @@ const displayFields = computed(() => {
           }
           break;
         case 'DATE':
-          if (value) {
+          if (value && (typeof value === 'number' || typeof value === 'string' || value instanceof Date)) {
             displayValue = new Date(value).toLocaleDateString('ru-RU');
           }
           break;
@@ -198,7 +198,7 @@ const displayFields = computed(() => {
           displayValue = value !== null && value !== undefined ? String(value) : '';
           break;
         default:
-          displayValue = value || '';
+          displayValue = typeof value === 'string' ? value : String(value || '');
       }
 
       return {
@@ -210,16 +210,16 @@ const displayFields = computed(() => {
         options,
       };
     })
-    .filter((field): field is {
+    .filter((field) =>
+      field !== null && field.displayValue !== null && field.displayValue !== undefined && field.displayValue !== ''
+    ) as Array<{
       columnId: string;
       columnName: string;
-      type: string;
+      type: ColumnType;
       displayValue: string;
       option?: SelectOption;
       options?: SelectOption[];
-    } =>
-      field !== null && field.displayValue !== null && field.displayValue !== undefined && field.displayValue !== ''
-    );
+    }>;
 });
 </script>
 

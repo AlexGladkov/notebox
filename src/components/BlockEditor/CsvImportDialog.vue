@@ -360,10 +360,9 @@ const processFile = async (file: File) => {
     parseErrors.value = result.errors;
 
     // Автоматическое определение типов колонок
-    const detectedTypes = detectColumnTypes(result.headers, result.rows);
 
     // Инициализируем маппинг колонок
-    columnMapping.value = result.headers.map((header, index) => {
+    columnMapping.value = result.headers.map((header, _index) => {
       // Пытаемся найти существующую колонку с таким же названием
       const existingColumn = props.columns.find(col =>
         col.name.toLowerCase() === header.toLowerCase()

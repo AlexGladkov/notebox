@@ -83,11 +83,11 @@ const selectedCategory = ref<'all' | TemplateCategory>('all');
 const selectedTemplateId = ref<string | null>(null);
 const useAI = ref(false);
 
-const categories = [
+const categories: Array<{ label: string; value: 'all' | TemplateCategory }> = [
   { label: 'Все', value: 'all' },
-  { label: TEMPLATE_CATEGORY_LABELS.work, value: 'work' },
-  { label: TEMPLATE_CATEGORY_LABELS.personal, value: 'personal' },
-  { label: TEMPLATE_CATEGORY_LABELS.learning, value: 'learning' },
+  { label: TEMPLATE_CATEGORY_LABELS.work, value: 'work' as TemplateCategory },
+  { label: TEMPLATE_CATEGORY_LABELS.personal, value: 'personal' as TemplateCategory },
+  { label: TEMPLATE_CATEGORY_LABELS.learning, value: 'learning' as TemplateCategory },
 ];
 
 const filteredTemplates = computed(() => {

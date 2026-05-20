@@ -274,15 +274,15 @@ const themeTooltip = computed(() => {
 // Notes Store - убираем дублирование состояния с App.vue
 const notesStore = useNotesStore();
 const { notes, expandedNotes } = storeToRefs(notesStore);
-const { loadNotes } = useStorage();
+const { loadNotes: _loadNotes } = useStorage();
 
 const {
   createNote,
   updateNote,
-  deleteNote,
+  deleteNote: _deleteNote,
   getNoteById,
-  getAllDescendants,
-  getChildrenCount,
+  getAllDescendants: _getAllDescendants,
+  getChildrenCount: _getChildrenCount,
   toggleNoteExpanded,
   expandAllAncestors,
 } = useNotes();
@@ -308,7 +308,7 @@ const {
   moveTab,
   getActiveNote,
   updateTabTitle,
-  removeTabsByNoteId,
+  removeTabsByNoteId: _removeTabsByNoteId,
 } = useTabs();
 
 const searchQuery = ref('');

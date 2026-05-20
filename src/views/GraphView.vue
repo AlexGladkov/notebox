@@ -91,7 +91,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed as _computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { notesApi } from '../api';
 import type { Note } from '../types';

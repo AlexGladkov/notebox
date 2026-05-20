@@ -126,7 +126,7 @@ const wikiLinkMenuRef = ref<InstanceType<typeof WikiLinkSuggestion> | null>(null
 const { createDatabase } = useDatabases();
 
 // AI composable for AI operations
-const { loading: aiLoading, error: aiError, summarize, expand } = useAI();
+const { loading: _aiLoading, error: aiError, summarize, expand } = useAI();
 
 // AI command handlers
 const handleSummarize = async (editor: Editor) => {

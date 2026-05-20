@@ -7,7 +7,7 @@
       style="scrollbar-width: none; -ms-overflow-style: none;"
     >
       <TabItem
-        v-for="(tab, index) in tabs"
+        v-for="(tab, _index) in tabs"
         :key="tab.id"
         :tab-id="tab.id"
         :title="tab.title"
@@ -16,7 +16,7 @@
         @close="handleTabClose"
         @contextmenu="handleTabContextMenu"
         @dragstart="handleDragStart"
-        @drop="handleDrop(tab.id, $event)"
+        @drop="handleDrop"
       />
     </div>
 

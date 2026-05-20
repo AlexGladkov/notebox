@@ -146,7 +146,7 @@ const localContent = ref('');
 let debounceTimer: number | null = null;
 
 const { fetchRemindersByNoteId } = useReminders();
-const noteReminder = ref<Reminder | null>(null);
+const noteReminder = ref<Reminder | undefined>(undefined);
 const reminderModalVisible = ref(false);
 
 watch(
@@ -158,11 +158,11 @@ watch(
 
       // Загружаем напоминание для заметки
       const reminders = fetchRemindersByNoteId(newNote.id);
-      noteReminder.value = reminders.length > 0 ? reminders[0] : null;
+      noteReminder.value = reminders.length > 0 ? reminders[0] : undefined;
     } else {
       localTitle.value = '';
       localContent.value = '';
-      noteReminder.value = null;
+      noteReminder.value = undefined;
     }
   },
   { immediate: true }
@@ -181,7 +181,7 @@ const handleReminderSaved = (reminder: Reminder) => {
   // Обновляем список напоминаний
   if (props.note) {
     const reminders = fetchRemindersByNoteId(props.note.id);
-    noteReminder.value = reminders.length > 0 ? reminders[0] : null;
+    noteReminder.value = reminders.length > 0 ? reminders[0] : undefined;
   }
 };
 

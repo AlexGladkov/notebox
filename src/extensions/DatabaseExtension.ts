@@ -62,7 +62,7 @@ export const Database = Node.create<DatabaseOptions>({
   },
 
   addNodeView() {
-    return VueNodeViewRenderer(DatabaseBlock);
+    return VueNodeViewRenderer(DatabaseBlock as any);
   },
 
   addCommands() {

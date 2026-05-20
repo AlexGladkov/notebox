@@ -41,7 +41,7 @@ const emit = defineEmits<{
 const menuVisible = ref(false);
 let clickOutsideTimer: ReturnType<typeof setTimeout> | null = null;
 
-const columnTypes = [
+const columnTypes: Array<{ value: ColumnType; label: string; icon: string }> = [
   { value: 'TEXT', label: 'Текст', icon: '📝' },
   { value: 'NUMBER', label: 'Число', icon: '#️⃣' },
   { value: 'BOOLEAN', label: 'Чекбокс', icon: '☑️' },

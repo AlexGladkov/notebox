@@ -17,7 +17,7 @@
         >
           <div class="text-sm font-medium truncate text-gray-800 dark:text-gray-100">{{ note.title }}</div>
           <div class="text-xs text-gray-500 dark:text-gray-400">
-            {{ getFolderPath(note.folderId) }}
+            {{ getFolderPath(note.parentId || '') }}
           </div>
         </div>
         <div v-if="searchResults.length === 0" class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
@@ -175,9 +175,9 @@ const toggleFolder = (id: string) => {
   emit('toggleExpand', id);
 };
 
-const getFolderPath = (folderId: string): string => {
+const getFolderPath = (parentId: string): string => {
   const path: string[] = [];
-  let currentId: string | null = folderId;
+  let currentId: string | null = parentId;
 
   while (currentId) {
     const folder = props.folders.find(f => f.id === currentId);

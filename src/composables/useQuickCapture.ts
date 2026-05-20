@@ -23,7 +23,7 @@ const INBOX_CONTENT = JSON.stringify({
 
 export function useQuickCapture() {
   const { notes } = useStorage();
-  const { createNote, updateNote, getNoteById } = useNotes(notes);
+  const { createNote, updateNote, getNoteById } = useNotes();
 
   const isProcessing = ref(false);
   const lastError = ref<string | null>(null);

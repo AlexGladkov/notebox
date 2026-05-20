@@ -4,7 +4,7 @@
     <div v-if="files.length > 0" class="file-thumbnails" @click="openFileDialog">
       <!-- Отображаем до 3 миниатюр -->
       <div
-        v-for="(file, index) in visibleFiles"
+        v-for="(file, _index) in visibleFiles"
         :key="file.id"
         class="file-thumbnail"
         :title="file.filename"

@@ -12,7 +12,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue';
-import type { GraphData, GraphNode, GraphEdge } from '../../composables/useGraph';
+import type { GraphData, GraphNode } from '../../composables/useGraph';
 
 interface Props {
   graphData: GraphData;

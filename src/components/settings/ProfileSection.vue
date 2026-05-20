@@ -114,7 +114,7 @@ const handleSave = async () => {
   try {
     await authStore.updateProfile({
       name: name.value,
-      avatarUrl: avatarUrl.value,
+      avatarUrl: avatarUrl.value ?? undefined,
     });
     successMessage.value = 'Профиль успешно обновлён';
   } catch (err) {

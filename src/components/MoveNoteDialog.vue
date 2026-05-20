@@ -119,7 +119,7 @@ const descendants = computed(() => {
 
 const selectableNotes = computed(() => {
   return props.allNotes
-    .filter(n => n.id !== props.noteId && n.folderId === currentNote.value?.folderId)
+    .filter(n => n.id !== props.noteId && n.parentId === currentNote.value?.parentId)
     .sort((a, b) => a.title.localeCompare(b.title));
 });
 

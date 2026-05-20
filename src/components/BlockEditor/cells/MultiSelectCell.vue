@@ -211,16 +211,16 @@ const colorPickerStyle = computed(() => {
   };
 });
 
-const setSettingsButtonRef = (optionId: string, el: Element | null) => {
-  if (el) {
+const setSettingsButtonRef = (optionId: string, el: unknown) => {
+  if (el && el instanceof Element) {
     settingsButtonRefs.value.set(optionId, el as HTMLElement);
   } else {
     settingsButtonRefs.value.delete(optionId);
   }
 };
 
-const setColorPickerRef = (el: Element | null) => {
-  colorPickerPopupRef.value = el ? (el as HTMLElement) : null;
+const setColorPickerRef = (el: unknown) => {
+  colorPickerPopupRef.value = (el && el instanceof Element) ? (el as HTMLElement) : null;
 };
 
 const isSelected = (optionId: string) => {

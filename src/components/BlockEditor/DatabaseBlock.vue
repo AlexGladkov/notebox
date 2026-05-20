@@ -87,7 +87,7 @@ import CsvImportDialog from './CsvImportDialog.vue';
 import type { ImportData } from './CsvImportDialog.vue';
 import { useDatabases } from '../../composables/useDatabases';
 import { useDatabaseFiltering, useDatabaseImport, useDatabaseExport } from './Database/composables';
-import type { ColumnType, SelectOption, Record } from '../../types';
+import type { ColumnType, SelectOption } from '../../types';
 import type { DatabaseView, DatabaseFilter, DatabaseSort } from '../../types/database';
 
 interface Props {

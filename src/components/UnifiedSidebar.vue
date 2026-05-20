@@ -12,7 +12,7 @@
         <div
           v-for="note in searchResults"
           :key="note.id"
-          @click="$emit('selectNote', note.id)"
+          @click="$emit('selectNote', note.id, false)"
           :class="[
             'px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-md',
             { 'bg-blue-50 dark:bg-blue-900': selectedNoteId === note.id }

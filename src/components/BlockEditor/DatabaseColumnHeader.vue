@@ -95,7 +95,7 @@ const editing = ref(false);
 const editedName = ref(props.column.name);
 const inputRef = ref<HTMLInputElement | null>(null);
 
-const columnTypes = [
+const columnTypes: Array<{ value: ColumnType; label: string; icon: string }> = [
   { value: 'TEXT', label: 'Текст', icon: '📝' },
   { value: 'NUMBER', label: 'Число', icon: '#️⃣' },
   { value: 'BOOLEAN', label: 'Чекбокс', icon: '☑️' },

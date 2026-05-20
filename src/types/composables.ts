@@ -1,5 +1,5 @@
 import { type Ref, type ComputedRef } from 'vue';
-import type { Note, Folder } from './index';
+import type { Note } from './index';
 
 // Хелпер для типизации catch блоков
 export function getErrorMessage(error: unknown): string {

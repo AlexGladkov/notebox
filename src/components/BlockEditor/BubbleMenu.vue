@@ -126,13 +126,13 @@ const shouldShow = ({ state, from, to, view }: any) => {
 
   // Проверка через activeElement - если фокус на input/textarea внутри database
   if (typeof document !== 'undefined' && document.activeElement) {
-    let el = document.activeElement;
+    let el: Element | null = document.activeElement;
     while (el && el !== document.body) {
       if (el.classList && (el.classList.contains('database-block') || el.classList.contains('database-container') || el.classList.contains('text-cell'))) {
         isInsideAtomicNode = true;
         break;
       }
-      el = el.parentElement;
+      el = (el as HTMLElement).parentElement;
     }
   }
 

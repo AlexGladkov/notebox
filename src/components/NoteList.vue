@@ -25,7 +25,7 @@
         :notes="rootNotes"
         :all-notes="notes"
         :selected-note-id="selectedNoteId"
-        :expanded-notes="expandedNotes"
+        :expanded-notes="expandedNotes ?? new Set()"
         @select-note="handleNoteSelect"
         @create-subpage="handleCreateSubpage"
         @toggle-expand="handleToggleExpand"

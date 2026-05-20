@@ -167,7 +167,7 @@ const startReposition = (event: MouseEvent) => {
 
 const finishReposition = () => {
   repositioning.value = false
-  emit('update', props.backdropType, props.backdropValue, currentPositionY.value)
+  emit('update', props.backdropType ?? null, props.backdropValue ?? null, currentPositionY.value ?? 50)
 }
 
 // Cleanup при размонтировании компонента

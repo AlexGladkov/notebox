@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import type { CustomDatabase, Record, RecordData, Column, ColumnType } from '../types';
 import type { DatabaseView } from '../types/database';
-import { databasesApi } from '../api/databases';
+import { databasesApi, type UpdateColumnRequest } from '../api/databases';
 
 export const useDatabasesStore = defineStore('databases', {
   state: () => ({
@@ -206,11 +206,26 @@ export const useDatabasesStore = defineStore('databases', {
       }
     },
 
-    async updateColumn(databaseId: string, columnId: string, updates: Partial<Column>): Promise<Column> {
+    async updateColumn(databaseId: string, columnId: string, updates: Partial<UpdateColumnRequest>): Promise<Column> {
       try {
-        const updatedColumn = await databasesApi.updateColumn(databaseId, columnId, updates);
+        // Получаем текущую колонку для заполнения обязательных полей
+        let database = this.getDatabaseById(databaseId);
+        const currentColumn = database?.columns.find(c => c.id === columnId);
 
-        const database = this.getDatabaseById(databaseId);
+        if (!currentColumn) {
+          throw new Error('Column not found');
+        }
+
+        const request: UpdateColumnRequest = {
+          name: updates.name ?? currentColumn.name,
+          type: updates.type ?? currentColumn.type,
+          position: updates.position ?? currentColumn.position,
+          options: updates.options ?? currentColumn.options,
+        };
+
+        const updatedColumn = await databasesApi.updateColumn(databaseId, columnId, request);
+
+        database = this.getDatabaseById(databaseId);
         if (database) {
           const colIndex = database.columns.findIndex(c => c.id === columnId);
           if (colIndex !== -1) {
