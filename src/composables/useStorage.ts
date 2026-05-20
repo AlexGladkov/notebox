@@ -10,7 +10,6 @@ import { useNetworkStatus } from './useNetworkStatus';
  * Для заметок с одинаковым title (например, "📥 Inbox") оставляет только самую свежую (по updatedAt).
  */
 function deduplicateNotes(notes: Note[]): Note[] {
-  const seenIds = new Set<string>();
   const titleMap = new Map<string, Note[]>();
 
   // Группируем заметки по title
@@ -25,7 +24,7 @@ function deduplicateNotes(notes: Note[]): Note[] {
   const result: Note[] = [];
 
   // Для каждой группы заметок с одинаковым title + parentId
-  titleMap.forEach((group, key) => {
+  titleMap.forEach(group => {
     if (group.length === 1) {
       // Одна заметка - добавляем как есть
       result.push(group[0]);

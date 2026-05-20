@@ -59,6 +59,10 @@ export function useSpeechRecognition() {
 
     try {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        error.value = 'Web Speech API не поддерживается в этом браузере';
+        return false;
+      }
       recognition = new SpeechRecognition();
 
       recognition.lang = 'ru-RU';
@@ -131,6 +135,11 @@ export function useSpeechRecognition() {
       if (!initialize()) {
         return false;
       }
+    }
+
+    if (!recognition) {
+      error.value = 'Распознавание речи не инициализировано';
+      return false;
     }
 
     if (isListening.value) {

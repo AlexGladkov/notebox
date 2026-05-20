@@ -41,7 +41,7 @@ export function useCrud<T extends { id: string }>(
       loading.value = true;
       error.value = null;
       const newItem = await api.create(data);
-      items.value.push(newItem);
+      items.value = [...items.value, newItem] as T[];
       return newItem;
     } catch (err) {
       console.error('Failed to create item:', err);
@@ -60,7 +60,11 @@ export function useCrud<T extends { id: string }>(
 
       const index = items.value.findIndex(item => item.id === id);
       if (index !== -1) {
-        items.value[index] = updatedItem;
+        items.value = [
+          ...items.value.slice(0, index),
+          updatedItem,
+          ...items.value.slice(index + 1),
+        ] as T[];
       }
 
       return updatedItem;

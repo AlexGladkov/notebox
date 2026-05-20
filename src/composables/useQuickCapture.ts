@@ -1,7 +1,7 @@
 import { ref } from 'vue';
 import { useStorage } from './useStorage';
 import { useNotes } from './useNotes';
-import type { CapturedItem, CaptureType, RelatedNote, Note } from '../types';
+import type { RelatedNote, Note } from '../types';
 import { aiApi } from '../api/ai';
 
 const INBOX_TITLE = '📥 Inbox';
@@ -152,7 +152,7 @@ export function useQuickCapture() {
     return captureText(transcript);
   }
 
-  async function capturePhoto(imageBase64: string, recognizedText: string): Promise<string> {
+  async function capturePhoto(_imageBase64: string, recognizedText: string): Promise<string> {
     if (!recognizedText || recognizedText.trim().length === 0) {
       throw new Error('Не удалось распознать текст на изображении');
     }

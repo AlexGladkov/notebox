@@ -1,6 +1,6 @@
 import { ref } from 'vue';
 import { templates } from '../data/templates';
-import { aiApi } from '../api/ai';
+// import { aiApi } from '../api/ai';
 import type { Template, TemplateCategory } from '../types/template';
 
 export function useTemplates() {
@@ -40,11 +40,12 @@ export function useTemplates() {
     try {
       loading.value = true;
       error.value = null;
-      const aiContent = await aiApi.generateTemplateContent(templateId);
 
-      if (aiContent) {
-        return replacePlaceholders(aiContent);
-      }
+      // TODO: Реализовать generateTemplateContent в aiApi
+      // const aiContent = await aiApi.generateTemplateContent(templateId);
+      // if (aiContent) {
+      //   return replacePlaceholders(aiContent);
+      // }
 
       return replacePlaceholders(template.staticExample || template.content);
     } catch (e) {
