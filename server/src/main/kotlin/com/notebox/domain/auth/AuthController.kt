@@ -5,6 +5,7 @@ import com.notebox.dto.UpdateUserDto
 import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import jakarta.validation.Valid
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
@@ -29,7 +30,6 @@ class AuthController(
         private const val STATE_COOKIE_NAME = "OAUTH_STATE"
         private const val SESSION_COOKIE_MAX_AGE = 30 * 24 * 60 * 60 // 30 days
         private const val STATE_COOKIE_MAX_AGE = 10 * 60 // 10 minutes
-        private val VALID_THEME_PREFERENCES = listOf("light", "dark", "system")
     }
 
     @GetMapping("/login/{provider}")
@@ -186,7 +186,7 @@ class AuthController(
 
     @PatchMapping("/me")
     fun updateCurrentUser(
-        @RequestBody updateDto: UpdateUserDto,
+        @Valid @RequestBody updateDto: UpdateUserDto,
         request: HttpServletRequest
     ): ResponseEntity<ApiResponse<*>> {
         val sessionId = getSessionIdFromCookies(request)
@@ -196,13 +196,6 @@ class AuthController(
         val userId = sessionService.getUserIdFromSession(sessionId)
             ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.error<Nothing>("SESSION_EXPIRED", "Session expired"))
-
-        // Validate theme preference if provided
-        if (updateDto.themePreference != null &&
-            updateDto.themePreference !in VALID_THEME_PREFERENCES) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error<Nothing>("INVALID_THEME", "Theme preference must be 'light', 'dark', or 'system'"))
-        }
 
         val updatedUser = userService.updateUser(
             userId,

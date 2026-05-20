@@ -7,6 +7,11 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.*
 
+data class VapidKeyResponse(
+    val configured: Boolean,
+    val publicKey: String? = null
+)
+
 @RestController
 @RequestMapping("/api/notifications")
 class NotificationController(
@@ -15,15 +20,16 @@ class NotificationController(
 ) {
 
     @GetMapping("/vapid-public-key")
-    fun getVapidPublicKey(): ResponseEntity<Map<String, Any>> {
+    fun getVapidPublicKey(): ResponseEntity<ApiResponse<VapidKeyResponse>> {
         if (!pushNotificationService.isConfigured()) {
-            return ResponseEntity.ok(mapOf<String, Any>("configured" to false))
+            return ResponseEntity.ok(successResponse(VapidKeyResponse(configured = false)))
         }
 
-        return ResponseEntity.ok(mapOf<String, Any>(
-            "configured" to true,
-            "publicKey" to (System.getenv("VAPID_PUBLIC_KEY") ?: "")
-        ))
+        val response = VapidKeyResponse(
+            configured = true,
+            publicKey = System.getenv("VAPID_PUBLIC_KEY") ?: ""
+        )
+        return ResponseEntity.ok(successResponse(response))
     }
 
     @GetMapping("/subscriptions")
