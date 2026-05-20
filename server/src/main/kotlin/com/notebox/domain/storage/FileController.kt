@@ -7,7 +7,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
-import java.util.*
 
 data class UploadFileResponse(
     val fileId: String,
@@ -17,78 +16,48 @@ data class UploadFileResponse(
     val size: Long
 )
 
-data class GetFileUrlResponse(
-    val url: String
-)
+data class GetFileUrlResponse(val url: String)
 
 @RestController
 @RequestMapping("/api/files")
 class FileController(
-    private val fileStorageService: FileStorageService,
-    private val fileValidationService: FileValidationService
+    private val fileService: FileService
 ) {
 
     @PostMapping("/upload")
     fun uploadFile(@RequestParam("file") file: MultipartFile): ResponseEntity<ApiResponse<UploadFileResponse>> {
-        val validationResult = fileValidationService.validateFile(file)
-        if (!validationResult.isValid) {
-            return ResponseEntity.badRequest()
-                .body(errorResponse(validationResult.errorCode!!, validationResult.errorMessage!!))
+        return try {
+            val result = fileService.uploadFile(file)
+            val response = UploadFileResponse(
+                fileId = result.fileId,
+                filename = result.filename,
+                key = result.key,
+                contentType = result.contentType,
+                size = result.size
+            )
+            ResponseEntity.status(HttpStatus.CREATED).body(successResponse(response))
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.badRequest().body(errorResponse("VALIDATION_ERROR", e.message ?: "Invalid file"))
         }
-
-        val originalFilename = file.originalFilename ?: "unknown"
-        val safeName = originalFilename.replace(Regex("[^a-zA-Z0-9._-]"), "_")
-        val extension = safeName.substringAfterLast('.', "").lowercase()
-
-        val fileId = UUID.randomUUID().toString()
-        val key = "$fileId.$extension"
-
-        val uploadedKey = fileStorageService.uploadFile(file, key)
-
-        val response = UploadFileResponse(
-            fileId = fileId,
-            filename = safeName,
-            key = uploadedKey,
-            contentType = file.contentType,
-            size = file.size
-        )
-
-        return ResponseEntity.status(HttpStatus.CREATED)
-            .body(successResponse(response))
     }
 
     @GetMapping("/{key}")
     fun getFileUrl(@PathVariable key: String): ResponseEntity<ApiResponse<GetFileUrlResponse>> {
-        // Validate key format to prevent path traversal
-        if (!isValidKey(key)) {
-            return ResponseEntity.badRequest()
-                .body(errorResponse("INVALID_KEY", "Invalid file key format"))
+        return try {
+            val url = fileService.getFileUrl(key)
+            ResponseEntity.ok(successResponse(GetFileUrlResponse(url)))
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.badRequest().body(errorResponse("INVALID_KEY", e.message ?: "Invalid key"))
         }
-
-        val url = fileStorageService.getFileUrl(key)
-        return ResponseEntity.ok(successResponse(GetFileUrlResponse(url)))
     }
 
     @DeleteMapping("/{key}")
     fun deleteFile(@PathVariable key: String): ResponseEntity<ApiResponse<Nothing>> {
-        if (!isValidKey(key)) {
-            return ResponseEntity.badRequest()
-                .body(errorResponse("INVALID_KEY", "Invalid file key format"))
+        return try {
+            fileService.deleteFile(key)
+            ResponseEntity.status(HttpStatus.NO_CONTENT).build()
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.badRequest().body(errorResponse("INVALID_KEY", e.message ?: "Invalid key"))
         }
-
-        fileStorageService.deleteFile(key)
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build()
-    }
-
-    private fun isValidKey(key: String): Boolean {
-        // Key must match UUID.extension pattern
-        // No path separators, no parent directory references
-        if (key.contains("..") || key.contains("/") || key.contains("\\")) {
-            return false
-        }
-
-        // Must match pattern: uuid.extension
-        val pattern = Regex("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\.[a-z]{2,5}$")
-        return pattern.matches(key)
     }
 }
