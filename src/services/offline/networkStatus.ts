@@ -1,5 +1,7 @@
 import { ref, readonly } from 'vue';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? '';
+
 const isOnline = ref(navigator.onLine);
 const lastOnlineTime = ref<number | null>(navigator.onLine ? Date.now() : null);
 
@@ -8,7 +10,7 @@ let checkInterval: ReturnType<typeof setInterval> | null = null;
 async function checkConnectivity(): Promise<boolean> {
   try {
     // Проверяем соединение через существующий API endpoint
-    const response = await fetch('/api/notes', {
+    const response = await fetch(`${API_BASE_URL}/api/notes`, {
       method: 'HEAD',
       cache: 'no-cache',
       credentials: 'include',
