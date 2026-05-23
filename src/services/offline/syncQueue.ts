@@ -86,13 +86,19 @@ class SyncQueue {
     // Генерируем sequence для этой заметки
     const currentSequence = this.sequenceCounters.get(item.noteId) || 0;
     const nextSequence = currentSequence + 1;
-    this.sequenceCounters.set(item.noteId, nextSequence);
 
-    await indexedDbService.addToSyncQueue({
-      ...item,
-      sequence: nextSequence,
-      retryCount: 0,
-    });
+    try {
+      await indexedDbService.addToSyncQueue({
+        ...item,
+        sequence: nextSequence,
+        retryCount: 0,
+      });
+      // Обновляем счётчик только после успешного сохранения
+      this.sequenceCounters.set(item.noteId, nextSequence);
+    } catch (error) {
+      console.error(`Failed to add item to sync queue for note ${item.noteId}:`, error);
+      throw error;
+    }
   }
 
   async getAll(): Promise<SyncQueueItem[]> {
@@ -153,7 +159,9 @@ class SyncQueue {
     await this.ensureInitialized();
     const items = await this.getItemsByNoteId(oldId);
 
-    // Обновляем все items транзакционно - если хотя бы один упадёт, откатываем всё
+    // ВАЖНО: Rollback не является атомарным, т.к. каждый updateSyncQueueItem() - отдельная транзакция.
+    // В редких случаях сбоя во время rollback может остаться inconsistent state.
+    // Для полной атомарности требуется батч-обновление в одной IndexedDB транзакции.
     const updatedItems: SyncQueueItem[] = [];
     try {
       for (const item of items) {

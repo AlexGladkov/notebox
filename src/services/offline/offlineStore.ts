@@ -99,13 +99,11 @@ class OfflineStore {
       timestamp: now,
     });
 
-    // Если онлайн, сразу пытаемся синхронизировать
+    // Если онлайн, запускаем синхронизацию в фоне (не блокируем UI)
     if (this.getIsOnline()) {
-      try {
-        await syncService.processQueue();
-      } catch (error) {
+      syncService.processQueue().catch(error => {
         console.error('Failed to sync after create:', error);
-      }
+      });
     }
 
     return newNote;
@@ -145,13 +143,11 @@ class OfflineStore {
       timestamp: updatedNote.updatedAt,
     });
 
-    // Если онлайн, сразу пытаемся синхронизировать
+    // Если онлайн, запускаем синхронизацию в фоне (не блокируем UI)
     if (this.getIsOnline()) {
-      try {
-        await syncService.processQueue();
-      } catch (error) {
+      syncService.processQueue().catch(error => {
         console.error('Failed to sync after update:', error);
-      }
+      });
     }
 
     return updatedNote;
@@ -172,13 +168,11 @@ class OfflineStore {
       timestamp: Date.now(),
     });
 
-    // Если онлайн, сразу пытаемся синхронизировать
+    // Если онлайн, запускаем синхронизацию в фоне (не блокируем UI)
     if (this.getIsOnline()) {
-      try {
-        await syncService.processQueue();
-      } catch (error) {
+      syncService.processQueue().catch(error => {
         console.error('Failed to sync after delete:', error);
-      }
+      });
     }
   }
 
@@ -210,13 +204,11 @@ class OfflineStore {
       timestamp: updatedNote.updatedAt,
     });
 
-    // Если онлайн, сразу пытаемся синхронизировать
+    // Если онлайн, запускаем синхронизацию в фоне (не блокируем UI)
     if (this.getIsOnline()) {
-      try {
-        await syncService.processQueue();
-      } catch (error) {
+      syncService.processQueue().catch(error => {
         console.error('Failed to sync after move:', error);
-      }
+      });
     }
 
     return updatedNote;

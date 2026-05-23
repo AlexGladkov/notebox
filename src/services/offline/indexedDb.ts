@@ -2,7 +2,7 @@ import type { Note } from '../../types';
 import type { SyncQueueItem } from './types';
 
 const DB_NAME = 'notebox-offline';
-const DB_VERSION = 1;
+const DB_VERSION = 2; // Увеличена версия для добавления индекса sequence
 
 const STORE_NOTES = 'notes';
 const STORE_SYNC_QUEUE = 'syncQueue';
@@ -35,6 +35,8 @@ class IndexedDbService {
 
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
+        const oldVersion = (event as IDBVersionChangeEvent).oldVersion;
+        const transaction = (event.target as IDBOpenDBRequest).transaction!;
 
         // Store для заметок
         if (!db.objectStoreNames.contains(STORE_NOTES)) {
@@ -44,13 +46,21 @@ class IndexedDbService {
         }
 
         // Store для очереди синхронизации
+        let syncQueueStore: IDBObjectStore;
         if (!db.objectStoreNames.contains(STORE_SYNC_QUEUE)) {
-          const syncQueueStore = db.createObjectStore(STORE_SYNC_QUEUE, {
+          syncQueueStore = db.createObjectStore(STORE_SYNC_QUEUE, {
             keyPath: 'id',
             autoIncrement: true
           });
           syncQueueStore.createIndex('noteId', 'noteId', { unique: false });
           syncQueueStore.createIndex('timestamp', 'timestamp', { unique: false });
+          syncQueueStore.createIndex('sequence', 'sequence', { unique: false });
+        } else {
+          // Миграция с версии 1 на 2: добавляем индекс sequence
+          syncQueueStore = transaction.objectStore(STORE_SYNC_QUEUE);
+          if (oldVersion < 2 && !syncQueueStore.indexNames.contains('sequence')) {
+            syncQueueStore.createIndex('sequence', 'sequence', { unique: false });
+          }
         }
 
         // Store для метаданных

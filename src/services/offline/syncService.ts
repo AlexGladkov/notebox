@@ -4,8 +4,10 @@ import { indexedDbService } from './indexedDb';
 import { syncQueue } from './syncQueue';
 import type { SyncQueueItem, SyncStatus } from './types';
 
-// Timeout для операций синхронизации заметки (30 секунд)
-const SYNC_TIMEOUT_MS = 30000;
+// Timeout для операций синхронизации заметки (60 секунд)
+// ВАЖНО: Timeout может прервать операцию на полпути, что в редких случаях может
+// оставить inconsistent state. Однако операция будет повторена при следующей синхронизации.
+const SYNC_TIMEOUT_MS = 60000;
 
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number, errorMessage: string): Promise<T> {
   return Promise.race([
