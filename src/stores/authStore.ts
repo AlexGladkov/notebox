@@ -3,13 +3,15 @@ import { authService } from '../services/auth/authService';
 import { userApi, type UpdateUserRequest } from '../api/user';
 import type { User } from '../services/auth/types';
 
+// Promise для синхронизации параллельных вызовов checkAuth (не реактивен)
+let authPromise: Promise<void> | null = null;
+
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: null as User | null,
     isLoading: false,
     isInitialized: false,
     sessionExpired: false,
-    _authPromise: null as Promise<void> | null,
   }),
 
   getters: {
@@ -20,12 +22,12 @@ export const useAuthStore = defineStore('auth', {
   actions: {
     async checkAuth() {
       // Если уже загружается — вернуть существующий Promise
-      if (this._authPromise) {
-        return this._authPromise;
+      if (authPromise) {
+        return authPromise;
       }
 
-      this._authPromise = this._doCheckAuth();
-      return this._authPromise;
+      authPromise = this._doCheckAuth();
+      return authPromise;
     },
 
     async _doCheckAuth() {
@@ -39,7 +41,7 @@ export const useAuthStore = defineStore('auth', {
       } finally {
         this.isLoading = false;
         this.isInitialized = true;
-        this._authPromise = null;
+        authPromise = null;
       }
     },
 

@@ -12,7 +12,14 @@ app.use(pinia);
 
 // CRITICAL: Инициализировать auth ДО router
 const authStore = useAuthStore();
-authStore.checkAuth().then(() => {
-  app.use(router);
-  app.mount('#app');
-});
+authStore.checkAuth()
+  .then(() => {
+    app.use(router);
+    app.mount('#app');
+  })
+  .catch((error) => {
+    console.error('Failed to initialize auth:', error);
+    // Всё равно монтируем приложение, router guard обработает отсутствие auth
+    app.use(router);
+    app.mount('#app');
+  });
