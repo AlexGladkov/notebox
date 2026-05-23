@@ -1,5 +1,6 @@
 package com.notebox.domain.demo
 
+import com.notebox.domain.auth.User
 import com.notebox.domain.auth.UserRepository
 import com.notebox.domain.database.DatabaseRepository
 import com.notebox.domain.note.NoteRepository
@@ -47,15 +48,15 @@ class DemoDataCleaner(
         val filesDeleted = fileRepository.deleteAllByUserId(demoUserId)
         val subscriptionsDeleted = pushSubscriptionRepository.deleteAllByUserId(demoUserId)
 
-        databaseRepository.deleteAllDatabases()
-        noteRepository.deleteAll()
+        val databasesDeleted = databaseRepository.deleteAllDatabases()
+        val notesDeleted = noteRepository.deleteAll()
 
         logger.info("Demo data cleared successfully: " +
-            "reminders=$remindersDeleted, tags=$tagsDeleted, files=$filesDeleted, " +
-            "subscriptions=$subscriptionsDeleted")
+            "notes=$notesDeleted, databases=$databasesDeleted, reminders=$remindersDeleted, " +
+            "tags=$tagsDeleted, files=$filesDeleted, subscriptions=$subscriptionsDeleted")
     }
 
-    private fun validateOnlyDemoUserExists(): com.notebox.domain.auth.User {
+    private fun validateOnlyDemoUserExists(): User {
         val allUsers = userRepository.findAll()
         val demoUser = allUsers.find { it.email == DEMO_EMAIL }
             ?: throw IllegalStateException("Demo user not found")
