@@ -8,11 +8,13 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.springframework.stereotype.Repository
 import java.time.Instant
 import java.util.*
-import java.util.Calendar
-import java.util.TimeZone
 
 @Repository
 class NoteRepository {
+
+    companion object {
+        private val UTC_CALENDAR = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+    }
 
     fun findAll(userId: String): List<Note> = transaction {
         NotesTable.select { NotesTable.userId eq userId }.map { toNote(it) }
@@ -288,21 +290,18 @@ class NoteRepository {
         updatedAt = row[NotesTable.updatedAt]
     )
 
-    private fun toNoteFromResultSet(rs: java.sql.ResultSet): Note {
-        val utcCalendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
-        return Note(
-            id = rs.getString("id"),
-            userId = rs.getString("user_id"),
-            title = rs.getString("title"),
-            content = rs.getString("content"),
-            parentId = rs.getString("parent_id"),  // getString возвращает null для SQL NULL
-            icon = rs.getString("icon"),
-            backdropType = rs.getString("backdrop_type"),
-            backdropValue = rs.getString("backdrop_value"),
-            backdropPositionY = rs.getObject("backdrop_position_y") as? Int,
-            color = rs.getString("color"),
-            createdAt = rs.getTimestamp("created_at", utcCalendar)?.toInstant() ?: Instant.now(),
-            updatedAt = rs.getTimestamp("updated_at", utcCalendar)?.toInstant() ?: Instant.now()
-        )
-    }
+    private fun toNoteFromResultSet(rs: java.sql.ResultSet) = Note(
+        id = rs.getString("id"),
+        userId = rs.getString("user_id"),
+        title = rs.getString("title"),
+        content = rs.getString("content"),
+        parentId = rs.getString("parent_id"),  // getString возвращает null для SQL NULL
+        icon = rs.getString("icon"),
+        backdropType = rs.getString("backdrop_type"),
+        backdropValue = rs.getString("backdrop_value"),
+        backdropPositionY = rs.getObject("backdrop_position_y") as? Int,
+        color = rs.getString("color"),
+        createdAt = rs.getTimestamp("created_at", UTC_CALENDAR)?.toInstant() ?: Instant.now(),
+        updatedAt = rs.getTimestamp("updated_at", UTC_CALENDAR)?.toInstant() ?: Instant.now()
+    )
 }
