@@ -52,7 +52,9 @@ class SecurityConfig {
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration = CorsConfiguration()
-        configuration.allowedOriginPatterns = allowedOrigins.split(",").map { it.trim() }
+        configuration.allowedOrigins = allowedOrigins.split(",")
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
         configuration.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
         configuration.allowedHeaders = listOf("Content-Type", "Authorization", "X-Requested-With", "Accept")
         configuration.exposedHeaders = listOf("Content-Disposition")
@@ -82,6 +84,12 @@ class SessionAuthenticationFilter(
         response: HttpServletResponse,
         filterChain: jakarta.servlet.FilterChain
     ) {
+        // Пропускаем OPTIONS preflight запросы без проверки сессии
+        if (request.method == "OPTIONS") {
+            filterChain.doFilter(request, response)
+            return
+        }
+
         val requestPath = request.requestURI
 
         // Пропускаем публичные эндпоинты без проверки сессии
