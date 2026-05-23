@@ -11,6 +11,32 @@ class OfflineStore {
   setNetworkStatusGetter(getter: () => boolean) {
     this.getIsOnline = getter;
   }
+
+  /**
+   * Резолвит ID заметки на случай если произошёл ID mapping.
+   * Проверяет IndexedDB metadata для поиска актуального ID.
+   */
+  private async resolveNoteId(id: string): Promise<string> {
+    // Сначала проверяем, существует ли заметка с таким ID
+    const note = await indexedDbService.getNote(id);
+    if (note) {
+      // Заметка найдена - ID актуален
+      return id;
+    }
+
+    // Заметка не найдена - проверяем ID mapping в metadata
+    const mappedId = await indexedDbService.getMetadata(`id_mapping:${id}`);
+    if (mappedId) {
+      // Нашли сохранённый mapping
+      console.log(`[OfflineStore] ID resolved from metadata: ${id} -> ${mappedId}`);
+      return mappedId;
+    }
+
+    // ID mapping не найден - возвращаем оригинальный ID
+    // (ошибка 'Note not found' будет выброшена выше по стеку)
+    return id;
+  }
+
   async loadFromCache(): Promise<Note[]> {
     try {
       await indexedDbService.init();
@@ -86,9 +112,11 @@ class OfflineStore {
   }
 
   async updateNote(id: string, request: UpdateNoteRequest): Promise<Note> {
+    // Резолвим ID на случай если был ID mapping
+    const resolvedId = await this.resolveNoteId(id);
 
     // Получаем текущую версию
-    const currentNote = await indexedDbService.getNote(id);
+    const currentNote = await indexedDbService.getNote(resolvedId);
     if (!currentNote) {
       throw new Error('Note not found');
     }
@@ -109,9 +137,9 @@ class OfflineStore {
     // Сохраняем в локальный кэш
     await indexedDbService.saveNote(updatedNote);
 
-    // Добавляем в очередь синхронизации
+    // Добавляем в очередь синхронизации (используем resolvedId)
     await syncQueue.add({
-      noteId: id,
+      noteId: resolvedId,
       operation: 'update',
       payload: updatedNote,
       timestamp: updatedNote.updatedAt,
@@ -130,15 +158,17 @@ class OfflineStore {
   }
 
   async deleteNote(id: string): Promise<void> {
+    // Резолвим ID на случай если был ID mapping
+    const resolvedId = await this.resolveNoteId(id);
 
     // Удаляем из локального кэша
-    await indexedDbService.deleteNote(id);
+    await indexedDbService.deleteNote(resolvedId);
 
-    // Добавляем в очередь синхронизации
+    // Добавляем в очередь синхронизации (используем resolvedId)
     await syncQueue.add({
-      noteId: id,
+      noteId: resolvedId,
       operation: 'delete',
-      payload: { id },
+      payload: { id: resolvedId },
       timestamp: Date.now(),
     });
 
@@ -153,9 +183,11 @@ class OfflineStore {
   }
 
   async moveNote(id: string, parentId: string | null): Promise<Note> {
+    // Резолвим ID на случай если был ID mapping
+    const resolvedId = await this.resolveNoteId(id);
 
     // Получаем текущую версию
-    const currentNote = await indexedDbService.getNote(id);
+    const currentNote = await indexedDbService.getNote(resolvedId);
     if (!currentNote) {
       throw new Error('Note not found');
     }
@@ -170,9 +202,9 @@ class OfflineStore {
     // Сохраняем в локальный кэш
     await indexedDbService.saveNote(updatedNote);
 
-    // Добавляем в очередь синхронизации
+    // Добавляем в очередь синхронизации (используем resolvedId)
     await syncQueue.add({
-      noteId: id,
+      noteId: resolvedId,
       operation: 'move',
       payload: { parentId },
       timestamp: updatedNote.updatedAt,
@@ -191,7 +223,9 @@ class OfflineStore {
   }
 
   async getNote(id: string): Promise<Note | undefined> {
-    return indexedDbService.getNote(id);
+    // Резолвим ID на случай если был ID mapping
+    const resolvedId = await this.resolveNoteId(id);
+    return indexedDbService.getNote(resolvedId);
   }
 
   async getAllNotes(): Promise<Note[]> {

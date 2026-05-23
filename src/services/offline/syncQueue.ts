@@ -6,10 +6,26 @@ const MAX_RETRY_COUNT = 3;
 class SyncQueue {
   private sequenceCounters = new Map<string, number>();
   private initialized = false;
+  private initializationPromise: Promise<void> | null = null;
 
   private async ensureInitialized(): Promise<void> {
     if (this.initialized) return;
 
+    // Мьютекс: если инициализация уже идёт, ждём её завершения
+    if (this.initializationPromise) {
+      return this.initializationPromise;
+    }
+
+    // Создаём Promise для инициализации
+    this.initializationPromise = this.doInitialization();
+    try {
+      await this.initializationPromise;
+    } finally {
+      this.initializationPromise = null;
+    }
+  }
+
+  private async doInitialization(): Promise<void> {
     // Восстанавливаем счётчики из существующих записей в IndexedDB
     const allItems = await indexedDbService.getSyncQueue();
     const maxSequenceByNote = new Map<string, number>();

@@ -146,6 +146,8 @@ class SyncService {
         console.log(`[SyncService] ID mapping: ${item.noteId} -> ${serverNote.id}`);
         // Сначала сохраняем новую заметку, чтобы не потерять данные при сбое
         await indexedDbService.saveNote(serverNote);
+        // Сохраняем ID mapping в metadata для будущих запросов
+        await indexedDbService.setMetadata(`id_mapping:${item.noteId}`, serverNote.id);
         // Обновляем pending операции с новым server ID
         await syncQueue.updateNoteId(item.noteId, serverNote.id);
         // Только после успешного сохранения удаляем старую локальную заметку
