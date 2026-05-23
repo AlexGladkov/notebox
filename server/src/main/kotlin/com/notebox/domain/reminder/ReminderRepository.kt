@@ -143,6 +143,10 @@ class ReminderRepository {
             .map { toReminder(it) }
     }
 
+    fun deleteAllByUserId(userId: String): Int = transaction {
+        RemindersTable.deleteWhere { RemindersTable.userId eq userId }
+    }
+
     private fun toReminder(row: ResultRow) = Reminder(
         id = row[RemindersTable.id],
         noteId = row[RemindersTable.noteId],

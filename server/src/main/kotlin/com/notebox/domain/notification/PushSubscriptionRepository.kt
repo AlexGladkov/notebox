@@ -68,6 +68,10 @@ class PushSubscriptionRepository {
         } > 0
     }
 
+    fun deleteAllByUserId(userId: String): Int = transaction {
+        PushSubscriptionsTable.deleteWhere { PushSubscriptionsTable.userId eq userId }
+    }
+
     private fun toSubscription(row: ResultRow) = PushSubscription(
         id = row[PushSubscriptionsTable.id],
         userId = row[PushSubscriptionsTable.userId],

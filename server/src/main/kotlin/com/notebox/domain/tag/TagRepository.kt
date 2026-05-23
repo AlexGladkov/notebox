@@ -2,6 +2,7 @@ package com.notebox.domain.tag
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.springframework.stereotype.Repository
 import java.time.Instant
@@ -101,6 +102,22 @@ class TagRepository {
         NoteTagsTable.deleteWhere {
             (NoteTagsTable.noteId eq noteId) and (NoteTagsTable.tagId eq tagId)
         } > 0
+    }
+
+    fun deleteAllByUserId(userId: String): Int = transaction {
+        // Сначала удаляем связи NoteTags для тегов данного пользователя
+        val userTagIds = TagsTable.select { TagsTable.userId eq userId }
+            .map { it[TagsTable.id] }
+
+        var noteTagsDeleted = 0
+        if (userTagIds.isNotEmpty()) {
+            noteTagsDeleted = NoteTagsTable.deleteWhere { NoteTagsTable.tagId inList userTagIds }
+        }
+
+        // Затем удаляем сами теги
+        val tagsDeleted = TagsTable.deleteWhere { TagsTable.userId eq userId }
+
+        tagsDeleted
     }
 
     private fun toTag(row: ResultRow) = Tag(
