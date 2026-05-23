@@ -34,8 +34,8 @@ class SyncService {
 
       // Обрабатываем операции для каждой заметки последовательно
       for (const [noteId, noteItems] of itemsByNote) {
-        // Сортируем по sequence для гарантии порядка
-        noteItems.sort((a, b) => a.sequence - b.sequence);
+        // Сортируем по sequence для гарантии порядка (обрабатываем undefined для backward compatibility)
+        noteItems.sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
 
         // Ждём завершения предыдущей операции для этой заметки
         const existingLock = this.noteLocks.get(noteId);
@@ -119,13 +119,16 @@ class SyncService {
 
       // ID mapping: обновляем все pending операции с новым server ID
       if (serverNote.id !== item.noteId) {
+        // Сначала сохраняем новую заметку, чтобы не потерять данные при сбое
+        await indexedDbService.saveNote(serverNote);
+        // Обновляем pending операции с новым server ID
         await syncQueue.updateNoteId(item.noteId, serverNote.id);
-        // Удаляем старую локальную заметку
+        // Только после успешного сохранения удаляем старую локальную заметку
         await indexedDbService.deleteNote(item.noteId);
+      } else {
+        // Обновляем локальную заметку с данными с сервера
+        await indexedDbService.saveNote(serverNote);
       }
-
-      // Обновляем локальную заметку с данными с сервера
-      await indexedDbService.saveNote(serverNote);
     } catch (error: any) {
       // Если заметка уже существует на сервере, пытаемся обновить
       if (error?.status === 409 || error?.message?.includes('already exists')) {

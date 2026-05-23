@@ -6,7 +6,7 @@ export interface SyncQueueItem {
   id?: number;
   noteId: string;
   operation: SyncOperation;
-  sequence: number;
+  sequence?: number; // Опционально для backward compatibility
   payload: Partial<Note>;
   timestamp: number;
   retryCount: number;

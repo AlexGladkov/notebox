@@ -5,8 +5,33 @@ const MAX_RETRY_COUNT = 3;
 
 class SyncQueue {
   private sequenceCounters = new Map<string, number>();
+  private initialized = false;
+
+  private async ensureInitialized(): Promise<void> {
+    if (this.initialized) return;
+
+    // Восстанавливаем счётчики из существующих записей в IndexedDB
+    const allItems = await indexedDbService.getSyncQueue();
+    const maxSequenceByNote = new Map<string, number>();
+
+    for (const item of allItems) {
+      if (item.sequence !== undefined) {
+        const current = maxSequenceByNote.get(item.noteId) || 0;
+        maxSequenceByNote.set(item.noteId, Math.max(current, item.sequence));
+      }
+    }
+
+    // Инициализируем счётчики максимальными значениями
+    for (const [noteId, maxSeq] of maxSequenceByNote) {
+      this.sequenceCounters.set(noteId, maxSeq);
+    }
+
+    this.initialized = true;
+  }
 
   async add(item: Omit<SyncQueueItem, 'id' | 'retryCount' | 'sequence'>): Promise<void> {
+    await this.ensureInitialized();
+
     // Генерируем sequence для этой заметки
     const currentSequence = this.sequenceCounters.get(item.noteId) || 0;
     const nextSequence = currentSequence + 1;
@@ -69,7 +94,7 @@ class SyncQueue {
     const allItems = await this.getAll();
     return allItems
       .filter(item => item.noteId === noteId)
-      .sort((a, b) => a.sequence - b.sequence);
+      .sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
   }
 
   async updateNoteId(oldId: string, newId: string): Promise<void> {
