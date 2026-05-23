@@ -4,12 +4,6 @@ import { useAuthStore } from '../stores/authStore';
 export async function authGuard(to: RouteLocationNormalized) {
   const authStore = useAuthStore();
 
-  // Если маршрут не найден (пустой to.matched), пропускаем guard
-  // catch-all маршрут обработает его
-  if (to.matched.length === 0) {
-    return;
-  }
-
   // Ждём завершения auth проверки (Promise tracking гарантирует завершение)
   if (!authStore.isInitialized) {
     await authStore.checkAuth();
