@@ -13,7 +13,8 @@ export function useSearch(searchQuery: Ref<string>) {
 
     const query = searchQuery.value.toLowerCase();
     return notes.value.filter(note =>
-      note.title.toLowerCase().includes(query)
+      note.title.toLowerCase().includes(query) ||
+      (note.content?.toLowerCase().includes(query) ?? false)
     ).sort((a, b) => b.updatedAt - a.updatedAt);
   });
 

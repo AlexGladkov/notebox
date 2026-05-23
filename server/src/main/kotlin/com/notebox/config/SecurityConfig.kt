@@ -52,9 +52,15 @@ class SecurityConfig {
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration = CorsConfiguration()
-        configuration.allowedOrigins = allowedOrigins.split(",")
+        val origins = allowedOrigins.split(",")
             .map { it.trim() }
             .filter { it.isNotEmpty() }
+            .toMutableList()
+
+        // Добавляем host.docker.internal для тестирования (любой порт)
+        origins.add("http://host.docker.internal:*")
+
+        configuration.allowedOriginPatterns = origins
         configuration.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
         configuration.allowedHeaders = listOf("Content-Type", "Authorization", "X-Requested-With", "Accept")
         configuration.exposedHeaders = listOf("Content-Disposition")
