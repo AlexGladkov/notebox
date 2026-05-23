@@ -25,9 +25,9 @@
             role="switch"
             :aria-checked="effectiveTheme === 'dark'"
             :aria-label="`Переключить на ${effectiveTheme === 'dark' ? 'светлую' : 'тёмную'} тему`"
-            :disabled="currentTheme === 'system'"
+            :disabled="themeMode === 'system'"
             @click="toggleTheme"
-            :class="['toggle-track', { dark: effectiveTheme === 'dark', disabled: currentTheme === 'system' }]"
+            :class="['toggle-track', { dark: effectiveTheme === 'dark', disabled: themeMode === 'system' }]"
           >
             <span class="toggle-thumb"></span>
           </button>
@@ -50,7 +50,7 @@
       <label class="system-theme-option">
         <input
           type="checkbox"
-          :checked="currentTheme === 'system'"
+          :checked="themeMode === 'system'"
           @change="toggleSystemTheme"
           class="system-checkbox"
         />
@@ -69,25 +69,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref } from 'vue';
 import { useTheme, type ThemeMode } from '../../composables/useTheme';
 import { useAuthStore } from '../../stores/authStore';
 
 const { themeMode, effectiveTheme, setTheme } = useTheme();
 const authStore = useAuthStore();
-const currentTheme = ref<ThemeMode>(themeMode.value);
 const error = ref<string | null>(null);
 
-onMounted(() => {
-  currentTheme.value = themeMode.value;
-});
-
-watch(themeMode, (newTheme) => {
-  currentTheme.value = newTheme;
-});
-
 const toggleTheme = () => {
-  if (currentTheme.value === 'system') return;
+  if (themeMode.value === 'system') return;
 
   const newTheme = effectiveTheme.value === 'dark' ? 'light' : 'dark';
   selectTheme(newTheme);
@@ -105,10 +96,9 @@ const toggleSystemTheme = (event: Event) => {
 };
 
 const selectTheme = async (theme: ThemeMode) => {
-  if (currentTheme.value === theme) return;
+  if (themeMode.value === theme) return;
 
   error.value = null;
-  currentTheme.value = theme;
 
   // Apply theme immediately
   setTheme(theme);
