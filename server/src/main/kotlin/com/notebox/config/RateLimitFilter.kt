@@ -38,6 +38,12 @@ class RateLimitFilter : OncePerRequestFilter() {
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
+        // Пропускаем OPTIONS запросы (CORS preflight) без rate limiting
+        if (request.method == "OPTIONS") {
+            filterChain.doFilter(request, response)
+            return
+        }
+
         val clientIp = getClientIp(request)
         val now = Instant.now()
 
