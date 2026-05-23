@@ -179,11 +179,16 @@ export function downloadCsv(content: string, filename: string, encoding: 'utf-8'
   link.style.display = 'none';
 
   document.body.appendChild(link);
-  link.click();
 
-  // Cleanup
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  try {
+    link.click();
+  } finally {
+    // Гарантированная очистка ресурсов
+    if (link.parentNode) {
+      document.body.removeChild(link);
+    }
+    URL.revokeObjectURL(url);
+  }
 }
 
 /**

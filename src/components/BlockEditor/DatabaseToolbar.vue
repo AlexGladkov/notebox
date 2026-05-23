@@ -102,20 +102,20 @@ const handleExport = () => {
 };
 
 const handleShare = async () => {
+  let textArea: HTMLTextAreaElement | null = null;
   try {
     // Проверяем доступность Clipboard API
     if (navigator.clipboard && navigator.clipboard.writeText) {
       await navigator.clipboard.writeText(window.location.href);
     } else {
       // Fallback для браузеров без поддержки Clipboard API
-      const textArea = document.createElement('textarea');
+      textArea = document.createElement('textarea');
       textArea.value = window.location.href;
       textArea.style.position = 'fixed';
       textArea.style.left = '-999999px';
       document.body.appendChild(textArea);
       textArea.select();
       document.execCommand('copy');
-      document.body.removeChild(textArea);
     }
     showToast.value = true;
     if (toastTimer) {
@@ -127,6 +127,11 @@ const handleShare = async () => {
   } catch (err) {
     console.error('Failed to copy URL:', err);
     alert('Не удалось скопировать ссылку');
+  } finally {
+    // Гарантированная очистка textArea, даже при ошибке
+    if (textArea && textArea.parentNode) {
+      document.body.removeChild(textArea);
+    }
   }
 };
 
