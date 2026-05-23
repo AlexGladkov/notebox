@@ -4,6 +4,18 @@ import { indexedDbService } from './indexedDb';
 import { syncQueue } from './syncQueue';
 import type { SyncQueueItem, SyncStatus } from './types';
 
+// Timeout для операций синхронизации заметки (30 секунд)
+const SYNC_TIMEOUT_MS = 30000;
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, errorMessage: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(errorMessage)), timeoutMs)
+    )
+  ]);
+}
+
 class SyncService {
   private isProcessing = ref(false);
   private syncStatus = ref<SyncStatus>('idle');
@@ -40,15 +52,24 @@ class SyncService {
         // Ждём завершения предыдущей операции для этой заметки
         const existingLock = this.noteLocks.get(noteId);
         if (existingLock) {
-          await existingLock;
+          await existingLock.catch(() => {
+            // Игнорируем ошибки предыдущей блокировки, продолжаем обработку
+          });
         }
 
-        // Создаём новую блокировку для этой заметки
-        const lockPromise = this.processNoteItems(noteId, noteItems);
+        // Создаём новую блокировку для этой заметки с timeout
+        const lockPromise = withTimeout(
+          this.processNoteItems(noteId, noteItems),
+          SYNC_TIMEOUT_MS,
+          `Sync timeout for note ${noteId}`
+        );
         this.noteLocks.set(noteId, lockPromise);
 
         try {
           await lockPromise;
+        } catch (error) {
+          console.error(`Failed to process items for note ${noteId}:`, error);
+          // Продолжаем обработку других заметок
         } finally {
           this.noteLocks.delete(noteId);
         }
@@ -65,10 +86,13 @@ class SyncService {
   }
 
   private async processNoteItems(noteId: string, items: SyncQueueItem[]): Promise<void> {
+    console.log(`[SyncService] Processing ${items.length} items for note ${noteId}, sequences: [${items.map(i => i.sequence || 'N/A').join(', ')}]`);
+
     for (const item of items) {
       try {
         await this.processSyncItem(item);
         await syncQueue.remove(item.id!);
+        console.log(`[SyncService] Successfully synced ${item.operation} for note ${noteId}, sequence: ${item.sequence || 'N/A'}`);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         console.error(`Failed to sync item ${item.id} for note ${noteId}:`, errorMessage);
@@ -119,12 +143,18 @@ class SyncService {
 
       // ID mapping: обновляем все pending операции с новым server ID
       if (serverNote.id !== item.noteId) {
+        console.log(`[SyncService] ID mapping: ${item.noteId} -> ${serverNote.id}`);
         // Сначала сохраняем новую заметку, чтобы не потерять данные при сбое
         await indexedDbService.saveNote(serverNote);
         // Обновляем pending операции с новым server ID
         await syncQueue.updateNoteId(item.noteId, serverNote.id);
         // Только после успешного сохранения удаляем старую локальную заметку
-        await indexedDbService.deleteNote(item.noteId);
+        try {
+          await indexedDbService.deleteNote(item.noteId);
+        } catch (error) {
+          // Логируем ошибку, но не прерываем процесс - данные уже сохранены с новым ID
+          console.error(`Failed to delete old local note ${item.noteId}:`, error);
+        }
       } else {
         // Обновляем локальную заметку с данными с сервера
         await indexedDbService.saveNote(serverNote);
