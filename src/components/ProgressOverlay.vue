@@ -81,12 +81,23 @@ const startTime = ref<number>(0);
 
 // Расчёт примерного времени до завершения
 const estimatedTime = computed(() => {
-  if (props.progress <= 5 || props.progress >= 95) {
+  if (props.progress <= 5 || props.progress >= 95 || !startTime.value) {
     return '';
   }
 
   const elapsed = Date.now() - startTime.value;
+  if (elapsed < 100) {
+    // Слишком рано для оценки
+    return '';
+  }
+
   const rate = props.progress / elapsed; // процентов в миллисекунду
+
+  // Защита от деления на 0
+  if (rate <= 0) {
+    return '';
+  }
+
   const remaining = (100 - props.progress) / rate;
 
   if (remaining < 1000) {
@@ -100,8 +111,10 @@ const estimatedTime = computed(() => {
 
 // Инициализация времени старта
 watch(() => props.show, (newShow) => {
-  if (newShow && props.progress <= 5) {
+  if (newShow) {
     startTime.value = Date.now();
+  } else {
+    startTime.value = 0;
   }
 });
 

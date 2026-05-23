@@ -521,10 +521,26 @@ export async function exportNoteToPdf(options: PdfExportOptions): Promise<void> 
     onProgress?.(25);
 
     // Генерация и скачивание PDF с таймаутом 60 секунд
+    // Симулируем промежуточный прогресс, так как html2pdf не предоставляет callbacks
     const pdfPromise = new Promise<void>((resolve, reject) => {
       html2pdf().set(opt).from(tempDiv).save().then(resolve).catch(reject);
     });
-    await withTimeout(pdfPromise, 60000);
+
+    // Запускаем симуляцию прогресса параллельно с генерацией PDF
+    let currentProgress = 25;
+    const progressInterval = setInterval(() => {
+      // Медленно увеличиваем прогресс до 90%
+      if (currentProgress < 90) {
+        currentProgress += 5;
+        onProgress?.(currentProgress);
+      }
+    }, 500); // Обновляем каждые 500ms
+
+    try {
+      await withTimeout(pdfPromise, 60000);
+    } finally {
+      clearInterval(progressInterval);
+    }
 
     onProgress?.(100);
   } finally {
