@@ -75,9 +75,11 @@ class OfflineStore {
 
     // Если онлайн, сразу пытаемся синхронизировать
     if (this.getIsOnline()) {
-      syncService.processQueue().catch(error => {
+      try {
+        await syncService.processQueue();
+      } catch (error) {
         console.error('Failed to sync after create:', error);
-      });
+      }
     }
 
     return newNote;
@@ -117,9 +119,11 @@ class OfflineStore {
 
     // Если онлайн, сразу пытаемся синхронизировать
     if (this.getIsOnline()) {
-      syncService.processQueue().catch(error => {
+      try {
+        await syncService.processQueue();
+      } catch (error) {
         console.error('Failed to sync after update:', error);
-      });
+      }
     }
 
     return updatedNote;
@@ -140,9 +144,11 @@ class OfflineStore {
 
     // Если онлайн, сразу пытаемся синхронизировать
     if (this.getIsOnline()) {
-      syncService.processQueue().catch(error => {
+      try {
+        await syncService.processQueue();
+      } catch (error) {
         console.error('Failed to sync after delete:', error);
-      });
+      }
     }
   }
 
@@ -174,9 +180,11 @@ class OfflineStore {
 
     // Если онлайн, сразу пытаемся синхронизировать
     if (this.getIsOnline()) {
-      syncService.processQueue().catch(error => {
+      try {
+        await syncService.processQueue();
+      } catch (error) {
         console.error('Failed to sync after move:', error);
-      });
+      }
     }
 
     return updatedNote;

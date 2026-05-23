@@ -8,6 +8,7 @@ class SyncService {
   private isProcessing = ref(false);
   private syncStatus = ref<SyncStatus>('idle');
   private lastError = ref<string | null>(null);
+  private noteLocks = new Map<string, Promise<void>>();
 
   async processQueue(): Promise<void> {
     if (this.isProcessing.value) {
@@ -23,19 +24,34 @@ class SyncService {
       const items = await syncQueue.getAll();
       const pendingItems = items.filter(item => syncQueue.shouldRetry(item));
 
+      // Группируем операции по noteId
+      const itemsByNote = new Map<string, SyncQueueItem[]>();
       for (const item of pendingItems) {
-        try {
-          await this.processSyncItem(item);
-          await syncQueue.remove(item.id!);
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-          console.error(`Failed to sync item ${item.id}:`, errorMessage);
-          await syncQueue.incrementRetry(item, errorMessage);
-          this.lastError.value = errorMessage;
+        const noteItems = itemsByNote.get(item.noteId) || [];
+        noteItems.push(item);
+        itemsByNote.set(item.noteId, noteItems);
+      }
+
+      // Обрабатываем операции для каждой заметки последовательно
+      for (const [noteId, noteItems] of itemsByNote) {
+        // Сортируем по sequence для гарантии порядка
+        noteItems.sort((a, b) => a.sequence - b.sequence);
+
+        // Ждём завершения предыдущей операции для этой заметки
+        const existingLock = this.noteLocks.get(noteId);
+        if (existingLock) {
+          await existingLock;
         }
 
-        // Добавляем небольшую задержку между запросами
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Создаём новую блокировку для этой заметки
+        const lockPromise = this.processNoteItems(noteId, noteItems);
+        this.noteLocks.set(noteId, lockPromise);
+
+        try {
+          await lockPromise;
+        } finally {
+          this.noteLocks.delete(noteId);
+        }
       }
 
       this.syncStatus.value = 'idle';
@@ -45,6 +61,23 @@ class SyncService {
       console.error('Failed to process sync queue:', error);
     } finally {
       this.isProcessing.value = false;
+    }
+  }
+
+  private async processNoteItems(noteId: string, items: SyncQueueItem[]): Promise<void> {
+    for (const item of items) {
+      try {
+        await this.processSyncItem(item);
+        await syncQueue.remove(item.id!);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error(`Failed to sync item ${item.id} for note ${noteId}:`, errorMessage);
+        await syncQueue.incrementRetry(item, errorMessage);
+        this.lastError.value = errorMessage;
+      }
+
+      // Добавляем небольшую задержку между запросами
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
   }
 
@@ -83,6 +116,13 @@ class SyncService {
         backdropValue: localNote.backdropValue,
         backdropPositionY: localNote.backdropPositionY,
       });
+
+      // ID mapping: обновляем все pending операции с новым server ID
+      if (serverNote.id !== item.noteId) {
+        await syncQueue.updateNoteId(item.noteId, serverNote.id);
+        // Удаляем старую локальную заметку
+        await indexedDbService.deleteNote(item.noteId);
+      }
 
       // Обновляем локальную заметку с данными с сервера
       await indexedDbService.saveNote(serverNote);
