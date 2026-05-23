@@ -1,6 +1,7 @@
 <template>
   <div
     v-if="visible && filteredCommands.length > 0"
+    ref="menuRef"
     class="slash-command-menu"
     :style="{ top: position.top + 'px', left: position.left + 'px' }"
   >
@@ -34,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, nextTick } from 'vue';
 import type { Editor } from '@tiptap/vue-3';
 import type { SlashCommand } from '../../types/editor';
 
@@ -51,6 +52,7 @@ const emit = defineEmits<{
 
 const selectedIndex = ref(0);
 const position = ref({ top: 0, left: 0 });
+const menuRef = ref<HTMLElement | null>(null);
 
 const filteredCommands = computed(() => {
   if (!props.query) {
@@ -148,16 +150,35 @@ const selectCurrent = () => {
   }
 };
 
-const updatePosition = () => {
+const updatePosition = async () => {
   if (!props.editor) return;
 
   const { selection } = props.editor.state;
   const coords = props.editor.view.coordsAtPos(selection.from);
 
+  // Устанавливаем начальную позицию под курсором
   position.value = {
     top: coords.bottom + 8,
     left: coords.left,
   };
+
+  // Ждем рендеринга меню для получения его размеров
+  await nextTick();
+
+  if (!menuRef.value) return;
+
+  // Проверяем, не выходит ли меню за пределы viewport
+  const menuRect = menuRef.value.getBoundingClientRect();
+
+  // Проверка правой границы
+  if (menuRect.right > window.innerWidth) {
+    position.value.left = window.innerWidth - menuRect.width - 10;
+  }
+
+  // Проверка нижней границы (flip-up логика)
+  if (menuRect.bottom > window.innerHeight) {
+    position.value.top = coords.top - menuRect.height - 8;
+  }
 };
 
 watch(
