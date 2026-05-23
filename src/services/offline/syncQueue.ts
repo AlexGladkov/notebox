@@ -13,11 +13,46 @@ class SyncQueue {
     // Восстанавливаем счётчики из существующих записей в IndexedDB
     const allItems = await indexedDbService.getSyncQueue();
     const maxSequenceByNote = new Map<string, number>();
+    const itemsNeedingSequence: SyncQueueItem[] = [];
 
     for (const item of allItems) {
       if (item.sequence !== undefined) {
         const current = maxSequenceByNote.get(item.noteId) || 0;
         maxSequenceByNote.set(item.noteId, Math.max(current, item.sequence));
+      } else {
+        // Backward compatibility: записи без sequence получат sequence на основе timestamp
+        itemsNeedingSequence.push(item);
+      }
+    }
+
+    // Миграция старых записей: присваиваем sequence на основе timestamp
+    if (itemsNeedingSequence.length > 0) {
+      console.log(`[SyncQueue] Migrating ${itemsNeedingSequence.length} items without sequence`);
+
+      // Группируем по noteId и сортируем по timestamp
+      const itemsByNote = new Map<string, SyncQueueItem[]>();
+      for (const item of itemsNeedingSequence) {
+        const noteItems = itemsByNote.get(item.noteId) || [];
+        noteItems.push(item);
+        itemsByNote.set(item.noteId, noteItems);
+      }
+
+      for (const [noteId, noteItems] of itemsByNote) {
+        // Сортируем по timestamp
+        noteItems.sort((a, b) => a.timestamp - b.timestamp);
+
+        // Присваиваем sequence
+        const baseSequence = maxSequenceByNote.get(noteId) || 0;
+        for (let i = 0; i < noteItems.length; i++) {
+          const item = noteItems[i];
+          const newSequence = baseSequence + i + 1;
+          const updatedItem: SyncQueueItem = {
+            ...item,
+            sequence: newSequence,
+          };
+          await indexedDbService.updateSyncQueueItem(updatedItem);
+          maxSequenceByNote.set(noteId, newSequence);
+        }
       }
     }
 
@@ -91,6 +126,7 @@ class SyncQueue {
   }
 
   async getItemsByNoteId(noteId: string): Promise<SyncQueueItem[]> {
+    await this.ensureInitialized();
     const allItems = await this.getAll();
     return allItems
       .filter(item => item.noteId === noteId)
@@ -98,21 +134,38 @@ class SyncQueue {
   }
 
   async updateNoteId(oldId: string, newId: string): Promise<void> {
+    await this.ensureInitialized();
     const items = await this.getItemsByNoteId(oldId);
 
-    for (const item of items) {
-      const updatedItem: SyncQueueItem = {
-        ...item,
-        noteId: newId,
-      };
-      await indexedDbService.updateSyncQueueItem(updatedItem);
-    }
+    // Обновляем все items транзакционно - если хотя бы один упадёт, откатываем всё
+    const updatedItems: SyncQueueItem[] = [];
+    try {
+      for (const item of items) {
+        const updatedItem: SyncQueueItem = {
+          ...item,
+          noteId: newId,
+        };
+        await indexedDbService.updateSyncQueueItem(updatedItem);
+        updatedItems.push(item); // Сохраняем оригинальные items для возможного отката
+      }
 
-    // Обновляем счётчик sequence
-    const oldSequence = this.sequenceCounters.get(oldId);
-    if (oldSequence !== undefined) {
-      this.sequenceCounters.set(newId, oldSequence);
-      this.sequenceCounters.delete(oldId);
+      // Обновляем счётчик sequence только после успешного обновления всех items
+      const oldSequence = this.sequenceCounters.get(oldId);
+      if (oldSequence !== undefined) {
+        this.sequenceCounters.set(newId, oldSequence);
+        this.sequenceCounters.delete(oldId);
+      }
+    } catch (error) {
+      // При ошибке пытаемся откатить изменения
+      console.error(`Failed to update noteId from ${oldId} to ${newId}, rolling back:`, error);
+      for (const originalItem of updatedItems) {
+        try {
+          await indexedDbService.updateSyncQueueItem(originalItem);
+        } catch (rollbackError) {
+          console.error(`Failed to rollback item ${originalItem.id}:`, rollbackError);
+        }
+      }
+      throw error;
     }
   }
 }
