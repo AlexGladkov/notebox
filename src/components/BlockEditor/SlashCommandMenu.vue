@@ -170,14 +170,34 @@ const updatePosition = async () => {
   // Проверяем, не выходит ли меню за пределы viewport
   const menuRect = menuRef.value.getBoundingClientRect();
 
-  // Проверка правой границы
-  if (menuRect.right > window.innerWidth) {
-    position.value.left = window.innerWidth - menuRect.width - 10;
+  // Определяем, где больше места: сверху или снизу
+  const spaceBelow = window.innerHeight - coords.bottom;
+  const spaceAbove = coords.top;
+
+  // Проверка вертикальных границ
+  if (menuRect.bottom > window.innerHeight) {
+    // Если снизу не хватает места, проверяем сверху
+    if (spaceAbove > spaceBelow && spaceAbove >= menuRect.height) {
+      // Flip вверх, если сверху больше места и оно достаточно
+      position.value.top = coords.top - menuRect.height - 8;
+    } else if (spaceBelow < menuRect.height) {
+      // Если места мало и снизу, и сверху, выбираем направление с большим пространством
+      if (spaceAbove > spaceBelow) {
+        position.value.top = Math.max(10, coords.top - menuRect.height - 8);
+      } else {
+        position.value.top = coords.bottom + 8;
+      }
+    }
   }
 
-  // Проверка нижней границы (flip-up логика)
-  if (menuRect.bottom > window.innerHeight) {
-    position.value.top = coords.top - menuRect.height - 8;
+  // Проверка правой границы
+  if (menuRect.right > window.innerWidth) {
+    position.value.left = Math.max(10, window.innerWidth - menuRect.width - 10);
+  }
+
+  // Проверка левой границы
+  if (position.value.left < 0) {
+    position.value.left = 10;
   }
 };
 
