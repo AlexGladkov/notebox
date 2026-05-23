@@ -12,6 +12,10 @@ import java.util.*
 @Repository
 class NoteRepository {
 
+    companion object {
+        private val UTC_CALENDAR = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+    }
+
     fun findAll(userId: String): List<Note> = transaction {
         NotesTable.select { NotesTable.userId eq userId }.map { toNote(it) }
     }
@@ -297,7 +301,7 @@ class NoteRepository {
         backdropValue = rs.getString("backdrop_value"),
         backdropPositionY = rs.getObject("backdrop_position_y") as? Int,
         color = rs.getString("color"),
-        createdAt = rs.getTimestamp("created_at")?.toInstant() ?: Instant.now(),
-        updatedAt = rs.getTimestamp("updated_at")?.toInstant() ?: Instant.now()
+        createdAt = rs.getTimestamp("created_at", UTC_CALENDAR)?.toInstant() ?: Instant.now(),
+        updatedAt = rs.getTimestamp("updated_at", UTC_CALENDAR)?.toInstant() ?: Instant.now()
     )
 }

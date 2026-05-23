@@ -7,7 +7,7 @@ spring:
     allow-bean-definition-overriding: true
 
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:notebox}
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:notebox}?TimeZone=UTC
     username: ${POSTGRES_USER:notebox}
     password: ${POSTGRES_PASSWORD:notebox}
     driver-class-name: org.postgresql.Driver
