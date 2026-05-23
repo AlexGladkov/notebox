@@ -52,6 +52,10 @@ class FileRepository {
         } > 0
     }
 
+    fun deleteAllByUserId(userId: String): Int = transaction {
+        UploadedFilesTable.deleteWhere { UploadedFilesTable.userId eq userId }
+    }
+
     private fun toUploadedFile(row: ResultRow): UploadedFile {
         return UploadedFile(
             id = row[UploadedFilesTable.id],
