@@ -253,6 +253,7 @@ class SyncService {
   async fullSync(): Promise<void> {
     try {
       this.syncStatus.value = 'syncing';
+      this.lastError.value = null;
 
       // Сначала обрабатываем очередь локальных изменений
       await this.processQueue();
