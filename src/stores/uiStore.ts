@@ -220,6 +220,16 @@ export const useUIStore = defineStore('ui', {
       this.initSystemThemeListener();
       this.applyTheme();
 
+      // Слушаем изменения localStorage из других вкладок
+      window.addEventListener('storage', (e: StorageEvent) => {
+        if (e.key === THEME_STORAGE_KEY && e.newValue) {
+          const newTheme = e.newValue as ThemeMode;
+          if (['light', 'dark', 'system'].includes(newTheme)) {
+            this.themeMode = newTheme;
+          }
+        }
+      });
+
       // Следим за изменениями и применяем тему
       watch(() => this.effectiveTheme, () => {
         this.applyTheme();
