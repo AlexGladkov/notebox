@@ -15,15 +15,15 @@ import { useTheme } from './composables/useTheme';
 import { initNetworkStatus, destroyNetworkStatus } from './services/offline/networkStatus';
 import SessionExpiredModal from './components/common/SessionExpiredModal.vue';
 
-const { isLoading, sessionExpired, checkAuth } = useAuth();
+const { isLoading, sessionExpired } = useAuth();
 const { initialize: initializeTheme } = useTheme();
 
-onMounted(async () => {
+onMounted(() => {
   // Инициализируем тему до проверки авторизации
   initializeTheme();
   // Инициализируем отслеживание состояния сети
   initNetworkStatus();
-  await checkAuth();
+  // checkAuth() теперь вызывается в main.ts до монтирования приложения
 });
 
 onUnmounted(() => {

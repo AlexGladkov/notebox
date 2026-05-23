@@ -9,6 +9,7 @@ export const useAuthStore = defineStore('auth', {
     isLoading: false,
     isInitialized: false,
     sessionExpired: false,
+    _authPromise: null as Promise<void> | null,
   }),
 
   getters: {
@@ -18,8 +19,16 @@ export const useAuthStore = defineStore('auth', {
 
   actions: {
     async checkAuth() {
-      if (this.isLoading) return;
+      // Если уже загружается — вернуть существующий Promise
+      if (this._authPromise) {
+        return this._authPromise;
+      }
 
+      this._authPromise = this._doCheckAuth();
+      return this._authPromise;
+    },
+
+    async _doCheckAuth() {
       this.isLoading = true;
       try {
         const user = await authService.getCurrentUser();
@@ -30,6 +39,7 @@ export const useAuthStore = defineStore('auth', {
       } finally {
         this.isLoading = false;
         this.isInitialized = true;
+        this._authPromise = null;
       }
     },
 

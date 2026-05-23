@@ -1,14 +1,10 @@
-import type { NavigationGuardNext, RouteLocationNormalized } from 'vue-router';
+import type { RouteLocationNormalized } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
 
-export async function authGuard(
-  to: RouteLocationNormalized,
-  _from: RouteLocationNormalized,
-  next: NavigationGuardNext
-) {
+export async function authGuard(to: RouteLocationNormalized) {
   const authStore = useAuthStore();
 
-  // Wait for auth check if not initialized
+  // Ждём завершения auth проверки (Promise tracking гарантирует завершение)
   if (!authStore.isInitialized) {
     await authStore.checkAuth();
   }
@@ -18,10 +14,9 @@ export async function authGuard(
   const isAuthRoute = to.path === '/login';
 
   if (requiresAuth && !isAuthenticated) {
-    next({ path: '/login', query: { redirect: to.fullPath } });
+    return { path: '/login', query: { redirect: to.fullPath } };
   } else if (isAuthRoute && isAuthenticated) {
-    next({ path: '/' });
-  } else {
-    next();
+    return { path: '/' };
   }
+  // return undefined для продолжения навигации
 }

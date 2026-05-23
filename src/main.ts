@@ -3,10 +3,16 @@ import { createPinia } from 'pinia';
 import './style.css';
 import AppWrapper from './AppWrapper.vue';
 import router from './router';
+import { useAuthStore } from './stores/authStore';
 
 const app = createApp(AppWrapper);
 const pinia = createPinia();
 
 app.use(pinia);
-app.use(router);
-app.mount('#app');
+
+// CRITICAL: Инициализировать auth ДО router
+const authStore = useAuthStore();
+authStore.checkAuth().then(() => {
+  app.use(router);
+  app.mount('#app');
+});
