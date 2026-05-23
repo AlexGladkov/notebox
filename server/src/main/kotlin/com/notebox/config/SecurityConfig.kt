@@ -82,6 +82,12 @@ class SessionAuthenticationFilter(
         response: HttpServletResponse,
         filterChain: jakarta.servlet.FilterChain
     ) {
+        // Пропускаем OPTIONS preflight запросы без проверки сессии
+        if (request.method == "OPTIONS") {
+            filterChain.doFilter(request, response)
+            return
+        }
+
         val requestPath = request.requestURI
 
         // Пропускаем публичные эндпоинты без проверки сессии
