@@ -36,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onUnmounted } from 'vue'
 
 interface Props {
   isOpen: boolean
@@ -59,12 +59,16 @@ const handleClickOutside = (event: MouseEvent) => {
   }
 }
 
-onMounted(() => {
-  if (props.isOpen) {
+// Реактивное управление event listeners при изменении props.isOpen
+watch(() => props.isOpen, (newIsOpen) => {
+  if (newIsOpen) {
     document.addEventListener('click', handleClickOutside)
+  } else {
+    document.removeEventListener('click', handleClickOutside)
   }
 })
 
+// Defensive cleanup при размонтировании компонента
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
