@@ -115,7 +115,9 @@ const handleShare = async () => {
       document.body.appendChild(textArea);
       textArea.select();
       document.execCommand('copy');
-      document.body.removeChild(textArea);
+      if (textArea.parentNode) {
+        document.body.removeChild(textArea);
+      }
     }
     showToast.value = true;
     if (toastTimer) {

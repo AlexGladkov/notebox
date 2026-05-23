@@ -182,7 +182,9 @@ export function downloadCsv(content: string, filename: string, encoding: 'utf-8'
   link.click();
 
   // Cleanup
-  document.body.removeChild(link);
+  if (link.parentNode) {
+    document.body.removeChild(link);
+  }
   URL.revokeObjectURL(url);
 }
 

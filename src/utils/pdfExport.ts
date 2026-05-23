@@ -617,6 +617,8 @@ export async function exportNoteToPdf(options: PdfExportOptions): Promise<void> 
     onProgress?.(100);
   } finally {
     // Очистка временного элемента
-    document.body.removeChild(tempDiv);
+    if (tempDiv.parentNode) {
+      document.body.removeChild(tempDiv);
+    }
   }
 }
