@@ -1,6 +1,7 @@
 <template>
   <div
     v-if="visible && filteredCommands.length > 0"
+    ref="menuRef"
     class="slash-command-menu"
     :style="{ top: position.top + 'px', left: position.left + 'px' }"
   >
@@ -34,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, nextTick } from 'vue';
 import type { Editor } from '@tiptap/vue-3';
 import type { SlashCommand } from '../../types/editor';
 
@@ -51,6 +52,7 @@ const emit = defineEmits<{
 
 const selectedIndex = ref(0);
 const position = ref({ top: 0, left: 0 });
+const menuRef = ref<HTMLElement | null>(null);
 
 const filteredCommands = computed(() => {
   if (!props.query) {
@@ -148,16 +150,55 @@ const selectCurrent = () => {
   }
 };
 
-const updatePosition = () => {
+const updatePosition = async () => {
   if (!props.editor) return;
 
   const { selection } = props.editor.state;
   const coords = props.editor.view.coordsAtPos(selection.from);
 
+  // Устанавливаем начальную позицию под курсором
   position.value = {
     top: coords.bottom + 8,
     left: coords.left,
   };
+
+  // Ждем рендеринга меню для получения его размеров
+  await nextTick();
+
+  if (!menuRef.value) return;
+
+  // Проверяем, не выходит ли меню за пределы viewport
+  const menuRect = menuRef.value.getBoundingClientRect();
+
+  // Определяем, где больше места: сверху или снизу
+  const spaceBelow = window.innerHeight - coords.bottom;
+  const spaceAbove = coords.top;
+
+  // Проверка вертикальных границ
+  if (menuRect.bottom > window.innerHeight) {
+    // Если снизу не хватает места, проверяем сверху
+    if (spaceAbove > spaceBelow && spaceAbove >= menuRect.height) {
+      // Flip вверх, если сверху больше места и оно достаточно
+      position.value.top = coords.top - menuRect.height - 8;
+    } else if (spaceBelow < menuRect.height) {
+      // Если места мало и снизу, и сверху, выбираем направление с большим пространством
+      if (spaceAbove > spaceBelow) {
+        position.value.top = Math.max(10, coords.top - menuRect.height - 8);
+      } else {
+        position.value.top = coords.bottom + 8;
+      }
+    }
+  }
+
+  // Проверка правой границы
+  if (menuRect.right > window.innerWidth) {
+    position.value.left = Math.max(10, window.innerWidth - menuRect.width - 10);
+  }
+
+  // Проверка левой границы
+  if (position.value.left < 0) {
+    position.value.left = 10;
+  }
 };
 
 watch(
