@@ -23,6 +23,9 @@ export const useUIStore = defineStore('ui', {
     themeMode: 'system' as ThemeMode,
     systemPrefersDark: false,
     themeInitialized: false,
+    storageListener: null as ((e: StorageEvent) => void) | null,
+    mediaQueryListener: null as ((e: MediaQueryListEvent) => void) | null,
+    mediaQuery: null as MediaQueryList | null,
 
     // Search
     searchQuery: '',
@@ -194,19 +197,19 @@ export const useUIStore = defineStore('ui', {
 
     initSystemThemeListener(): void {
       if (window.matchMedia) {
-        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        this.systemPrefersDark = mediaQuery.matches;
+        this.mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        this.systemPrefersDark = this.mediaQuery.matches;
 
-        const listener = (e: MediaQueryListEvent) => {
+        this.mediaQueryListener = (e: MediaQueryListEvent) => {
           this.systemPrefersDark = e.matches;
           this.applyTheme();
         };
 
         // Поддержка старого и нового API
-        if (mediaQuery.addEventListener) {
-          mediaQuery.addEventListener('change', listener);
-        } else if ((mediaQuery as any).addListener) {
-          (mediaQuery as any).addListener(listener);
+        if (this.mediaQuery.addEventListener) {
+          this.mediaQuery.addEventListener('change', this.mediaQueryListener);
+        } else if ((this.mediaQuery as any).addListener) {
+          (this.mediaQuery as any).addListener(this.mediaQueryListener);
         }
       } else {
         this.systemPrefersDark = false;
@@ -221,14 +224,15 @@ export const useUIStore = defineStore('ui', {
       this.applyTheme();
 
       // Слушаем изменения localStorage из других вкладок
-      window.addEventListener('storage', (e: StorageEvent) => {
+      this.storageListener = (e: StorageEvent) => {
         if (e.key === THEME_STORAGE_KEY && e.newValue) {
-          const newTheme = e.newValue as ThemeMode;
-          if (['light', 'dark', 'system'].includes(newTheme)) {
-            this.themeMode = newTheme;
+          // Валидируем значение перед приведением типа
+          if (['light', 'dark', 'system'].includes(e.newValue)) {
+            this.themeMode = e.newValue as ThemeMode;
           }
         }
-      });
+      };
+      window.addEventListener('storage', this.storageListener);
 
       // Следим за изменениями и применяем тему
       watch(() => this.effectiveTheme, () => {
@@ -240,6 +244,27 @@ export const useUIStore = defineStore('ui', {
       });
 
       this.themeInitialized = true;
+    },
+
+    destroyTheme(): void {
+      // Очищаем storage listener
+      if (this.storageListener) {
+        window.removeEventListener('storage', this.storageListener);
+        this.storageListener = null;
+      }
+
+      // Очищаем mediaQuery listener
+      if (this.mediaQuery && this.mediaQueryListener) {
+        if (this.mediaQuery.removeEventListener) {
+          this.mediaQuery.removeEventListener('change', this.mediaQueryListener);
+        } else if ((this.mediaQuery as any).removeListener) {
+          (this.mediaQuery as any).removeListener(this.mediaQueryListener);
+        }
+        this.mediaQueryListener = null;
+        this.mediaQuery = null;
+      }
+
+      this.themeInitialized = false;
     },
 
     // Search

@@ -13,5 +13,6 @@ export function useTheme() {
     cycleTheme: store.cycleTheme,
     setTheme: store.setTheme,
     initialize: store.initializeTheme,
+    destroy: store.destroyTheme,
   };
 }
