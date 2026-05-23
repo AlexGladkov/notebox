@@ -20,7 +20,6 @@
             <span>Светлая</span>
           </div>
 
-          <!-- Переключатель отключается в режиме System (defense-in-depth: HTML disabled + CSS + guard в toggleTheme) -->
           <button
             type="button"
             role="switch"
@@ -88,7 +87,6 @@ watch(themeMode, (newTheme) => {
 });
 
 const toggleTheme = () => {
-  // Defense-in-depth: предотвращает переключение темы в режиме System (дополняет HTML disabled атрибут)
   if (currentTheme.value === 'system') return;
 
   const newTheme = effectiveTheme.value === 'dark' ? 'light' : 'dark';
