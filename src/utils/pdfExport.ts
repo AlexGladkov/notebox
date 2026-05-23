@@ -426,6 +426,28 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
 }
 
 /**
+ * Подсчёт количества нод в TipTap документе (для определения размера)
+ */
+function countNodes(jsonString: string): number {
+  try {
+    const doc = JSON.parse(jsonString);
+    let count = 0;
+
+    function traverse(node: any) {
+      count++;
+      if (node.content && Array.isArray(node.content)) {
+        node.content.forEach(traverse);
+      }
+    }
+
+    traverse(doc);
+    return count;
+  } catch {
+    return 0;
+  }
+}
+
+/**
  * Основная функция экспорта заметки в PDF
  */
 export async function exportNoteToPdf(options: PdfExportOptions): Promise<void> {
@@ -433,6 +455,12 @@ export async function exportNoteToPdf(options: PdfExportOptions): Promise<void> 
 
   // Начало экспорта
   onProgress?.(0);
+
+  // Определяем размер документа для оптимизации
+  const nodeCount = countNodes(content);
+  const isLargeDocument = nodeCount > 200; // Большой документ: > 200 нод
+
+  console.log(`PDF Export: nodeCount=${nodeCount}, isLarge=${isLargeDocument}`);
 
   // Форматирование даты
   const date = new Date(updatedAt);
@@ -503,41 +531,85 @@ export async function exportNoteToPdf(options: PdfExportOptions): Promise<void> 
     // Генерация имени файла
     const filename = transliterate(title) || 'note';
 
-    // Конфигурация html2pdf
+    // Конфигурация html2pdf с оптимизацией для больших документов
     const opt: Html2PdfOptions = {
       margin: 20, // mm
       filename: `${filename}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      // Для больших документов снижаем качество и scale для ускорения
+      image: { type: 'jpeg', quality: isLargeDocument ? 0.85 : 0.98 },
+      html2canvas: {
+        scale: isLargeDocument ? 1.5 : 2,
+        useCORS: true,
+        // Для больших документов отключаем некоторые тяжёлые фичи
+        logging: false,
+        imageTimeout: isLargeDocument ? 5000 : 15000
+      },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      // Включаем page breaks для корректного разбиения на страницы
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
     onProgress?.(20);
 
-    // Yield to event loop перед тяжёлой операцией
-    // Даём браузеру возможность обновить UI и обработать другие события
-    await new Promise(resolve => setTimeout(resolve, 50));
+    // Множественные yield points для освобождения event loop
+    // Даём браузеру время отрисовать прогресс-бар перед тяжёлой операцией
+    await new Promise(resolve => requestAnimationFrame(() => resolve(undefined)));
+    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise(resolve => requestAnimationFrame(() => resolve(undefined)));
 
     onProgress?.(25);
 
-    // Генерация и скачивание PDF с таймаутом 60 секунд
-    // Симулируем промежуточный прогресс, так как html2pdf не предоставляет callbacks
+    // Еще один yield для гарантии отрисовки UI
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    // Генерация и скачивание PDF с таймаутом (60 сек для малых, 120 сек для больших)
+    // html2pdf.js выполняется синхронно и блокирует event loop,
+    // поэтому прогресс-бар может не обновляться во время генерации
+    const timeoutDuration = isLargeDocument ? 120000 : 60000;
+
     const pdfPromise = new Promise<void>((resolve, reject) => {
-      html2pdf().set(opt).from(tempDiv).save().then(resolve).catch(reject);
+      // Даём браузеру последний шанс обновить UI перед блокировкой
+      requestAnimationFrame(() => {
+        // Небольшая задержка для завершения отрисовки
+        setTimeout(() => {
+          try {
+            console.log('PDF Export: Starting html2pdf generation...');
+            const startTime = Date.now();
+
+            html2pdf()
+              .set(opt)
+              .from(tempDiv)
+              .save()
+              .then(() => {
+                const duration = Date.now() - startTime;
+                console.log(`PDF Export: Completed in ${duration}ms`);
+                resolve();
+              })
+              .catch((err) => {
+                console.error('PDF Export: html2pdf error:', err);
+                reject(err);
+              });
+          } catch (err) {
+            console.error('PDF Export: Sync error during html2pdf:', err);
+            reject(err);
+          }
+        }, 100);
+      });
     });
 
-    // Запускаем симуляцию прогресса параллельно с генерацией PDF
+    // Симулируем прогресс (может не обновляться во время html2pdf работы)
     let currentProgress = 25;
-    const progressInterval = setInterval(() => {
-      // Медленно увеличиваем прогресс до 90%
+    const progressInterval = setInterval(async () => {
       if (currentProgress < 90) {
         currentProgress += 5;
         onProgress?.(currentProgress);
+        // Yield в callback для попытки освободить event loop
+        await new Promise(resolve => setTimeout(resolve, 0));
       }
-    }, 500); // Обновляем каждые 500ms
+    }, 500);
 
     try {
-      await withTimeout(pdfPromise, 60000);
+      await withTimeout(pdfPromise, timeoutDuration);
     } finally {
       clearInterval(progressInterval);
     }
