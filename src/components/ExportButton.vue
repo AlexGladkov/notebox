@@ -40,23 +40,36 @@
       <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
     </svg>
   </button>
+
+  <!-- Progress Overlay -->
+  <ProgressOverlay
+    :show="isExporting"
+    :progress="exportProgress"
+    :message="progressMessage"
+    :can-cancel="false"
+  />
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
 import type { Note } from '../types';
 import { exportNoteToPdf } from '../utils/pdfExport';
+import ProgressOverlay from './ProgressOverlay.vue';
 
 const props = defineProps<{
   note: Note;
 }>();
 
 const isExporting = ref(false);
+const exportProgress = ref(0);
+const progressMessage = ref('');
 
 const handleExport = async () => {
   if (isExporting.value) return;
 
   isExporting.value = true;
+  exportProgress.value = 0;
+  progressMessage.value = 'Подготовка документа...';
 
   try {
     await exportNoteToPdf({
@@ -64,6 +77,20 @@ const handleExport = async () => {
       content: props.note.content,
       tags: props.note.tags,
       updatedAt: props.note.updatedAt,
+      onProgress: (percent: number) => {
+        exportProgress.value = percent;
+
+        // Обновляем сообщение в зависимости от этапа
+        if (percent < 10) {
+          progressMessage.value = 'Подготовка документа...';
+        } else if (percent < 25) {
+          progressMessage.value = 'Конвертация содержимого...';
+        } else if (percent < 95) {
+          progressMessage.value = 'Генерация PDF файла...';
+        } else {
+          progressMessage.value = 'Завершение...';
+        }
+      },
     });
 
     // Показываем уведомление об успехе
@@ -85,6 +112,8 @@ const handleExport = async () => {
     showNotification(errorMessage, true);
   } finally {
     isExporting.value = false;
+    exportProgress.value = 0;
+    progressMessage.value = '';
   }
 };
 

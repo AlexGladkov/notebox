@@ -7,6 +7,7 @@ export interface PdfExportOptions {
   content: string; // TipTap JSON
   tags?: Tag[];
   updatedAt: number;
+  onProgress?: (percent: number) => void; // Callback для отображения прогресса
 }
 
 /**
@@ -428,7 +429,10 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
  * Основная функция экспорта заметки в PDF
  */
 export async function exportNoteToPdf(options: PdfExportOptions): Promise<void> {
-  const { title, content, tags, updatedAt } = options;
+  const { title, content, tags, updatedAt, onProgress } = options;
+
+  // Начало экспорта
+  onProgress?.(0);
 
   // Форматирование даты
   const date = new Date(updatedAt);
@@ -440,8 +444,11 @@ export async function exportNoteToPdf(options: PdfExportOptions): Promise<void> 
     minute: '2-digit',
   });
 
+  onProgress?.(5);
+
   // Конвертация контента
   const htmlContent = convertTipTapToHtml(content);
+  onProgress?.(10);
 
   // Формирование тегов
   let tagsHtml = '';
@@ -490,6 +497,8 @@ export async function exportNoteToPdf(options: PdfExportOptions): Promise<void> 
   tempDiv.style.left = '-9999px';
   document.body.appendChild(tempDiv);
 
+  onProgress?.(15);
+
   try {
     // Генерация имени файла
     const filename = transliterate(title) || 'note';
@@ -503,11 +512,21 @@ export async function exportNoteToPdf(options: PdfExportOptions): Promise<void> 
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
+    onProgress?.(20);
+
+    // Yield to event loop перед тяжёлой операцией
+    // Даём браузеру возможность обновить UI и обработать другие события
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    onProgress?.(25);
+
     // Генерация и скачивание PDF с таймаутом 60 секунд
     const pdfPromise = new Promise<void>((resolve, reject) => {
       html2pdf().set(opt).from(tempDiv).save().then(resolve).catch(reject);
     });
     await withTimeout(pdfPromise, 60000);
+
+    onProgress?.(100);
   } finally {
     // Очистка временного элемента
     document.body.removeChild(tempDiv);
