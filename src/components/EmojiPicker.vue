@@ -36,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 
 interface Props {
   isOpen: boolean
@@ -65,6 +65,13 @@ watch(() => props.isOpen, (newIsOpen) => {
     document.addEventListener('click', handleClickOutside)
   } else {
     document.removeEventListener('click', handleClickOutside)
+  }
+})
+
+// Обработка начального состояния при монтировании
+onMounted(() => {
+  if (props.isOpen) {
+    document.addEventListener('click', handleClickOutside)
   }
 })
 
