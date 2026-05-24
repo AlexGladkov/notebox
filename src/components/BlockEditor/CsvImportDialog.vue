@@ -306,8 +306,12 @@ const canImport = computed(() => {
 });
 
 const handleEscape = (event: KeyboardEvent) => {
-  if (event.key === 'Escape' && (step.value === 'upload' || step.value === 'mapping')) {
-    handleCancel();
+  if (event.key === 'Escape') {
+    if (step.value === 'upload' || step.value === 'mapping') {
+      handleCancel();
+    } else if (step.value === 'result') {
+      handleClose();
+    }
   }
 };
 
