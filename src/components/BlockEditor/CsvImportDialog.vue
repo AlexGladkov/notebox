@@ -1,6 +1,6 @@
 <template>
-  <div v-if="show" class="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50">
-    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+  <div v-if="show" class="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50" @click.self="handleCancel">
+    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto" @click.stop>
       <!-- Header -->
       <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
         Импорт CSV
@@ -253,7 +253,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch, onUnmounted } from 'vue';
 import type { Column, ColumnType } from '../../types';
 import { parseCsv, detectColumnTypes, convertCsvValue, validateCsvSize, validateCsvRowCount } from '../../utils/csvParser';
 import type { CsvParseError } from '../../utils/csvParser';
@@ -303,6 +303,24 @@ const previewRows = computed(() => csvRows.value.slice(0, 5));
 const canImport = computed(() => {
   // Проверяем, что хотя бы одна колонка выбрана
   return columnMapping.value.some(mapping => mapping !== null);
+});
+
+const handleEscape = (event: KeyboardEvent) => {
+  if (event.key === 'Escape' && (step.value === 'upload' || step.value === 'mapping')) {
+    handleCancel();
+  }
+};
+
+watch(() => props.show, (newValue) => {
+  if (newValue) {
+    document.addEventListener('keydown', handleEscape);
+  } else {
+    document.removeEventListener('keydown', handleEscape);
+  }
+});
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleEscape);
 });
 
 const handleDrop = (event: DragEvent) => {
