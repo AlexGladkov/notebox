@@ -90,6 +90,12 @@ class DatabaseRepository {
             .singleOrNull()
     }
 
+    fun findColumnByDatabaseIdAndName(databaseId: String, name: String): Column? = transaction {
+        ColumnsTable.select { (ColumnsTable.databaseId eq databaseId) and (ColumnsTable.name eq name) }
+            .mapNotNull { toColumn(it) }
+            .singleOrNull()
+    }
+
     fun createColumn(
         databaseId: String,
         name: String,

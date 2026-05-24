@@ -3,6 +3,7 @@ package com.notebox.domain.database
 import com.notebox.dto.ColumnType
 import com.notebox.dto.SelectOptionDto
 import com.notebox.exception.AccessDeniedException
+import com.notebox.exception.ValidationException
 import org.springframework.stereotype.Service
 
 /**
@@ -29,6 +30,13 @@ class ColumnService(
     ): Column {
         // Проверяем ownership parent database
         verifyDatabaseOwnership(databaseId, userId)
+
+        // Проверяем уникальность имени колонки в рамках базы данных
+        val existingColumn = databaseRepository.findColumnByDatabaseIdAndName(databaseId, name)
+        if (existingColumn != null) {
+            throw ValidationException("Column with name '$name' already exists in this database")
+        }
+
         return databaseRepository.createColumn(databaseId, name, type, options, position)
     }
 
@@ -44,6 +52,15 @@ class ColumnService(
         val column = databaseRepository.findColumnById(id)
             ?: return null
         verifyDatabaseOwnership(column.databaseId, userId)
+
+        // Проверяем уникальность имени при переименовании
+        if (column.name != name) {
+            val existingColumn = databaseRepository.findColumnByDatabaseIdAndName(column.databaseId, name)
+            if (existingColumn != null && existingColumn.id != id) {
+                throw ValidationException("Column with name '$name' already exists in this database")
+            }
+        }
+
         return databaseRepository.updateColumn(id, name, type, options, position)
     }
 
