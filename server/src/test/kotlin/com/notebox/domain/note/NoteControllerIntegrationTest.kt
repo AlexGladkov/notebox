@@ -12,6 +12,7 @@ import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequ
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+import org.hamcrest.Matchers.containsString
 import java.util.*
 
 /**
@@ -31,18 +32,8 @@ class NoteControllerIntegrationTest {
     private lateinit var objectMapper: ObjectMapper
 
     /**
-     * Regression test для бага: "NoteController.updateNote returns 200 OK even when note doesn't exist"
-     *
-     * Проверяет, что PUT /api/notes/{id} с несуществующим UUID:
-     * - Возвращает HTTP 404 Not Found (не 200 OK)
-     * - Возвращает корректную JSON структуру ошибки с кодом "NOT_FOUND"
-     * - Включает ID несуществующей заметки в сообщение об ошибке
-     *
-     * Исправлено в commit 984df85 (20 мая 2026):
-     * - Добавлена проактивная проверка существования в NoteService.kt:84-85
-     * - Добавлена резервная проверка в NoteController.kt:80
-     *
-     * @see <a href="specs/bugs/BUG_DIAGNOSTIC_notecontroller_updatenote_returns_200_ok_even_when.md">Bug Diagnostic Report</a>
+     * Regression test: проверяет, что PUT /api/notes/{id} с несуществующим UUID
+     * возвращает HTTP 404 Not Found с корректной структурой ошибки.
      */
     @Test
     fun `updateNote with non-existent ID returns 404 Not Found`() {
@@ -68,7 +59,7 @@ class NoteControllerIntegrationTest {
             .andExpect(status().isNotFound)
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.error.code").value("NOT_FOUND"))
-            .andExpect(jsonPath("$.error.message").value(org.hamcrest.Matchers.containsString(nonExistentId)))
+            .andExpect(jsonPath("$.error.message").value(containsString(nonExistentId)))
     }
 
     /**
