@@ -77,6 +77,9 @@ services:
     build:
       context: .
       dockerfile: nginx/Dockerfile
+      args:
+        VITE_BASE_PATH: ${VITE_BASE_PATH:-}
+        VITE_API_URL: ${VITE_API_URL:-}
     ports:
       - "0:80"
     depends_on:
