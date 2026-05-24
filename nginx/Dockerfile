@@ -19,6 +19,14 @@ COPY tsconfig.node.json .
 COPY tailwind.config.js .
 COPY postcss.config.js .
 
+# Принимаем build arguments для конфигурации frontend
+ARG VITE_BASE_PATH=""
+ARG VITE_API_URL=""
+
+# Передаём их как переменные окружения для Vite
+ENV VITE_BASE_PATH=$VITE_BASE_PATH
+ENV VITE_API_URL=$VITE_API_URL
+
 # Собираем production build
 RUN npm run build
 
