@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col h-screen bg-white dark:bg-gray-900">
     <!-- Header -->
-    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+    <div class="grid grid-cols-3 items-center px-6 py-4 border-b border-gray-200 dark:border-gray-700">
       <div class="flex items-center gap-4">
         <button
           @click="goBack"
@@ -15,11 +15,11 @@
         </button>
       </div>
 
-      <h1 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+      <h1 class="text-xl font-semibold text-gray-900 dark:text-gray-100 text-center">
         Billing
       </h1>
 
-      <div class="w-24"></div>
+      <div></div>
     </div>
 
     <!-- Billing Content -->
@@ -112,12 +112,12 @@ const goBack = () => {
 };
 
 const getDatabasesPercentage = (): number => {
-  if (!usage.value) return 0;
+  if (!usage.value || usage.value.databases.limit === 0) return 0;
   return Math.min((usage.value.databases.current / usage.value.databases.limit) * 100, 100);
 };
 
 const getRemindersPercentage = (): number => {
-  if (!usage.value) return 0;
+  if (!usage.value || usage.value.reminders.limit === 0) return 0;
   return Math.min((usage.value.reminders.current / usage.value.reminders.limit) * 100, 100);
 };
 
