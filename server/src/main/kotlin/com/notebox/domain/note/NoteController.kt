@@ -87,7 +87,7 @@ class NoteController(
     @DeleteMapping("/{id}")
     fun deleteNote(
         @PathVariable @ValidUuid(fieldName = "id") id: String,
-        @RequestParam(required = false, defaultValue = "cascade") action: String
+        @RequestParam(required = false, defaultValue = "orphan") action: String
     ): ResponseEntity<Void> {
         val userId = getCurrentUserId()
         val cascadeDelete = action == "cascade"

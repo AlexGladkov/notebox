@@ -146,7 +146,7 @@ class NoteService(
         return noteRepository.findByIdAndUserId(noteId, userId)
     }
 
-    fun deleteNote(id: String, userId: String, cascadeDelete: Boolean = true): Boolean {
+    fun deleteNote(id: String, userId: String, cascadeDelete: Boolean = false): Boolean {
         verifyNoteOwnership(id, userId)
         if (cascadeDelete) {
             noteRepository.deleteWithDescendants(id, userId)
