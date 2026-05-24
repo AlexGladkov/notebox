@@ -5,9 +5,10 @@
       <div class="flex items-center gap-4">
         <button
           @click="goBack"
+          aria-label="Вернуться назад"
           class="flex items-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
         >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
           <span>Назад</span>
@@ -34,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
 import ProfileSection from '../components/settings/ProfileSection.vue';
@@ -43,6 +44,13 @@ const router = useRouter();
 const authStore = useAuthStore();
 
 const user = computed(() => authStore.user);
+
+// Редирект на login если пользователь вышел из системы
+watch(user, (newUser) => {
+  if (!newUser) {
+    router.push('/login');
+  }
+});
 
 const goBack = () => {
   router.back();
