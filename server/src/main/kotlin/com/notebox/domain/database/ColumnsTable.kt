@@ -14,4 +14,8 @@ object ColumnsTable : Table("columns") {
     val createdAt = timestamp("created_at").default(Instant.now())
 
     override val primaryKey = PrimaryKey(id)
+
+    init {
+        uniqueIndex(databaseId, name)
+    }
 }

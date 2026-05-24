@@ -3,6 +3,7 @@ package com.notebox.domain.database
 import com.notebox.dto.ColumnType
 import com.notebox.dto.SelectOptionDto
 import com.notebox.exception.AccessDeniedException
+import com.notebox.exception.ValidationException
 import org.springframework.stereotype.Service
 
 /**
@@ -29,7 +30,17 @@ class ColumnService(
     ): Column {
         // Проверяем ownership parent database
         verifyDatabaseOwnership(databaseId, userId)
-        return databaseRepository.createColumn(databaseId, name, type, options, position)
+
+        // Нормализуем имя колонки (удаляем пробелы в начале и конце)
+        val normalizedName = name.trim()
+
+        // Проверяем уникальность имени колонки в рамках базы данных
+        val existingColumn = databaseRepository.findColumnByDatabaseIdAndName(databaseId, normalizedName)
+        if (existingColumn != null) {
+            throw ValidationException("Column with name '$normalizedName' already exists in this database")
+        }
+
+        return databaseRepository.createColumn(databaseId, normalizedName, type, options, position)
     }
 
     fun updateColumn(
@@ -44,7 +55,19 @@ class ColumnService(
         val column = databaseRepository.findColumnById(id)
             ?: return null
         verifyDatabaseOwnership(column.databaseId, userId)
-        return databaseRepository.updateColumn(id, name, type, options, position)
+
+        // Нормализуем имя колонки (удаляем пробелы в начале и конце)
+        val normalizedName = name.trim()
+
+        // Проверяем уникальность имени при переименовании
+        if (column.name != normalizedName) {
+            val existingColumn = databaseRepository.findColumnByDatabaseIdAndName(column.databaseId, normalizedName)
+            if (existingColumn != null && existingColumn.id != id) {
+                throw ValidationException("Column with name '$normalizedName' already exists in this database")
+            }
+        }
+
+        return databaseRepository.updateColumn(id, normalizedName, type, options, position)
     }
 
     fun deleteColumn(id: String, userId: String): Boolean {
