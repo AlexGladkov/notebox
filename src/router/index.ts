@@ -23,7 +23,7 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/profile',
-    redirect: '/',
+    redirect: () => ({ path: '/', query: {} }),
     meta: { requiresAuth: true }
   },
   {
