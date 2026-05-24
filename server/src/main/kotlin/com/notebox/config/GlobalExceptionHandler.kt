@@ -114,7 +114,7 @@ class GlobalExceptionHandler {
         logger.warn("No handler found for {} {}", ex.httpMethod, ex.requestURL)
         return ResponseEntity
             .status(HttpStatus.NOT_FOUND)
-            .body(errorResponse("NOT_FOUND", "Endpoint not found: ${ex.httpMethod} ${ex.requestURL}"))
+            .body(errorResponse("NOT_FOUND", "Endpoint not found"))
     }
 
     @ExceptionHandler(Exception::class)
