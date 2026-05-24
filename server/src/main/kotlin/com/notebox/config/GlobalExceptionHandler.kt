@@ -11,6 +11,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.multipart.MaxUploadSizeExceededException
+import org.springframework.web.servlet.NoHandlerFoundException
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
@@ -106,6 +107,14 @@ class GlobalExceptionHandler {
         return ResponseEntity
             .status(HttpStatus.PAYLOAD_TOO_LARGE)
             .body(errorResponse("FILE_TOO_LARGE", "File size exceeds maximum allowed limit"))
+    }
+
+    @ExceptionHandler(NoHandlerFoundException::class)
+    fun handleNoHandlerFound(ex: NoHandlerFoundException): ResponseEntity<ApiResponse<Nothing>> {
+        logger.warn("No handler found for {} {}", ex.httpMethod, ex.requestURL)
+        return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(errorResponse("NOT_FOUND", "Endpoint not found: ${ex.httpMethod} ${ex.requestURL}"))
     }
 
     @ExceptionHandler(Exception::class)
