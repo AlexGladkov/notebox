@@ -13,6 +13,16 @@ spring:
     resources:
       add-mappings: false
 
+  jackson:
+    # Сериализация дат в формате ISO-8601 (если используются Instant/LocalDateTime)
+    # Для timestamp используйте Long (миллисекунды) в DTO как в существующем коде
+    serialization:
+      write-dates-as-timestamps: false
+    # Не падать на неизвестных полях в JSON для обратной совместимости
+    # Для строгой валидации обязательных полей используйте @JsonProperty(required=true)
+    deserialization:
+      fail-on-unknown-properties: false
+
   datasource:
     url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:notebox}?TimeZone=UTC
     username: ${POSTGRES_USER:notebox}
