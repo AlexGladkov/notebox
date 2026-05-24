@@ -2,6 +2,8 @@ package com.notebox.domain.database
 
 import com.notebox.dto.ColumnType
 import com.notebox.dto.SelectOptionDto
+import com.notebox.exception.ValidationException
+import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -102,21 +104,30 @@ class DatabaseRepository {
         type: ColumnType,
         options: List<SelectOptionDto>?,
         position: Int
-    ): Column = transaction {
-        val id = UUID.randomUUID().toString()
-        val now = Instant.now()
+    ): Column = try {
+        transaction {
+            val id = UUID.randomUUID().toString()
+            val now = Instant.now()
 
-        ColumnsTable.insert {
-            it[ColumnsTable.id] = id
-            it[ColumnsTable.databaseId] = databaseId
-            it[ColumnsTable.name] = name
-            it[ColumnsTable.type] = type.name
-            it[ColumnsTable.options] = serializeOptions(options)
-            it[ColumnsTable.position] = position
-            it[createdAt] = now
+            ColumnsTable.insert {
+                it[ColumnsTable.id] = id
+                it[ColumnsTable.databaseId] = databaseId
+                it[ColumnsTable.name] = name
+                it[ColumnsTable.type] = type.name
+                it[ColumnsTable.options] = serializeOptions(options)
+                it[ColumnsTable.position] = position
+                it[createdAt] = now
+            }
+
+            Column(id, databaseId, name, type, options, position, now)
         }
-
-        Column(id, databaseId, name, type, options, position, now)
+    } catch (e: ExposedSQLException) {
+        // Обрабатываем нарушение уникального индекса (race condition)
+        if (e.message?.contains("unique", ignoreCase = true) == true ||
+            e.message?.contains("duplicate", ignoreCase = true) == true) {
+            throw ValidationException("Column with name '$name' already exists in this database")
+        }
+        throw e
     }
 
     fun updateColumn(
@@ -125,18 +136,27 @@ class DatabaseRepository {
         type: ColumnType,
         options: List<SelectOptionDto>?,
         position: Int
-    ): Column? = transaction {
-        val exists = ColumnsTable.select { ColumnsTable.id eq id }.any()
-        if (!exists) return@transaction null
+    ): Column? = try {
+        transaction {
+            val exists = ColumnsTable.select { ColumnsTable.id eq id }.any()
+            if (!exists) return@transaction null
 
-        ColumnsTable.update({ ColumnsTable.id eq id }) {
-            it[ColumnsTable.name] = name
-            it[ColumnsTable.type] = type.name
-            it[ColumnsTable.options] = serializeOptions(options)
-            it[ColumnsTable.position] = position
+            ColumnsTable.update({ ColumnsTable.id eq id }) {
+                it[ColumnsTable.name] = name
+                it[ColumnsTable.type] = type.name
+                it[ColumnsTable.options] = serializeOptions(options)
+                it[ColumnsTable.position] = position
+            }
+
+            findColumnById(id)
         }
-
-        findColumnById(id)
+    } catch (e: ExposedSQLException) {
+        // Обрабатываем нарушение уникального индекса (race condition при переименовании)
+        if (e.message?.contains("unique", ignoreCase = true) == true ||
+            e.message?.contains("duplicate", ignoreCase = true) == true) {
+            throw ValidationException("Column with name '$name' already exists in this database")
+        }
+        throw e
     }
 
     fun deleteColumn(id: String): Boolean = transaction {
