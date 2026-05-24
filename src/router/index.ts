@@ -23,8 +23,7 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/profile',
-    name: 'profile',
-    component: () => import('../views/ProfileView.vue'),
+    redirect: () => ({ path: '/', query: {} }),
     meta: { requiresAuth: true }
   },
   {
@@ -36,7 +35,7 @@ const routes: RouteRecordRaw[] = [
 ];
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHistory(),
   routes
 });
 
