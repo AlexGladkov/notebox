@@ -15,6 +15,22 @@ class DemoDatabaseBuilder(
     private val databaseService: DatabaseService
 ) {
     fun createDemoDatabase(userId: String): CustomDatabase {
+        val existingDatabases = databaseService.getAllDatabases(userId)
+        val existingDemoDatabase = existingDatabases.find { it.name == DemoContentData.DATABASE_NAME }
+
+        if (existingDemoDatabase != null) {
+            val (_, columns) = databaseService.getDatabaseById(existingDemoDatabase.id, userId)
+                ?: return createNewDemoDatabase(userId)
+
+            if (columns.size >= 3) {
+                return existingDemoDatabase
+            }
+        }
+
+        return createNewDemoDatabase(userId)
+    }
+
+    private fun createNewDemoDatabase(userId: String): CustomDatabase {
         val (database, _) = databaseService.createDatabase(
             userId = userId,
             name = DemoContentData.DATABASE_NAME,
