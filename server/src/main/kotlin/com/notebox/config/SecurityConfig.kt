@@ -62,7 +62,8 @@ class SecurityConfig {
 
         // Добавляем host.docker.internal только для dev/test окружений (любой порт)
         // В production это создаёт CSRF уязвимость через Docker internal network
-        if (activeProfile != "prod" && activeProfile != "production") {
+        val isProduction = activeProfile.contains("prod", ignoreCase = true)
+        if (!isProduction) {
             origins.add("http://host.docker.internal:*")
         }
 
