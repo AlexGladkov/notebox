@@ -18,9 +18,15 @@ class NoteController(
 ) : BaseController() {
 
     @GetMapping
-    fun getAllNotes(): ResponseEntity<ApiResponse<List<NoteDto>>> {
+    fun getAllNotes(
+        @RequestParam(required = false) @ValidUuid(fieldName = "folderId") folderId: String?
+    ): ResponseEntity<ApiResponse<List<NoteDto>>> {
         val userId = getCurrentUserId()
-        val notes = noteService.getAllNotesWithTags(userId)
+        val notes = if (folderId != null) {
+            noteService.getChildrenWithTags(folderId, userId)
+        } else {
+            noteService.getAllNotesWithTags(userId)
+        }
         return ResponseEntity.ok(successResponse(notes))
     }
 
