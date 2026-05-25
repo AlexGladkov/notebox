@@ -22,30 +22,37 @@ class DemoNoteBuilder(
 
     fun createDemoNotes(userId: String): DemoNotes {
         val existingNotes = noteService.getAllNotes(userId)
-        val notesByTitle = existingNotes.associateBy { it.title }
 
-        val dashboardNote = notesByTitle[DemoContentData.DASHBOARD_TITLE] ?: noteService.createNote(
+        val dashboardNote = existingNotes.find {
+            it.title == DemoContentData.DASHBOARD_TITLE && it.parentId == null
+        } ?: noteService.createNote(
             userId = userId,
             title = DemoContentData.DASHBOARD_TITLE,
             content = "{\"type\":\"doc\",\"content\":[]}",
             icon = "🏠"
         )
 
-        val goalsNote = notesByTitle[DemoContentData.GOALS_TITLE] ?: noteService.createNote(
+        val goalsNote = existingNotes.find {
+            it.title == DemoContentData.GOALS_TITLE && it.parentId == null
+        } ?: noteService.createNote(
             userId = userId,
             title = DemoContentData.GOALS_TITLE,
             content = DemoContentData.getGoalsContent(),
             icon = "🎯"
         )
 
-        val ideasNote = notesByTitle[DemoContentData.IDEAS_TITLE] ?: noteService.createNote(
+        val ideasNote = existingNotes.find {
+            it.title == DemoContentData.IDEAS_TITLE && it.parentId == null
+        } ?: noteService.createNote(
             userId = userId,
             title = DemoContentData.IDEAS_TITLE,
             content = DemoContentData.getIdeasContent(),
             icon = "💡"
         )
 
-        val workNotesNote = notesByTitle[DemoContentData.NOTES_TITLE] ?: noteService.createNote(
+        val workNotesNote = existingNotes.find {
+            it.title == DemoContentData.NOTES_TITLE && it.parentId == null
+        } ?: noteService.createNote(
             userId = userId,
             title = DemoContentData.NOTES_TITLE,
             content = "{\"type\":\"doc\",\"content\":[]}",
