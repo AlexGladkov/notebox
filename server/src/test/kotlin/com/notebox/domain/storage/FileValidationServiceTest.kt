@@ -38,7 +38,7 @@ class FileValidationServiceTest {
         assertEquals("FILE_TOO_LARGE", result.errorCode, "errorCode должен быть FILE_TOO_LARGE")
         assertNotNull(result.errorMessage, "Должно быть сообщение об ошибке")
         assertTrue(
-            result.errorMessage!!.contains("exceeds maximum allowed size"),
+            result.errorMessage!!.contains("exceeds or equals maximum allowed size"),
             "Сообщение об ошибке должно содержать информацию о превышении лимита"
         )
     }
@@ -59,7 +59,7 @@ class FileValidationServiceTest {
         // Act
         val result = fileValidationService.validateFile(exactLimitFile)
 
-        // Assert: файл должен быть отклонён (так как size > MAX_FILE_SIZE, не >=)
+        // Assert: файл должен быть отклонён (так как size >= MAX_FILE_SIZE)
         assertFalse(result.isValid, "Файл размером ровно 10MB должен быть отклонён")
         assertEquals("FILE_TOO_LARGE", result.errorCode)
     }

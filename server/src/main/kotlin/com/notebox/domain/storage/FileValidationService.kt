@@ -23,11 +23,11 @@ class FileValidationService {
 
     fun validateFile(file: MultipartFile): FileValidationResult {
         // Проверка размера ПЕРВОЙ (до чтения содержимого файла)
-        if (file.size > MAX_FILE_SIZE) {
+        if (file.size >= MAX_FILE_SIZE) {
             return FileValidationResult(
                 isValid = false,
                 errorCode = "FILE_TOO_LARGE",
-                errorMessage = "File size ${file.size} bytes exceeds maximum allowed size of ${MAX_FILE_SIZE / 1024 / 1024}MB"
+                errorMessage = "File size ${file.size} bytes exceeds or equals maximum allowed size of ${MAX_FILE_SIZE / 1024 / 1024}MB"
             )
         }
 
