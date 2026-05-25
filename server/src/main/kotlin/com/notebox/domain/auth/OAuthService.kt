@@ -58,6 +58,9 @@ class OAuthService(
             expiresAt = expiresAt
         )
 
+        // Invalidate all existing sessions before creating new one
+        sessionService.invalidateAllUserSessions(user.id)
+
         // Create session
         user to sessionService.createSession(user.id)
     }
@@ -94,6 +97,9 @@ class OAuthService(
             refreshToken = tokens.refreshToken,
             expiresAt = expiresAt
         )
+
+        // Invalidate all existing sessions before creating new one
+        sessionService.invalidateAllUserSessions(user.id)
 
         // Create session
         user to sessionService.createSession(user.id)

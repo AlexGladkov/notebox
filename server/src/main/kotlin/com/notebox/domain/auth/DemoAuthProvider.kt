@@ -36,6 +36,9 @@ class DemoAuthProvider(
         // Создать свежий демо-контент
         demoContentService.createDemoContent(demoUser.id)
 
+        // Invalidate all existing sessions before creating new one
+        sessionService.invalidateAllUserSessions(demoUser.id)
+
         // Create session for demo user
         val session = sessionService.createSession(demoUser.id)
 
