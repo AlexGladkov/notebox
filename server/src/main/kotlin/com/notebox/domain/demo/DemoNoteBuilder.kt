@@ -21,35 +21,40 @@ class DemoNoteBuilder(
     )
 
     fun createDemoNotes(userId: String): DemoNotes {
-        val dashboardNote = noteService.createNote(
+        val existingNotes = noteService.getAllNotes(userId)
+        val notesByTitle = existingNotes.associateBy { it.title }
+
+        val dashboardNote = notesByTitle[DemoContentData.DASHBOARD_TITLE] ?: noteService.createNote(
             userId = userId,
             title = DemoContentData.DASHBOARD_TITLE,
             content = "{\"type\":\"doc\",\"content\":[]}",
             icon = "🏠"
         )
 
-        val goalsNote = noteService.createNote(
+        val goalsNote = notesByTitle[DemoContentData.GOALS_TITLE] ?: noteService.createNote(
             userId = userId,
             title = DemoContentData.GOALS_TITLE,
             content = DemoContentData.getGoalsContent(),
             icon = "🎯"
         )
 
-        val ideasNote = noteService.createNote(
+        val ideasNote = notesByTitle[DemoContentData.IDEAS_TITLE] ?: noteService.createNote(
             userId = userId,
             title = DemoContentData.IDEAS_TITLE,
             content = DemoContentData.getIdeasContent(),
             icon = "💡"
         )
 
-        val workNotesNote = noteService.createNote(
+        val workNotesNote = notesByTitle[DemoContentData.NOTES_TITLE] ?: noteService.createNote(
             userId = userId,
             title = DemoContentData.NOTES_TITLE,
             content = "{\"type\":\"doc\",\"content\":[]}",
             icon = "📝"
         )
 
-        val contactsNote = noteService.createNote(
+        val contactsNote = existingNotes.find {
+            it.title == DemoContentData.CONTACTS_TITLE && it.parentId == workNotesNote.id
+        } ?: noteService.createNote(
             userId = userId,
             title = DemoContentData.CONTACTS_TITLE,
             content = DemoContentData.getContactsContent(),
