@@ -8,6 +8,8 @@ import java.io.InputStream
 class FileValidationService {
 
     companion object {
+        const val MAX_FILE_SIZE = 10 * 1024 * 1024L // 10MB
+
         val ALLOWED_CONTENT_TYPES = setOf(
             "image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp",
             "application/pdf", "text/plain", "text/markdown",
@@ -20,6 +22,15 @@ class FileValidationService {
     }
 
     fun validateFile(file: MultipartFile): FileValidationResult {
+        // Проверка размера ПЕРВОЙ (до чтения содержимого файла)
+        if (file.size > MAX_FILE_SIZE) {
+            return FileValidationResult(
+                isValid = false,
+                errorCode = "FILE_TOO_LARGE",
+                errorMessage = "File size ${file.size} bytes exceeds maximum allowed size of ${MAX_FILE_SIZE / 1024 / 1024}MB"
+            )
+        }
+
         if (file.isEmpty) {
             return FileValidationResult(
                 isValid = false,
