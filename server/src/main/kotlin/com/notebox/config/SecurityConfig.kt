@@ -27,6 +27,9 @@ class SecurityConfig {
     @Value("\${cors.allowed-origins:http://localhost:5173,http://localhost:3000}")
     private lateinit var allowedOrigins: String
 
+    @Value("\${spring.profiles.active:dev}")
+    private lateinit var activeProfile: String
+
     @Bean
     fun securityFilterChain(
         http: HttpSecurity,
@@ -57,8 +60,11 @@ class SecurityConfig {
             .filter { it.isNotEmpty() }
             .toMutableList()
 
-        // Добавляем host.docker.internal для тестирования (любой порт)
-        origins.add("http://host.docker.internal:*")
+        // Добавляем host.docker.internal только для dev/test окружений (любой порт)
+        // В production это создаёт CSRF уязвимость через Docker internal network
+        if (activeProfile != "prod" && activeProfile != "production") {
+            origins.add("http://host.docker.internal:*")
+        }
 
         configuration.allowedOriginPatterns = origins
         configuration.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
