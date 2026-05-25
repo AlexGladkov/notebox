@@ -58,7 +58,10 @@ class OAuthService(
             expiresAt = expiresAt
         )
 
-        // Create session
+        // Инвалидировать все существующие сессии перед созданием новой
+        sessionService.invalidateAllUserSessions(user.id)
+
+        // Создать сессию
         user to sessionService.createSession(user.id)
     }
 
@@ -95,7 +98,10 @@ class OAuthService(
             expiresAt = expiresAt
         )
 
-        // Create session
+        // Инвалидировать все существующие сессии перед созданием новой
+        sessionService.invalidateAllUserSessions(user.id)
+
+        // Создать сессию
         user to sessionService.createSession(user.id)
     }
 }
