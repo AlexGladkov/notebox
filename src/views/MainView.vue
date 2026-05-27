@@ -638,13 +638,12 @@ onMounted(async () => {
     console.error('Failed to load tags:', error);
   }
 
-  // Проверка и запуск onboarding для новых пользователей
-  checkOnboardingStatus();
+  // Запуск onboarding для новых пользователей
   if (shouldShowOnboarding.value) {
-    // Задержка для полного рендеринга интерфейса
+    // Минимальная задержка для полного рендеринга интерфейса
     setTimeout(() => {
       startOnboarding();
-    }, 1000);
+    }, 500);
   }
 });
 </script>

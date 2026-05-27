@@ -54,7 +54,7 @@
               Персональное пространство для заметок и знаний
             </div>
           </div>
-          <div class="version-badge">v0.1.0</div>
+          <div class="version-badge">v{{ APP_VERSION }}</div>
         </div>
       </div>
     </div>
@@ -65,6 +65,9 @@
 import { useOnboarding } from '../../composables/useOnboarding';
 
 const { resetOnboarding } = useOnboarding();
+
+// Версия приложения
+const APP_VERSION = '0.1.0';
 
 const handleRestartTour = () => {
   resetOnboarding();

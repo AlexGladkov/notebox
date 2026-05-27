@@ -3,13 +3,14 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, watch } from 'vue';
+import { onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { useOnboarding } from '../../composables/useOnboarding';
 import type { DriveStep, Config } from 'driver.js';
 
 const { isOnboardingActive, completeOnboarding } = useOnboarding();
 
 let driver: any = null;
+let isInitializing = false;
 
 const tourSteps: DriveStep[] = [
   {
@@ -88,15 +89,15 @@ const initDriver = async () => {
       completeOnboarding();
     },
     onDestroyStarted: () => {
-      if (driver && !driver.isLastStep()) {
-        if (confirm('Вы уверены, что хотите пропустить тур? Вы всегда можете запустить его снова из настроек.')) {
-          driver.destroy();
-          completeOnboarding();
-        }
-      } else {
+      // Разрешаем закрытие на последнем шаге без подтверждения
+      if (!driver || driver.isLastStep()) {
         driver?.destroy();
-        completeOnboarding();
+        return;
       }
+
+      // На промежуточных шагах всегда помечаем как завершенный
+      // (пользователь может вернуться через настройки)
+      driver.destroy();
     },
   };
 
@@ -104,24 +105,31 @@ const initDriver = async () => {
 };
 
 const startTour = async () => {
+  if (isInitializing || driver) return;
+
+  isInitializing = true;
+
+  // Ждем следующий тик для рендеринга DOM
+  await nextTick();
+
   await initDriver();
   if (driver) {
     driver.drive();
   }
+
+  isInitializing = false;
 };
 
 watch(isOnboardingActive, async (active) => {
   if (active) {
-    // Небольшая задержка для рендеринга DOM
-    setTimeout(() => {
-      startTour();
-    }, 500);
+    await startTour();
   }
 });
 
 onMounted(async () => {
   if (isOnboardingActive.value) {
-    await startTour();
+    // Дополнительная задержка для полного рендеринга интерфейса
+    setTimeout(startTour, 300);
   }
 });
 
