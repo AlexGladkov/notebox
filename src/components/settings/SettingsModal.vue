@@ -37,6 +37,7 @@ import SettingsSidebar from './SettingsSidebar.vue';
 import ProfileSection from './ProfileSection.vue';
 import AppearanceSection from './AppearanceSection.vue';
 import NotificationsSection from './NotificationsSection.vue';
+import HelpSection from './HelpSection.vue';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -59,6 +60,8 @@ const currentSectionComponent = computed(() => {
       return AppearanceSection;
     case 'notifications':
       return NotificationsSection;
+    case 'help':
+      return HelpSection;
     default:
       return ProfileSection;
   }

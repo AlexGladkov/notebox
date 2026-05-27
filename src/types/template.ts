@@ -8,7 +8,7 @@ export interface Template {
   staticExample?: string;
 }
 
-export type TemplateCategory = 'work' | 'personal' | 'learning';
+export type TemplateCategory = 'work' | 'personal' | 'learning' | 'quickstart';
 
 export interface TemplateWithExample extends Template {
   generatedContent?: string;
@@ -18,4 +18,5 @@ export const TEMPLATE_CATEGORY_LABELS: Record<TemplateCategory, string> = {
   work: 'Работа',
   personal: 'Личное',
   learning: 'Обучение',
+  quickstart: 'Быстрый старт',
 };

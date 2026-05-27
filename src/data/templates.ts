@@ -383,4 +383,64 @@ export const templates: Template[] = [
   <li data-checked="false">Выделить время на чтение технической статьи</li>
 </ul>`,
   },
+  {
+    id: 'personal-journal',
+    title: 'Персональный журнал',
+    description: 'Ежедневные записи, рефлексия, благодарности',
+    icon: '📔',
+    category: 'quickstart',
+    content: `<h2>📔 Мой журнал</h2>
+<p><strong>Дата:</strong> {{DATE}}</p>
+<h3>Как прошёл день</h3>
+<p></p>
+<h3>За что благодарен</h3>
+<ul>
+  <li></li>
+</ul>
+<h3>Планы на завтра</h3>
+<ul class="task-list">
+  <li data-checked="false"></li>
+</ul>`,
+  },
+  {
+    id: 'knowledge-base',
+    title: 'База знаний',
+    description: 'Структурированное хранение информации по темам',
+    icon: '📚',
+    category: 'quickstart',
+    content: `<h2>📚 [Тема]</h2>
+<h3>Ключевые понятия</h3>
+<ul>
+  <li><strong>Понятие 1:</strong> </li>
+</ul>
+<h3>Заметки</h3>
+<p></p>
+<h3>Связанные темы</h3>
+<p>[[]] [[]]</p>
+<h3>Источники</h3>
+<ul>
+  <li></li>
+</ul>`,
+  },
+  {
+    id: 'tasks',
+    title: 'Задачи',
+    description: 'Простой трекер задач с чеклистами и приоритетами',
+    icon: '✅',
+    category: 'quickstart',
+    content: `<h2>✅ Задачи на сегодня</h2>
+<p><strong>Дата:</strong> {{DATE}}</p>
+<h3>🔴 Высокий приоритет</h3>
+<ul class="task-list">
+  <li data-checked="false"></li>
+</ul>
+<h3>🟡 Средний приоритет</h3>
+<ul class="task-list">
+  <li data-checked="false"></li>
+</ul>
+<h3>🟢 Низкий приоритет</h3>
+<ul class="task-list">
+  <li data-checked="false"></li>
+</ul>`,
+  },
 ];

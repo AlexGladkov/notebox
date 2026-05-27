@@ -106,6 +106,7 @@
           <!-- Кнопка графа -->
           <button
             @click="openGraph"
+            data-onboarding="graph-button"
             class="w-full flex items-center gap-3 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
             title="Граф связей страниц"
             aria-label="Открыть граф связей"
@@ -230,6 +231,9 @@
 
     <!-- Quick Capture FAB -->
     <QuickCaptureButton />
+
+    <!-- Onboarding Tour -->
+    <OnboardingTour />
   </div>
 </template>
 
@@ -246,6 +250,7 @@ import { useTabs } from '../composables/useTabs';
 import { useAuth } from '../composables/useAuth';
 import { useTags } from '../composables/useTags';
 import { useBacklinks } from '../composables/useBacklinks';
+import { useOnboarding } from '../composables/useOnboarding';
 import { notesApi } from '../api/notes';
 import SearchBar from '../components/SearchBar.vue';
 import NoteTree from '../components/NoteTree.vue';
@@ -261,6 +266,7 @@ import QuickCaptureButton from '../components/QuickCapture/QuickCaptureButton.vu
 import EmptyState from '../components/EmptyState.vue';
 import EmptyNotesIllustration from '../components/illustrations/EmptyNotesIllustration.vue';
 import EmptySearchIllustration from '../components/illustrations/EmptySearchIllustration.vue';
+import OnboardingTour from '../components/onboarding/OnboardingTour.vue';
 
 // Router
 const router = useRouter();
@@ -268,6 +274,9 @@ const router = useRouter();
 // Auth
 const { user, logout, isDemoUser } = useAuth();
 const showProfileModal = ref(false);
+
+// Onboarding
+const { shouldShowOnboarding, checkOnboardingStatus, startOnboarding } = useOnboarding();
 
 // Переключатель темы
 const { themeMode, cycleTheme } = useTheme();
@@ -621,12 +630,21 @@ function clearTagFilter() {
   selectedTagIds.value = [];
 }
 
-// Загрузка тегов при монтировании
+// Загрузка тегов и проверка onboarding при монтировании
 onMounted(async () => {
   try {
     await loadTags();
   } catch (error) {
     console.error('Failed to load tags:', error);
+  }
+
+  // Проверка и запуск onboarding для новых пользователей
+  checkOnboardingStatus();
+  if (shouldShowOnboarding.value) {
+    // Задержка для полного рендеринга интерфейса
+    setTimeout(() => {
+      startOnboarding();
+    }, 1000);
   }
 });
 </script>
