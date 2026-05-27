@@ -1,6 +1,7 @@
 <template>
   <div>
     <SessionExpiredModal :is-open="sessionExpired" />
+    <CommandPalette />
     <router-view v-if="!isLoading" />
     <div v-else class="loading-screen">
       <div class="loading-spinner"></div>
@@ -14,6 +15,7 @@ import { useAuth } from './composables/useAuth';
 import { useTheme } from './composables/useTheme';
 import { initNetworkStatus, destroyNetworkStatus } from './services/offline/networkStatus';
 import SessionExpiredModal from './components/common/SessionExpiredModal.vue';
+import CommandPalette from './components/CommandPalette.vue';
 
 const { isLoading, sessionExpired } = useAuth();
 const { initialize: initializeTheme } = useTheme();

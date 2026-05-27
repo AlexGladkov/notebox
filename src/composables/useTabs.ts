@@ -3,6 +3,7 @@ import { storeToRefs } from 'pinia';
 import type { Note } from '../types';
 import { useNotesStore } from '../stores/notesStore';
 import { useUIStore } from '../stores/uiStore';
+import { useRecentNotes } from './useRecentNotes';
 
 export type { Tab } from '../stores/uiStore';
 
@@ -10,11 +11,14 @@ export function useTabs() {
   const uiStore = useUIStore();
   const notesStore = useNotesStore();
   const { tabs, activeTabId } = storeToRefs(uiStore);
+  const { addRecentNote } = useRecentNotes();
 
   const openTab = (noteId: string, forceNew: boolean = false): void => {
     const note = notesStore.getNoteById(noteId);
     if (note) {
       uiStore.openTab(noteId, note.title, forceNew);
+      // Добавляем в список недавних заметок
+      addRecentNote(noteId);
     }
   };
 

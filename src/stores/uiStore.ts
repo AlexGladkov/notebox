@@ -32,6 +32,9 @@ export const useUIStore = defineStore('ui', {
 
     // Modals
     activeModal: null as string | null,
+
+    // Command Palette
+    commandPaletteOpen: false,
   }),
 
   getters: {
@@ -279,6 +282,15 @@ export const useUIStore = defineStore('ui', {
 
     closeModal(): void {
       this.activeModal = null;
+    },
+
+    // Command Palette
+    openCommandPalette(): void {
+      this.commandPaletteOpen = true;
+    },
+
+    closeCommandPalette(): void {
+      this.commandPaletteOpen = false;
     },
   },
 });
