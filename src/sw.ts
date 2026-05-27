@@ -21,8 +21,8 @@ self.addEventListener('push', function(event) {
 
   const options = {
     body: data.body || 'Напоминание из NoteBox',
-    icon: '/icon-192.png',
-    badge: '/badge-72.png',
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/icon-192x192.png',
     data: {
       url: data.url || '/',
     },

@@ -81,6 +81,7 @@
 <script setup lang="ts">
 import { ref, computed, reactive, onMounted, onUnmounted } from 'vue';
 import { storeToRefs } from 'pinia';
+import type { Note } from './types';
 import { useNotesStore } from './stores/notesStore';
 import { useStorage } from './composables/useStorage';
 import { useNotes } from './composables/useNotes';
@@ -154,7 +155,7 @@ const {
   updateNote,
   deleteNote,
   getNoteById,
-  getAllDescendants: _getAllDescendants,
+  getAllDescendants,
   getChildrenCount: _getChildrenCount,
   toggleNoteExpanded,
   expandAllAncestors,
