@@ -64,6 +64,18 @@
       @confirm="handleConfirmAction"
       @cancel="cancelConfirm"
     />
+
+    <!-- PWA Components -->
+    <PWAInstallPrompt
+      :can-install="canInstall"
+      :is-installed="isInstalled"
+      @install="handlePWAInstall"
+    />
+    <PWAUpdatePrompt
+      :need-refresh="needRefresh"
+      @update="handlePWAUpdate"
+      @dismiss="() => {}"
+    />
   </div>
 </template>
 
@@ -76,6 +88,7 @@ import { useNotes } from './composables/useNotes';
 import { useSearch } from './composables/useSearch';
 import { useTheme } from './composables/useTheme';
 import { useTabs } from './composables/useTabs';
+import { usePWA } from './composables/usePWA';
 import { initNetworkStatus, destroyNetworkStatus, useNetworkStatus } from './services/offline/networkStatus';
 import { offlineStore } from './services/offline/offlineStore';
 import { notesApi } from './api/notes';
@@ -84,6 +97,8 @@ import NoteEditor from './components/NoteEditor.vue';
 import TabBar from './components/TabBar.vue';
 import ConfirmDialog from './components/ConfirmDialog.vue';
 import SyncStatusIndicator from './components/SyncStatusIndicator.vue';
+import PWAInstallPrompt from './components/PWAInstallPrompt.vue';
+import PWAUpdatePrompt from './components/PWAUpdatePrompt.vue';
 
 // Инициализация темы
 const { initialize: initializeTheme } = useTheme();
@@ -95,6 +110,17 @@ const { notes, expandedNotes } = storeToRefs(notesStore);
 const { loadNotes } = useStorage();
 const { isOnline } = useNetworkStatus();
 
+// PWA
+const { canInstall, isInstalled, needRefresh, install, updateServiceWorker } = usePWA();
+
+const handlePWAInstall = async () => {
+  await install();
+};
+
+const handlePWAUpdate = () => {
+  updateServiceWorker();
+};
+
 // Инициализация отслеживания состояния сети
 onMounted(async () => {
   initNetworkStatus();
@@ -105,39 +131,24 @@ onMounted(async () => {
   // Загружаем заметки
   await loadNotes();
 
-  registerServiceWorker();
+  // Слушаем сообщения от Service Worker для навигации (push-уведомления)
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'NAVIGATE') {
+        const url = event.data.url;
+        // Извлекаем ID заметки из URL
+        const match = url.match(/\/notes\/([a-f0-9-]+)/);
+        if (match && match[1]) {
+          handleSelectNote(match[1]);
+        }
+      }
+    });
+  }
 });
 
 onUnmounted(() => {
   destroyNetworkStatus();
 });
-
-// Регистрация Service Worker для push-уведомлений
-const registerServiceWorker = async () => {
-  if ('serviceWorker' in navigator) {
-    try {
-      const basePath = import.meta.env.BASE_URL;
-      const registration = await navigator.serviceWorker.register(`${basePath}sw.js`, {
-        scope: basePath,
-      });
-      console.log('Service Worker registered:', registration);
-
-      // Слушаем сообщения от Service Worker для навигации
-      navigator.serviceWorker.addEventListener('message', (event) => {
-        if (event.data && event.data.type === 'NAVIGATE') {
-          const url = event.data.url;
-          // Извлекаем ID заметки из URL
-          const match = url.match(/\/notes\/([a-f0-9-]+)/);
-          if (match && match[1]) {
-            handleSelectNote(match[1]);
-          }
-        }
-      });
-    } catch (error) {
-      console.error('Service Worker registration failed:', error);
-    }
-  }
-};
 
 const {
   createNote,

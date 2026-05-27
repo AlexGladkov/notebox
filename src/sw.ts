@@ -1,4 +1,21 @@
-/* eslint-disable no-undef */
+/// <reference lib="webworker" />
+import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
+import { clientsClaim } from 'workbox-core';
+
+declare let self: ServiceWorkerGlobalScope;
+
+// Precache и маршрутизация для всех активов, собранных Vite
+precacheAndRoute(self.__WB_MANIFEST);
+
+// Очистка устаревших кэшей
+cleanupOutdatedCaches();
+
+// Немедленно активировать новый Service Worker
+self.skipWaiting();
+clientsClaim();
+
+// === Push-уведомления (из оригинального sw.js) ===
+
 self.addEventListener('push', function(event) {
   const data = event.data ? event.data.json() : {};
 
