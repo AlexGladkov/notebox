@@ -83,6 +83,7 @@ import { useRouter } from 'vue-router';
 import { notesApi } from '../api';
 import type { Note } from '../types';
 import { useGraph } from '../composables/useGraph';
+import { useNotes } from '../composables/useNotes';
 import GraphCanvas from '../components/graph/GraphCanvas.vue';
 import GraphControls from '../components/graph/GraphControls.vue';
 import QuickCaptureButton from '../components/QuickCapture/QuickCaptureButton.vue';
@@ -103,6 +104,9 @@ let themeObserver: MutationObserver | null = null;
 const layoutWidth = ref(1200);
 const layoutHeight = ref(800);
 const { graphData, isCalculating, recalculateLayout } = useGraph(notes, layoutWidth, layoutHeight);
+
+// Используем composable для работы с заметками
+const { createNote } = useNotes();
 
 /**
  * Загрузка всех заметок
@@ -135,9 +139,13 @@ function handleNodeClick(nodeId: string) {
 /**
  * Создание новой страницы из графа
  */
-function handleCreatePage() {
-  // Переходим на главную страницу, которая автоматически создаст новую заметку
-  router.push('/');
+async function handleCreatePage() {
+  try {
+    const newNote = await createNote('Новая страница', null);
+    router.push(`/?note=${newNote.id}`);
+  } catch (error) {
+    console.error('Не удалось создать страницу:', error);
+  }
 }
 
 /**
