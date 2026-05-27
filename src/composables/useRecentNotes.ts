@@ -104,5 +104,6 @@ export function useRecentNotes() {
     addRecentNote,
     removeRecentNote,
     clearRecentNotes,
+    loadRecentNotes, // Экспортируем для принудительной перезагрузки
   };
 }

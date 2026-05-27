@@ -18,7 +18,7 @@ export function useCommandPalette() {
   const { createNote } = useNotes();
   const { openTab } = useTabs();
   const { cycleTheme } = useTheme();
-  const { recentNoteIds, removeRecentNote } = useRecentNotes();
+  const { recentNoteIds, removeRecentNote, loadRecentNotes } = useRecentNotes();
   const { notes } = storeToRefs(notesStore);
 
   const query = ref('');
@@ -248,6 +248,8 @@ export function useCommandPalette() {
     if (typeof document !== 'undefined' && document.activeElement) {
       previousActiveElement.value = document.activeElement as HTMLElement;
     }
+    // Перезагружаем недавние заметки из localStorage
+    loadRecentNotes();
     // Очищаем несуществующие заметки перед открытием
     cleanupInvalidRecentNotes();
     uiStore.openCommandPalette();
