@@ -33,27 +33,14 @@
         v-if="graphData.nodes.length === 0"
         class="absolute inset-0 flex items-center justify-center"
       >
-        <div class="text-center">
-          <svg
-            class="w-16 h-16 mx-auto mb-4 text-gray-400 dark:text-gray-600"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
-            />
-          </svg>
-          <p class="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Нет страниц для отображения
-          </p>
-          <p class="text-sm text-gray-500 dark:text-gray-400">
-            Создайте страницы, чтобы увидеть граф связей
-          </p>
-        </div>
+        <EmptyState
+          title="Граф пока пуст"
+          description="Создайте страницы и связывайте их между собой с помощью [[wiki-ссылок]]. Дочерние страницы и обратные ссылки автоматически появятся на графе."
+          :icon="EmptyGraphIllustration"
+          cta-label="Создать страницу"
+          cta-variant="primary"
+          @cta-click="handleCreatePage"
+        />
       </div>
 
       <!-- Loading состояние -->
@@ -99,6 +86,8 @@ import { useGraph } from '../composables/useGraph';
 import GraphCanvas from '../components/graph/GraphCanvas.vue';
 import GraphControls from '../components/graph/GraphControls.vue';
 import QuickCaptureButton from '../components/QuickCapture/QuickCaptureButton.vue';
+import EmptyState from '../components/EmptyState.vue';
+import EmptyGraphIllustration from '../components/illustrations/EmptyGraphIllustration.vue';
 
 const router = useRouter();
 const notes = ref<Note[]>([]);
@@ -141,6 +130,14 @@ function goBack() {
 function handleNodeClick(nodeId: string) {
   // Открываем страницу и возвращаемся к основному виду
   router.push(`/?note=${nodeId}`);
+}
+
+/**
+ * Создание новой страницы из графа
+ */
+function handleCreatePage() {
+  // Переходим на главную страницу, которая автоматически создаст новую заметку
+  router.push('/');
 }
 
 /**

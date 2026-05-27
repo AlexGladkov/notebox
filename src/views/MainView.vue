@@ -38,8 +38,17 @@
                 </div>
               </div>
             </div>
-            <div v-if="searchResults.length === 0" class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
-              Ничего не найдено
+            <div v-if="searchResults.length === 0" class="search-empty-container">
+              <EmptyState
+                title="Ничего не найдено"
+                description="Попробуйте изменить запрос"
+                :icon="EmptySearchIllustration"
+                :hints="[
+                  'Введите название заметки или часть текста',
+                  'Поиск регистронезависимый',
+                  'Ищет по заголовкам и содержимому'
+                ]"
+              />
             </div>
           </div>
 
@@ -69,8 +78,15 @@
               @toggle-expand="toggleExpandNote"
             />
 
-            <div v-else class="px-3 py-4 text-sm text-gray-500 dark:text-gray-400 text-center">
-              Создайте первую страницу
+            <div v-else class="notes-empty-container">
+              <EmptyState
+                title="Начните с первой заметки"
+                description="Создавайте заметки, объединяйте их в иерархию и связывайте между собой с помощью [[wiki-ссылок]]"
+                :icon="EmptyNotesIllustration"
+                cta-label="Создать заметку"
+                cta-variant="primary"
+                @cta-click="handleCreateRootPage"
+              />
             </div>
           </div>
 
@@ -242,6 +258,9 @@ import DemoBanner from '../components/layout/DemoBanner.vue';
 import TagFilter from '../components/TagFilter.vue';
 import SyncStatusIndicator from '../components/SyncStatusIndicator.vue';
 import QuickCaptureButton from '../components/QuickCapture/QuickCaptureButton.vue';
+import EmptyState from '../components/EmptyState.vue';
+import EmptyNotesIllustration from '../components/illustrations/EmptyNotesIllustration.vue';
+import EmptySearchIllustration from '../components/illustrations/EmptySearchIllustration.vue';
 
 // Router
 const router = useRouter();
@@ -627,5 +646,19 @@ onMounted(async () => {
 .dark .sync-status-bar {
   background-color: #1f2937;
   border-bottom-color: #374151;
+}
+
+.notes-empty-container {
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-empty-container {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>

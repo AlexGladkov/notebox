@@ -42,6 +42,7 @@
         @update-column="handleUpdateColumn"
         @delete-column="handleDeleteColumn"
         @sort="handleTableSort"
+        @reset-filters="handleResetFilters"
       />
       <KanbanBoard
         v-else-if="currentView.type === 'kanban'"
@@ -312,6 +313,11 @@ const handleSortChange = async (sort: DatabaseSort | null) => {
 
 const handleSearchChange = (query: string) => {
   searchQuery.value = query;
+};
+
+const handleResetFilters = () => {
+  currentFilter.value = null;
+  searchQuery.value = '';
 };
 
 const handleUpdateRecord = async (recordId: string, data: { [columnId: string]: any }) => {

@@ -60,15 +60,32 @@
           </td>
           <td class="empty-cell"></td>
         </tr>
-        <tr v-if="records.length === 0" class="empty-row">
-          <td :colspan="database.columns.length + 2" class="empty-message">
-            {{ emptyMessage }}
-          </td>
-        </tr>
       </tbody>
     </table>
 
-    <DatabaseAddRow @add="handleAddRow" />
+    <!-- Пустое состояние с иллюстрацией -->
+    <div v-if="records.length === 0" class="database-empty-state">
+      <EmptyState
+        v-if="filter || searchQuery"
+        title="Нет записей, соответствующих фильтру"
+        description="Измените условия фильтрации или сбросьте фильтры"
+        :icon="EmptyDatabaseIllustration"
+        cta-label="Сбросить фильтры"
+        cta-variant="secondary"
+        @cta-click="$emit('reset-filters')"
+      />
+      <EmptyState
+        v-else
+        title="Добавьте первую запись"
+        description="База данных готова. Начните добавлять записи."
+        :icon="EmptyDatabaseIllustration"
+        cta-label="Добавить запись"
+        cta-variant="primary"
+        @cta-click="handleAddRow"
+      />
+    </div>
+
+    <DatabaseAddRow v-if="records.length > 0" @add="handleAddRow" />
 
     <!-- Context Menu for Row -->
     <div
@@ -101,6 +118,8 @@ import DatabaseColumnHeader from './DatabaseColumnHeader.vue';
 import DatabaseAddColumn from './DatabaseAddColumn.vue';
 import DatabaseAddRow from './DatabaseAddRow.vue';
 import DatabaseCell from './DatabaseCell.vue';
+import EmptyState from '../EmptyState.vue';
+import EmptyDatabaseIllustration from '../illustrations/EmptyDatabaseIllustration.vue';
 import type { CustomDatabase, Record, Column, ColumnType, SelectOption } from '../../types';
 import type { DatabaseFilter, DatabaseSort } from '../../types/database';
 
@@ -112,13 +131,6 @@ const props = defineProps<{
   searchQuery?: string;
 }>();
 
-const emptyMessage = computed(() => {
-  if (props.filter || props.searchQuery) {
-    return 'Нет записей, соответствующих фильтру';
-  }
-  return 'Нет записей';
-});
-
 const emit = defineEmits<{
   updateRecord: [recordId: string, data: { [columnId: string]: any }];
   createRecord: [data: { [columnId: string]: any }];
@@ -127,6 +139,7 @@ const emit = defineEmits<{
   updateColumn: [columnId: string, name: string, type: ColumnType, options?: SelectOption[]];
   deleteColumn: [columnId: string];
   sort: [columnId: string, direction: 'asc' | 'desc'];
+  'reset-filters': [];
 }>();
 
 const contextMenu = ref({
@@ -246,6 +259,22 @@ onUnmounted(() => {
 .database-table-wrapper {
   width: 100%;
   position: relative;
+}
+
+.database-empty-state {
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
+.dark .database-empty-state {
+  background: #1f2937;
+  border-color: #374151;
 }
 
 .database-table {

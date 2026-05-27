@@ -55,6 +55,9 @@
       :show="confirmDialog.show"
       :title="confirmDialog.title"
       :message="confirmDialog.message"
+      :details="confirmDialog.details"
+      :confirm-label="confirmDialog.confirmLabel"
+      :confirm-variant="confirmDialog.confirmVariant"
       @confirm="handleConfirmAction"
       @cancel="cancelConfirm"
     />
@@ -162,11 +165,25 @@ const {
 const searchQuery = ref('');
 const { searchResults } = useSearch(searchQuery);
 
-const confirmDialog = reactive({
+const confirmDialog = reactive<{
+  show: boolean;
+  title: string;
+  message: string;
+  action: (() => void | Promise<void>) | null;
+  details?: {
+    childrenCount?: number;
+    itemsList?: string[];
+  };
+  confirmLabel?: string;
+  confirmVariant?: 'danger' | 'warning';
+}>({
   show: false,
   title: '',
   message: '',
-  action: null as (() => void | Promise<void>) | null,
+  action: null,
+  details: undefined,
+  confirmLabel: undefined,
+  confirmVariant: undefined,
 });
 
 const currentNote = computed(() => {
@@ -234,13 +251,22 @@ const _showDeleteNoteWithChildrenDialog = (noteId: string, childrenCount: number
   const note = getNoteById(noteId);
   if (!note) return;
 
+  // Получаем всех потомков для отображения в списке
+  const descendants = getAllDescendants(noteId);
+  const childrenTitles = descendants.map(n => n.title || 'Без названия');
+
   confirmDialog.show = true;
   confirmDialog.title = 'Удалить страницу с вложенными страницами?';
-  confirmDialog.message = `У страницы "${note.title}" есть ${childrenCount} вложенных страниц. Удалить всё?`;
+  confirmDialog.message = `Вы собираетесь удалить страницу "${note.title}".`;
+  confirmDialog.details = {
+    childrenCount,
+    itemsList: childrenTitles,
+  };
+  confirmDialog.confirmLabel = 'Удалить всё';
+  confirmDialog.confirmVariant = 'danger';
   confirmDialog.action = async () => {
     try {
       // Получаем все ID заметок, которые будут удалены (включая потомков)
-      const descendants = getAllDescendants(noteId);
       const allNoteIds = [noteId, ...descendants.map(n => n.id)];
 
       await deleteNote(noteId, true); // cascade delete
@@ -295,6 +321,9 @@ const cancelConfirm = () => {
   confirmDialog.title = '';
   confirmDialog.message = '';
   confirmDialog.action = null;
+  confirmDialog.details = undefined;
+  confirmDialog.confirmLabel = undefined;
+  confirmDialog.confirmVariant = undefined;
 };
 </script>
 
