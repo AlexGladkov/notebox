@@ -86,37 +86,34 @@ export function useCommandPalette() {
     },
   ]);
 
-  // Недавние заметки
-  const recentNotes = computed<CommandPaletteItem[]>(() => {
-    const items: CommandPaletteItem[] = [];
-    const invalidNoteIds: string[] = [];
+  // Очистка несуществующих заметок из недавних
+  const cleanupInvalidRecentNotes = (): void => {
+    const invalidNoteIds = recentNoteIds.value.filter(noteId => {
+      return !notesStore.getNoteById(noteId);
+    });
 
-    for (const noteId of recentNoteIds.value.slice(0, 5)) {
-      const note = notesStore.getNoteById(noteId);
-      if (note) {
-        items.push({
-          id: `recent-${note.id}`,
-          type: 'note' as const,
-          title: note.title || 'Без названия',
-          description: note.parentId ? 'Недавняя заметка' : 'Корневая заметка',
-          icon: note.icon || '📄',
-          action: () => {
-            openTab(note.id);
-            close();
-          },
-        });
-      } else {
-        // Собираем несуществующие ID для очистки
-        invalidNoteIds.push(noteId);
-      }
-    }
-
-    // Очищаем несуществующие заметки из списка недавних
     if (invalidNoteIds.length > 0) {
       invalidNoteIds.forEach(id => removeRecentNote(id));
     }
+  };
 
-    return items;
+  // Недавние заметки
+  const recentNotes = computed<CommandPaletteItem[]>(() => {
+    return recentNoteIds.value
+      .slice(0, 5)
+      .map(noteId => notesStore.getNoteById(noteId))
+      .filter((note): note is NonNullable<typeof note> => note !== null)
+      .map(note => ({
+        id: `recent-${note.id}`,
+        type: 'note' as const,
+        title: note.title || 'Без названия',
+        description: note.parentId ? 'Недавняя заметка' : 'Корневая заметка',
+        icon: note.icon || '📄',
+        action: () => {
+          openTab(note.id);
+          close();
+        },
+      }));
   });
 
   // Fuzzy-поиск с весами
@@ -240,6 +237,8 @@ export function useCommandPalette() {
     if (typeof document !== 'undefined' && document.activeElement) {
       previousActiveElement.value = document.activeElement as HTMLElement;
     }
+    // Очищаем несуществующие заметки перед открытием
+    cleanupInvalidRecentNotes();
     uiStore.openCommandPalette();
     query.value = '';
     selectedIndex.value = 0;

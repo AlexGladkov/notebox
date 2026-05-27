@@ -33,12 +33,12 @@
                 <div
                   v-for="item in section.items"
                   :key="item.id"
+                  :ref="el => { if (isSelected(item)) selectedItemRef = el as HTMLElement }"
                   :class="[
                     'palette-item',
                     { 'palette-item-active': isSelected(item) }
                   ]"
                   role="button"
-                  tabindex="0"
                   @click="executeItem(item)"
                   @mouseenter="selectItemByInstance(item)"
                 >
@@ -101,6 +101,7 @@ const {
 } = useCommandPalette();
 
 const inputRef = ref<HTMLInputElement | null>(null);
+const selectedItemRef = ref<HTMLElement | null>(null);
 
 // Фокус на input при открытии
 watch(isOpen, (newValue) => {
@@ -109,6 +110,18 @@ watch(isOpen, (newValue) => {
       inputRef.value?.focus();
     });
   }
+});
+
+// Прокрутка к выбранному элементу при навигации
+watch(selectedIndex, () => {
+  nextTick(() => {
+    if (selectedItemRef.value) {
+      selectedItemRef.value.scrollIntoView({
+        block: 'nearest',
+        behavior: 'smooth'
+      });
+    }
+  });
 });
 
 // Проверка, выбран ли элемент
