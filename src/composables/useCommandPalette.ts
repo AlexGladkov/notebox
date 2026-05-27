@@ -38,9 +38,14 @@ export function useCommandPalette() {
       shortcut: isMac ? '⌘N' : 'Ctrl+N',
       keywords: ['create', 'add', 'note', 'page', 'новая', 'создать', 'заметка'],
       action: async () => {
-        const note = await createNote('Новая страница', null);
-        openTab(note.id);
-        close();
+        try {
+          const note = await createNote('Новая страница', null);
+          openTab(note.id);
+          close();
+        } catch (error) {
+          console.error('Не удалось создать заметку:', error);
+          close();
+        }
       },
     },
     {
@@ -164,7 +169,7 @@ export function useCommandPalette() {
       .map(cmd => {
         const titleScore = fuzzyMatch(cmd.title, q);
         const descScore = cmd.description ? fuzzyMatch(cmd.description, q) : 0;
-        const keywordsScore = cmd.keywords
+        const keywordsScore = cmd.keywords && cmd.keywords.length > 0
           ? Math.max(...cmd.keywords.map(kw => fuzzyMatch(kw, q)))
           : 0;
         const score = Math.max(titleScore, descScore, keywordsScore);
@@ -221,7 +226,9 @@ export function useCommandPalette() {
 
   // Открытие палитры
   const open = (): void => {
-    previousActiveElement.value = document.activeElement as HTMLElement;
+    if (typeof document !== 'undefined' && document.activeElement) {
+      previousActiveElement.value = document.activeElement as HTMLElement;
+    }
     uiStore.openCommandPalette();
     query.value = '';
     selectedIndex.value = 0;
@@ -234,8 +241,12 @@ export function useCommandPalette() {
     selectedIndex.value = 0;
 
     // Восстанавливаем фокус
-    if (previousActiveElement.value) {
-      previousActiveElement.value.focus();
+    if (previousActiveElement.value && typeof previousActiveElement.value.focus === 'function') {
+      try {
+        previousActiveElement.value.focus();
+      } catch (e) {
+        // Игнорируем ошибки фокусировки (элемент может быть удален из DOM)
+      }
       previousActiveElement.value = null;
     }
   };
@@ -251,13 +262,21 @@ export function useCommandPalette() {
 
   // Выполнение выбранного элемента
   const executeItem = (item: CommandPaletteItem): void => {
-    item.action();
+    try {
+      item.action();
+    } catch (error) {
+      console.error('Ошибка при выполнении команды:', error);
+      close();
+    }
   };
 
   // Навигация вверх
   const navigateUp = (): void => {
     if (selectedIndex.value > 0) {
       selectedIndex.value--;
+    } else if (allItems.value.length > 0) {
+      // Циклическая навигация: переход к последнему элементу
+      selectedIndex.value = allItems.value.length - 1;
     }
   };
 
@@ -265,6 +284,9 @@ export function useCommandPalette() {
   const navigateDown = (): void => {
     if (selectedIndex.value < allItems.value.length - 1) {
       selectedIndex.value++;
+    } else if (allItems.value.length > 0) {
+      // Циклическая навигация: переход к первому элементу
+      selectedIndex.value = 0;
     }
   };
 

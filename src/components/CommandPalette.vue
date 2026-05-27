@@ -5,9 +5,8 @@
         v-if="isOpen"
         class="command-palette-overlay"
         @click.self="close"
-        @keydown.esc="close"
       >
-        <div class="command-palette" role="dialog" aria-modal="true" aria-labelledby="palette-title">
+        <div class="command-palette" role="dialog" aria-modal="true" aria-label="Командная палитра">
           <!-- Header with search input -->
           <div class="palette-header">
             <span class="search-icon">🔍</span>

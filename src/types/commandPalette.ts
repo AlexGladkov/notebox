@@ -5,7 +5,7 @@ export interface CommandPaletteItem {
   description?: string;
   icon: string;
   shortcut?: string;
-  action: () => void;
+  action: () => void | Promise<void>;
   keywords?: string[];
 }
 

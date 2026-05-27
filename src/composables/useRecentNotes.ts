@@ -8,18 +8,41 @@ interface RecentNote {
   timestamp: number;
 }
 
+// Проверка доступности localStorage
+const isLocalStorageAvailable = (): boolean => {
+  try {
+    if (typeof localStorage === 'undefined') {
+      return false;
+    }
+    const testKey = '__test__';
+    localStorage.setItem(testKey, 'test');
+    localStorage.removeItem(testKey);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 export function useRecentNotes() {
   const recentNoteIds: Ref<string[]> = ref([]);
 
   // Загрузка из localStorage
   const loadRecentNotes = (): void => {
+    if (!isLocalStorageAvailable()) {
+      return;
+    }
+
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed: RecentNote[] = JSON.parse(stored);
-        recentNoteIds.value = parsed
-          .sort((a, b) => b.timestamp - a.timestamp)
-          .map(item => item.noteId);
+        // Валидация данных
+        if (Array.isArray(parsed)) {
+          recentNoteIds.value = parsed
+            .filter(item => item && typeof item.noteId === 'string')
+            .sort((a, b) => b.timestamp - a.timestamp)
+            .map(item => item.noteId);
+        }
       }
     } catch (e) {
       console.warn('Не удалось загрузить недавние заметки из localStorage:', e);
@@ -29,6 +52,10 @@ export function useRecentNotes() {
 
   // Сохранение в localStorage
   const saveRecentNotes = (): void => {
+    if (!isLocalStorageAvailable()) {
+      return;
+    }
+
     try {
       const items: RecentNote[] = recentNoteIds.value.map((noteId, index) => ({
         noteId,
