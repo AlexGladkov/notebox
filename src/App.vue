@@ -13,11 +13,14 @@
         :selected-note-id="activeNoteId"
         :expanded-notes="expandedNotes"
         :search-results="searchResults"
+        :create-note-fn="handleCreateNoteForImport"
+        :update-note-fn="handleUpdateNoteForImport"
         @update:search-query="searchQuery = $event"
         @select-note="handleSelectNote"
         @create-root-page="handleCreateRootPage"
         @create-subpage="handleCreateSubpage"
         @toggle-expand="toggleExpandNote"
+        @notes-imported="handleNotesImported"
       />
 
       <!-- Правая панель с редактором -->
@@ -302,6 +305,36 @@ const handleCreateFromTemplate = async (data: { title: string; content: string; 
     openTab(newNote.id);
   } catch (error) {
     console.error('Не удалось создать заметку из шаблона:', error);
+  }
+};
+
+// Обработчики для импорта
+const handleCreateNoteForImport = async (data: {
+  title: string;
+  content: string;
+  parentId?: string | null;
+  icon?: string | null;
+}): Promise<Note> => {
+  const note = await notesStore.createNote({
+    title: data.title,
+    content: data.content,
+    parentId: data.parentId,
+    icon: data.icon,
+  });
+  return note;
+};
+
+const handleUpdateNoteForImport = async (id: string, updates: Partial<Note>): Promise<void> => {
+  await updateNote(id, updates);
+};
+
+const handleNotesImported = async (importedNotes: Note[]) => {
+  // Заметки уже добавлены в store через createNote
+  // Просто обновляем UI и открываем первую заметку
+  if (importedNotes.length > 0) {
+    // Открываем первую импортированную заметку (обычно это корневая папка или первый файл)
+    const firstNote = importedNotes[0];
+    openTab(firstNote.id, false);
   }
 };
 

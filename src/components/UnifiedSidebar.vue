@@ -34,15 +34,26 @@
       <div v-else>
         <div class="flex items-center justify-between px-3 py-2">
           <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Страницы</span>
-          <button
-            @click="$emit('createRootPage')"
-            class="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-700 dark:text-gray-300"
-            title="Создать страницу"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-            </svg>
-          </button>
+          <div class="flex items-center gap-1">
+            <button
+              @click="showImportDialog = true"
+              class="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-700 dark:text-gray-300"
+              title="Импортировать Markdown"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+            </button>
+            <button
+              @click="$emit('createRootPage')"
+              class="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-700 dark:text-gray-300"
+              title="Создать страницу"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         <NoteTree
@@ -121,15 +132,28 @@
         <span class="text-sm text-gray-700 dark:text-gray-300">{{ themeTooltip }}</span>
       </button>
     </div>
+
+    <!-- Диалог импорта -->
+    <ImportDialog
+      :visible="showImportDialog"
+      :parent-id="null"
+      :create-note-fn="createNoteFn"
+      :update-note-fn="updateNoteFn"
+      @close="showImportDialog = false"
+      @imported="handleImported"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 import type { Note } from '../types';
 import { useTheme } from '../composables/useTheme';
 import SearchBar from './SearchBar.vue';
 import NoteTree from './NoteTree.vue';
+import ImportDialog from './ImportDialog.vue';
+
+const showImportDialog = ref(false);
 
 const props = defineProps<{
   allNotes: Note[];
@@ -137,6 +161,13 @@ const props = defineProps<{
   selectedNoteId: string | null;
   expandedNotes: Set<string>;
   searchResults: Note[];
+  createNoteFn?: (data: {
+    title: string;
+    content: string;
+    parentId?: string | null;
+    icon?: string | null;
+  }) => Promise<Note>;
+  updateNoteFn?: (id: string, updates: Partial<Note>) => Promise<void>;
 }>();
 
 const emit = defineEmits<{
@@ -145,7 +176,13 @@ const emit = defineEmits<{
   createRootPage: [];
   createSubpage: [parentId: string];
   toggleExpand: [id: string];
+  notesImported: [notes: Note[]];
 }>();
+
+function handleImported(notes: Note[]) {
+  showImportDialog.value = false;
+  emit('notesImported', notes);
+}
 
 // Переключатель темы
 const { themeMode, cycleTheme } = useTheme();

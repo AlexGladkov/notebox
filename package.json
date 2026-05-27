@@ -20,6 +20,7 @@
     "@tiptap/starter-kit": "^2.1.0",
     "@tiptap/vue-3": "^2.1.0",
     "html2pdf.js": "^0.10.1",
+    "jszip": "^3.10.1",
     "marked": "^12.0.0",
     "pinia": "^2.3.1",
     "uuid": "^9.0.0",
