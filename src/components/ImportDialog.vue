@@ -355,29 +355,10 @@ async function handleImport() {
   );
 
   try {
-    // Используем переданную функцию создания заметки или дефолтную
-    const createNoteFn = props.createNoteFn || (async (data: {
-      title: string;
-      content: string;
-      parentId?: string | null;
-      icon?: string | null;
-    }) => {
-      // Fallback: создаем временную заметку для демонстрации
-      importedCount.value++;
-
-      const note: Note = {
-        id: `temp-${Date.now()}-${Math.random()}`,
-        title: data.title,
-        content: data.content,
-        parentId: data.parentId ?? null,
-        icon: data.icon ?? null,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      };
-
-      await new Promise(resolve => setTimeout(resolve, 50));
-      return note;
-    });
+    // Проверяем, что функция создания заметки передана
+    if (!props.createNoteFn) {
+      throw new Error('Функция создания заметки не передана в компонент');
+    }
 
     // Оборачиваем функцию создания для отслеживания прогресса
     const wrappedCreateFn = async (data: {
@@ -386,7 +367,7 @@ async function handleImport() {
       parentId?: string | null;
       icon?: string | null;
     }) => {
-      const note = await createNoteFn(data);
+      const note = await props.createNoteFn!(data);
       importedCount.value++;
       return note;
     };
@@ -401,7 +382,7 @@ async function handleImport() {
     // Обновляем контент заметок с wiki-ссылками, если есть функция обновления
     if (props.updateNoteFn && importResult.value.createdNotes.length > 0) {
       for (const note of importResult.value.createdNotes) {
-        // Обновляем все заметки, чтобы сохранить обработанные wiki-ссылки
+        // Обновляем заметки в хранилище для сохранения обработанного контента
         try {
           await props.updateNoteFn(note.id, { content: note.content });
         } catch (error) {

@@ -1,7 +1,15 @@
 import { marked } from 'marked';
 import JSZip from 'jszip';
 import type { Note } from '../../types';
-import { v4 as uuidv4 } from 'uuid';
+
+// Настраиваем marked один раз для всех конвертаций
+marked.setOptions({
+  gfm: true,
+  breaks: true,
+});
+
+// Максимальный размер загружаемого файла (100MB)
+const MAX_FILE_SIZE = 100 * 1024 * 1024;
 
 export interface ImportFile {
   path: string;
@@ -31,6 +39,20 @@ export interface ImportResult {
 }
 
 /**
+ * Экранирует HTML-символы для предотвращения XSS
+ */
+function escapeHtml(text: string): string {
+  const htmlEscapeMap: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  };
+  return text.replace(/[&<>"']/g, char => htmlEscapeMap[char]);
+}
+
+/**
  * Извлекает wiki-ссылки [[название]] из текста
  */
 function extractWikiLinks(text: string): string[] {
@@ -50,12 +72,13 @@ function extractWikiLinks(text: string): string[] {
  */
 function convertWikiLinks(text: string, noteIdMap: Map<string, string>): string {
   return text.replace(/\[\[([^\]]+)\]\]/g, (_, linkText) => {
+    const escapedLinkText = escapeHtml(linkText);
     const noteId = noteIdMap.get(linkText);
     if (noteId) {
-      return `<wiki-link data-note-id="${noteId}">${linkText}</wiki-link>`;
+      return `<wiki-link data-note-id="${escapeHtml(noteId)}">${escapedLinkText}</wiki-link>`;
     }
     // Если заметка еще не создана, оставляем как есть для последующей обработки
-    return `<wiki-link data-note-title="${linkText}">${linkText}</wiki-link>`;
+    return `<wiki-link data-note-title="${escapedLinkText}">${escapedLinkText}</wiki-link>`;
   });
 }
 
@@ -63,12 +86,6 @@ function convertWikiLinks(text: string, noteIdMap: Map<string, string>): string 
  * Конвертирует Markdown в HTML
  */
 async function markdownToHtml(markdown: string): Promise<string> {
-  // Настраиваем marked для поддержки GFM (GitHub Flavored Markdown)
-  marked.setOptions({
-    gfm: true,
-    breaks: true,
-  });
-
   return await marked.parse(markdown);
 }
 
@@ -95,6 +112,11 @@ function parsePath(path: string): { folders: string[]; filename: string } {
  * Читает содержимое ZIP-архива
  */
 export async function readZipFile(file: File): Promise<ImportFile[]> {
+  // Проверяем размер файла
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error(`Размер файла превышает максимально допустимый (${MAX_FILE_SIZE / 1024 / 1024}MB)`);
+  }
+
   const zip = new JSZip();
   const zipContent = await zip.loadAsync(file);
   const files: ImportFile[] = [];
@@ -125,6 +147,11 @@ export async function readZipFile(file: File): Promise<ImportFile[]> {
  * Читает один Markdown файл
  */
 export async function readMarkdownFile(file: File): Promise<ImportFile> {
+  // Проверяем размер файла
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error(`Размер файла превышает максимально допустимый (${MAX_FILE_SIZE / 1024 / 1024}MB)`);
+  }
+
   const content = await file.text();
 
   return {
@@ -192,9 +219,10 @@ export async function importFiles(
     errors: [],
   };
 
-  // Сначала создаем структуру папок и собираем маппинг путей
+  // Мапы для отслеживания созданных заметок
   const pathToNoteId = new Map<string, string>();
   const titleToNoteId = new Map<string, string>();
+  const noteIdToOriginalContent = new Map<string, string>();
 
   // Сортируем файлы по глубине вложенности (сначала корневые)
   const sortedFiles = files
@@ -205,7 +233,7 @@ export async function importFiles(
       return aDepth - bDepth;
     });
 
-  // Первый проход: создаем все заметки без обработки wiki-ссылок
+  // Первый проход: создаем все заметки с временным контентом
   for (const file of sortedFiles) {
     try {
       const { folders, filename } = parsePath(file.path);
@@ -215,8 +243,9 @@ export async function importFiles(
       let currentParentId = parentId;
 
       // Создаем папки по пути (если есть)
-      for (const folder of folders) {
-        const folderPath = folders.slice(0, folders.indexOf(folder) + 1).join('/');
+      for (let i = 0; i < folders.length; i++) {
+        const folder = folders[i];
+        const folderPath = folders.slice(0, i + 1).join('/');
 
         if (!pathToNoteId.has(folderPath)) {
           // Создаем папку
@@ -228,6 +257,7 @@ export async function importFiles(
           });
 
           pathToNoteId.set(folderPath, folderNote.id);
+          // Используем путь вместо только названия для избежания конфликтов
           titleToNoteId.set(folder, folderNote.id);
           result.createdNotes.push(folderNote);
           currentParentId = folderNote.id;
@@ -236,13 +266,10 @@ export async function importFiles(
         }
       }
 
-      // Сначала конвертируем Markdown в HTML
-      let html = await markdownToHtml(file.content);
-
-      // Создаем заметку с базовым контентом
+      // Создаем заметку с пустым контентом (будет заполнен во втором проходе)
       const note = await createNoteFn({
         title,
-        content: html,
+        content: '',
         parentId: currentParentId,
         icon: '📄',
       });
@@ -250,8 +277,8 @@ export async function importFiles(
       pathToNoteId.set(file.path, note.id);
       titleToNoteId.set(title, note.id);
 
-      // Сохраняем оригинальный контент для второго прохода
-      (note as any)._originalContent = file.content;
+      // Сохраняем оригинальный markdown-контент в отдельной мапе
+      noteIdToOriginalContent.set(note.id, file.content);
 
       result.createdNotes.push(note);
     } catch (error) {
@@ -263,29 +290,27 @@ export async function importFiles(
     }
   }
 
-  // Второй проход: обрабатываем wiki-ссылки в уже созданных заметках
+  // Второй проход: обрабатываем контент с wiki-ссылками и конвертируем в HTML
   for (const note of result.createdNotes) {
-    const originalContent = (note as any)._originalContent;
-    if (!originalContent) continue; // Пропускаем папки
+    const originalContent = noteIdToOriginalContent.get(note.id);
+    if (!originalContent) continue; // Пропускаем папки (у них нет контента)
 
-    const wikiLinks = extractWikiLinks(originalContent);
-    if (wikiLinks.length > 0) {
-      try {
-        // Заменяем wiki-ссылки на HTML-ссылки с ID заметок
-        let contentWithLinks = convertWikiLinks(originalContent, titleToNoteId);
+    try {
+      let markdown = originalContent;
 
-        // Конвертируем обновленный Markdown в HTML
-        const htmlWithLinks = await markdownToHtml(contentWithLinks);
-
-        // Обновляем контент заметки
-        note.content = htmlWithLinks;
-      } catch (error) {
-        console.error(`Failed to process wiki links in note ${note.title}:`, error);
+      // Если есть wiki-ссылки, заменяем их перед конвертацией в HTML
+      const wikiLinks = extractWikiLinks(originalContent);
+      if (wikiLinks.length > 0) {
+        markdown = convertWikiLinks(originalContent, titleToNoteId);
       }
-    }
 
-    // Удаляем временное поле
-    delete (note as any)._originalContent;
+      // Конвертируем финальный Markdown в HTML
+      note.content = await markdownToHtml(markdown);
+    } catch (error) {
+      console.error(`Failed to process content for note ${note.title}:`, error);
+      // В случае ошибки, сохраняем хотя бы оригинальный текст
+      note.content = originalContent;
+    }
   }
 
   return result;
