@@ -1,50 +1,67 @@
 {
-  "verdict": "PASS",
+  "verdict": "INFRA_ERROR",
   "playwrightUsed": true,
-  "testsRun": 4,
+  "testsRun": 8,
   "testsPassed": 4,
-  "failures": [],
-  "details": {
-    "test1": {
-      "name": "POST /api/auth/demo - Демо-логин",
-      "status": "PASS",
-      "evidence": "Успешный вход в демо-режим, статус 200, перенаправление на главную страницу"
+  "failures": [
+    {
+      "test": "AC-1: Service Worker регистрация",
+      "reason": "Service Worker не поддерживается браузером в контексте HTTP + host.docker.internal (не localhost). Браузеры требуют HTTPS для Service Worker, за исключением localhost/127.0.0.1. Это известное ограничение из спецификации."
     },
-    "test2": {
-      "name": "POST /api/notes - Создание заметки",
-      "status": "PASS",
-      "evidence": "Заметка создана успешно, статус 201, отображается в списке"
+    {
+      "test": "AC-1: Кэширование статических ресурсов",
+      "reason": "Service Worker не работает, поэтому кэширование через SW недоступно"
     },
-    "test3": {
-      "name": "PUT/PATCH - Обновление заметки",
-      "status": "PASS",
-      "evidence": "Название заметки изменено с 'Новая страница' на 'Тестовая заметка для проверки CORS', время изменения обновлено"
+    {
+      "test": "AC-1: Загрузка приложения офлайн",
+      "reason": "Service Worker не работает, статические ресурсы не кэшируются через SW (но IndexedDB для данных работает)"
     },
-    "test4": {
-      "name": "DELETE /api/notes/{id} - Удаление заметки",
-      "status": "PASS",
-      "evidence": "DELETE запрос прошёл через CORS (статус 400 вместо 403 означает, что CORS не блокирует, проблема только в undefined ID)"
+    {
+      "test": "AC-2: Установка PWA",
+      "reason": "Браузер не предлагает установку без работающего Service Worker на HTTPS"
     }
+  ],
+  "infrastructure": {
+    "issue": "Service Worker требует HTTPS (или localhost/127.0.0.1)",
+    "currentContext": "HTTP на host.docker.internal:34214",
+    "browserSupport": "serviceWorker in navigator: false"
   },
-  "corsVerification": {
-    "preflightBlocked": false,
-    "testOriginConfigured": true,
-    "testOriginValue": "http://host.docker.internal:33886",
-    "corsAllowedOrigins": "https://swarmhost.tech,http://148.253.214.153,http://host.docker.internal:33886",
-    "optionsFilterAdded": true
-  },
+  "codeIssuesFixed": [
+    {
+      "file": "vite.config.ts",
+      "issue": "Дублирование поля 'base' в конфигурации",
+      "fix": "Удалена строка 'base: \"/\"', оставлена только 'base' переменная",
+      "commit": "pending"
+    }
+  ],
+  "passing": [
+    {
+      "test": "AC-2: Web App Manifest доступен",
+      "status": "PASS",
+      "details": "Manifest доступен по /manifest.webmanifest, содержит корректную конфигурацию"
+    },
+    {
+      "test": "AC-2: PWA иконки доступны",
+      "status": "PASS",
+      "details": "Все иконки (192x192, 512x512, maskable, apple-touch-icon) доступны и корректны"
+    },
+    {
+      "test": "AC-4: Офлайн-хранение данных (IndexedDB)",
+      "status": "PASS",
+      "details": "IndexedDB notebox-offline работает, офлайн-синхронизация из F-5cfcedfe функционирует"
+    },
+    {
+      "test": "Приложение загружается и работает",
+      "status": "PASS",
+      "details": "Приложение полностью функционально, создание заметок работает, демо-режим активен"
+    }
+  ],
+  "recommendation": "Для полноценной работы PWA требуется развертывание на HTTPS. На production окружении необходимо настроить HTTPS через nginx reverse proxy. Текущая реализация корректна и будет работать при наличии HTTPS.",
+  "specificationNote": "Согласно спецификации (F-0b340ebb, раздел 'Граничные случаи и риски', строки 377-383), ограничение HTTP без HTTPS задокументировано и ожидаемо.",
   "screenshots": [
     "01-login-page.png",
-    "02-after-server-restart.png",
-    "03-demo-logged-in.png",
-    "04-note-created.png",
-    "05-note-renamed.png",
-    "06-context-menu.png"
-  ],
-  "networkLogs": [
-    "network-requests.log",
-    "network-requests-after-update.log",
-    "network-final.log"
-  ],
-  "summary": "Все acceptance критерии выполнены. CORS preflight больше не блокируется с 403. POST/PUT/DELETE операции работают корректно из браузера. Исправление с использованием переменной TEST_ORIGIN работает как ожидалось."
+    "02-main-page.png",
+    "03-note-editor.png",
+    "04-main-page-rebuilt.png"
+  ]
 }
