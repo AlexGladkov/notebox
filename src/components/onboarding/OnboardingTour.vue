@@ -5,12 +5,83 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { useOnboarding } from '../../composables/useOnboarding';
+import { useNotes } from '../../composables/useNotes';
+import { templates } from '../../data/templates';
+import { useRouter } from 'vue-router';
 import type { DriveStep, Config } from 'driver.js';
 
 const { isOnboardingActive, completeOnboarding } = useOnboarding();
+const { createNote, updateNote } = useNotes();
+const router = useRouter();
 
 let driver: any = null;
 let isInitializing = false;
+
+// Получаем шаблоны quickstart
+const quickstartTemplates = templates.filter(t => t.category === 'quickstart');
+
+// Функция для создания заметки из шаблона
+const createNoteFromTemplate = async (templateId: string) => {
+  const template = templates.find(t => t.id === templateId);
+  if (!template) return;
+
+  // Создаем заметку с названием и контентом из шаблона
+  const note = await createNote(template.title);
+
+  // Заменяем {{DATE}} на текущую дату
+  const today = new Date().toLocaleDateString('ru-RU', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+  const content = template.content.replace(/\{\{DATE\}\}/g, today);
+
+  // Обновляем заметку с контентом и иконкой
+  await updateNote(note.id, {
+    content,
+    icon: template.icon
+  });
+
+  // Закрываем тур
+  if (driver) {
+    driver.destroy();
+  }
+
+  // Переходим к созданной заметке
+  router.push(`/?note=${note.id}`);
+};
+
+// Генерируем HTML для кнопок шаблонов
+const templatesButtonsHTML = quickstartTemplates.map(template => `
+  <button
+    class="onboarding-template-btn"
+    data-template-id="${template.id}"
+    style="
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 12px 16px;
+      margin-top: 8px;
+      background: #f3f4f6;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #374151;
+      cursor: pointer;
+      transition: all 0.2s;
+    "
+    onmouseover="this.style.background='#e5e7eb'; this.style.borderColor='#3b82f6';"
+    onmouseout="this.style.background='#f3f4f6'; this.style.borderColor='transparent';"
+  >
+    <span style="font-size: 24px;">${template.icon}</span>
+    <div style="text-align: left; flex: 1;">
+      <div style="font-weight: 600;">${template.title}</div>
+      <div style="font-size: 12px; color: #6b7280; margin-top: 2px;">${template.description}</div>
+    </div>
+  </button>
+`).join('');
 
 const tourSteps: DriveStep[] = [
   {
@@ -67,7 +138,10 @@ const tourSteps: DriveStep[] = [
   {
     popover: {
       title: '🎉 Готово! Создайте первую заметку',
-      description: 'Теперь вы готовы работать с NoteBox! Выберите шаблон для быстрого старта или создайте заметку с нуля.',
+      description: `
+        <p style="margin-bottom: 16px;">Теперь вы готовы работать с NoteBox! Выберите шаблон для быстрого старта:</p>
+        ${templatesButtonsHTML}
+      `,
     },
   },
 ];
@@ -85,6 +159,22 @@ const initDriver = async () => {
     prevBtnText: 'Назад',
     doneBtnText: 'Завершить',
     progressText: '{{current}} из {{total}}',
+    onPopoverRender: (popover: any) => {
+      // Добавляем обработчики кликов для кнопок шаблонов
+      setTimeout(() => {
+        const templateButtons = document.querySelectorAll('.onboarding-template-btn');
+        templateButtons.forEach(button => {
+          button.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const templateId = (button as HTMLElement).getAttribute('data-template-id');
+            if (templateId) {
+              createNoteFromTemplate(templateId);
+            }
+          });
+        });
+      }, 0);
+    },
     onDestroyed: () => {
       completeOnboarding();
     },
@@ -105,7 +195,13 @@ const initDriver = async () => {
 };
 
 const startTour = async () => {
-  if (isInitializing || driver) return;
+  if (isInitializing) return;
+
+  // Сбрасываем существующий driver перед повторным запуском
+  if (driver) {
+    driver.destroy();
+    driver = null;
+  }
 
   isInitializing = true;
 
