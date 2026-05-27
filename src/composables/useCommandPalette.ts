@@ -1,4 +1,4 @@
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { useUIStore } from '../stores/uiStore';
@@ -230,6 +230,17 @@ export function useCommandPalette() {
   // Выбранный элемент
   const selectedItem = computed(() => {
     return allItems.value[selectedIndex.value] || null;
+  });
+
+  // Корректируем selectedIndex при изменении списка элементов
+  watch(allItems, (newItems) => {
+    if (newItems.length > 0 && selectedIndex.value >= newItems.length) {
+      selectedIndex.value = 0;
+    }
+    // Если список стал пустым, сбрасываем индекс
+    if (newItems.length === 0) {
+      selectedIndex.value = 0;
+    }
   });
 
   // Открытие палитры
