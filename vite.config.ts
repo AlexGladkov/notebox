@@ -11,8 +11,10 @@ const normalizePath = (path: string | undefined): string => {
   return normalized.endsWith('/') ? normalized : `${normalized}/`;
 };
 
+const base = normalizePath(process.env.VITE_BASE_PATH);
+
 export default defineConfig({
-  base: normalizePath(process.env.VITE_BASE_PATH),
+  base,
   plugins: [
     vue(),
     VitePWA({
@@ -26,8 +28,8 @@ export default defineConfig({
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'any',
-        start_url: '.',
-        scope: '.',
+        start_url: base,
+        scope: base,
         icons: [
           {
             src: 'icons/icon-192x192.png',
@@ -49,26 +51,11 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts-cache',
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 год
-              },
-              cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
-          }
-        ],
-        navigateFallback: null, // Отключаем для SPA, т.к. используем vue-router
+        // navigateFallback отключен для корректной работы vue-router
+        navigateFallback: null,
         cleanupOutdatedCaches: true
       },
-      // Стратегия: generateSW для автоматической генерации SW с кастомным кодом
+      // Стратегия: injectManifest для использования кастомного Service Worker с Workbox
       strategies: 'injectManifest',
       srcDir: 'src',
       filename: 'sw.ts',

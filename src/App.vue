@@ -74,7 +74,6 @@
     <PWAUpdatePrompt
       :need-refresh="needRefresh"
       @update="handlePWAUpdate"
-      @dismiss="() => {}"
     />
   </div>
 </template>
