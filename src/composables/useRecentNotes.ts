@@ -87,6 +87,12 @@ export function useRecentNotes() {
     saveRecentNotes();
   };
 
+  // Очистка всех недавних заметок (например, при сбросе демо-режима)
+  const clearRecentNotes = (): void => {
+    recentNoteIds.value = [];
+    saveRecentNotes();
+  };
+
   // Инициализация (только один раз)
   if (!isInitialized) {
     loadRecentNotes();
@@ -97,5 +103,6 @@ export function useRecentNotes() {
     recentNoteIds,
     addRecentNote,
     removeRecentNote,
+    clearRecentNotes,
   };
 }

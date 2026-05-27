@@ -18,7 +18,7 @@ export function useCommandPalette() {
   const { createNote } = useNotes();
   const { openTab } = useTabs();
   const { cycleTheme } = useTheme();
-  const { recentNoteIds } = useRecentNotes();
+  const { recentNoteIds, removeRecentNote } = useRecentNotes();
   const { notes } = storeToRefs(notesStore);
 
   const query = ref('');
@@ -89,6 +89,8 @@ export function useCommandPalette() {
   // Недавние заметки
   const recentNotes = computed<CommandPaletteItem[]>(() => {
     const items: CommandPaletteItem[] = [];
+    const invalidNoteIds: string[] = [];
+
     for (const noteId of recentNoteIds.value.slice(0, 5)) {
       const note = notesStore.getNoteById(noteId);
       if (note) {
@@ -103,8 +105,17 @@ export function useCommandPalette() {
             close();
           },
         });
+      } else {
+        // Собираем несуществующие ID для очистки
+        invalidNoteIds.push(noteId);
       }
     }
+
+    // Очищаем несуществующие заметки из списка недавних
+    if (invalidNoteIds.length > 0) {
+      invalidNoteIds.forEach(id => removeRecentNote(id));
+    }
+
     return items;
   });
 
