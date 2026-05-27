@@ -22,33 +22,40 @@ const quickstartTemplates = templates.filter(t => t.category === 'quickstart');
 
 // Функция для создания заметки из шаблона
 const createNoteFromTemplate = async (templateId: string) => {
-  const template = templates.find(t => t.id === templateId);
-  if (!template) return;
+  try {
+    const template = templates.find(t => t.id === templateId);
+    if (!template) {
+      console.error('Template not found:', templateId);
+      return;
+    }
 
-  // Создаем заметку с названием и контентом из шаблона
-  const note = await createNote(template.title);
+    // Создаем заметку с названием и контентом из шаблона
+    const note = await createNote(template.title);
 
-  // Заменяем {{DATE}} на текущую дату
-  const today = new Date().toLocaleDateString('ru-RU', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-  const content = template.content.replace(/\{\{DATE\}\}/g, today);
+    // Заменяем {{DATE}} на текущую дату
+    const today = new Date().toLocaleDateString('ru-RU', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    const content = template.content.replace(/\{\{DATE\}\}/g, today);
 
-  // Обновляем заметку с контентом и иконкой
-  await updateNote(note.id, {
-    content,
-    icon: template.icon
-  });
+    // Обновляем заметку с контентом и иконкой
+    await updateNote(note.id, {
+      content,
+      icon: template.icon
+    });
 
-  // Закрываем тур
-  if (driver) {
-    driver.destroy();
+    // Закрываем тур
+    if (driver) {
+      driver.destroy();
+    }
+
+    // Переходим к созданной заметке
+    router.push(`/?note=${note.id}`);
+  } catch (error) {
+    console.error('Failed to create note from template:', error);
   }
-
-  // Переходим к созданной заметке
-  router.push(`/?note=${note.id}`);
 };
 
 // Генерируем HTML для кнопок шаблонов
@@ -56,29 +63,11 @@ const templatesButtonsHTML = quickstartTemplates.map(template => `
   <button
     class="onboarding-template-btn"
     data-template-id="${template.id}"
-    style="
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      width: 100%;
-      padding: 12px 16px;
-      margin-top: 8px;
-      background: #f3f4f6;
-      border: 2px solid transparent;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 500;
-      color: #374151;
-      cursor: pointer;
-      transition: all 0.2s;
-    "
-    onmouseover="this.style.background='#e5e7eb'; this.style.borderColor='#3b82f6';"
-    onmouseout="this.style.background='#f3f4f6'; this.style.borderColor='transparent';"
   >
-    <span style="font-size: 24px;">${template.icon}</span>
-    <div style="text-align: left; flex: 1;">
-      <div style="font-weight: 600;">${template.title}</div>
-      <div style="font-size: 12px; color: #6b7280; margin-top: 2px;">${template.description}</div>
+    <span class="template-icon">${template.icon}</span>
+    <div class="template-content">
+      <div class="template-title">${template.title}</div>
+      <div class="template-description">${template.description}</div>
     </div>
   </button>
 `).join('');
@@ -149,49 +138,42 @@ const tourSteps: DriveStep[] = [
 const initDriver = async () => {
   if (driver) return;
 
-  const { driver: createDriver } = await import('driver.js');
-  await import('driver.js/dist/driver.css');
+  try {
+    const { driver: createDriver } = await import('driver.js');
+    await import('driver.js/dist/driver.css');
 
-  const config: Config = {
-    showProgress: true,
-    steps: tourSteps,
-    nextBtnText: 'Далее',
-    prevBtnText: 'Назад',
-    doneBtnText: 'Завершить',
-    progressText: '{{current}} из {{total}}',
-    onPopoverRender: (popover: any) => {
-      // Добавляем обработчики кликов для кнопок шаблонов
-      setTimeout(() => {
-        const templateButtons = document.querySelectorAll('.onboarding-template-btn');
-        templateButtons.forEach(button => {
-          button.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            const templateId = (button as HTMLElement).getAttribute('data-template-id');
-            if (templateId) {
-              createNoteFromTemplate(templateId);
-            }
+    const config: Config = {
+      showProgress: true,
+      steps: tourSteps,
+      nextBtnText: 'Далее',
+      prevBtnText: 'Назад',
+      doneBtnText: 'Завершить',
+      progressText: '{{current}} из {{total}}',
+      onPopoverRender: (popover: any) => {
+        // Используем nextTick для добавления обработчиков после рендеринга DOM
+        nextTick(() => {
+          const templateButtons = document.querySelectorAll('.onboarding-template-btn');
+          templateButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const templateId = (button as HTMLElement).getAttribute('data-template-id');
+              if (templateId) {
+                createNoteFromTemplate(templateId);
+              }
+            });
           });
         });
-      }, 0);
-    },
-    onDestroyed: () => {
-      completeOnboarding();
-    },
-    onDestroyStarted: () => {
-      // Разрешаем закрытие на последнем шаге без подтверждения
-      if (!driver || driver.isLastStep()) {
-        driver?.destroy();
-        return;
-      }
+      },
+      onDestroyed: () => {
+        completeOnboarding();
+      },
+    };
 
-      // На промежуточных шагах всегда помечаем как завершенный
-      // (пользователь может вернуться через настройки)
-      driver.destroy();
-    },
-  };
-
-  driver = createDriver(config);
+    driver = createDriver(config);
+  } catch (error) {
+    console.error('Failed to initialize driver:', error);
+  }
 };
 
 const startTour = async () => {
@@ -224,7 +206,7 @@ watch(isOnboardingActive, async (active) => {
 
 onMounted(async () => {
   if (isOnboardingActive.value) {
-    // Дополнительная задержка для полного рендеринга интерфейса
+    // Задержка для полного рендеринга интерфейса, включая ProseMirror редактор и все sidebar элементы
     setTimeout(startTour, 300);
   }
 });
@@ -336,6 +318,63 @@ onUnmounted(() => {
 }
 
 .dark .driver-popover-progress-text {
+  color: #9ca3af;
+}
+
+/* Стили для кнопок шаблонов */
+.onboarding-template-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 16px;
+  margin-top: 8px;
+  background: #f3f4f6;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.onboarding-template-btn:hover {
+  background: #e5e7eb;
+  border-color: #3b82f6;
+}
+
+.onboarding-template-btn .template-icon {
+  font-size: 24px;
+}
+
+.onboarding-template-btn .template-content {
+  text-align: left;
+  flex: 1;
+}
+
+.onboarding-template-btn .template-title {
+  font-weight: 600;
+}
+
+.onboarding-template-btn .template-description {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+/* Темная тема для кнопок шаблонов */
+.dark .onboarding-template-btn {
+  background: #374151;
+  color: #d1d5db;
+}
+
+.dark .onboarding-template-btn:hover {
+  background: #4b5563;
+  border-color: #3b82f6;
+}
+
+.dark .onboarding-template-btn .template-description {
   color: #9ca3af;
 }
 </style>

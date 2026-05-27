@@ -640,7 +640,7 @@ onMounted(async () => {
 
   // Запуск onboarding для новых пользователей
   if (shouldShowOnboarding.value) {
-    // Минимальная задержка для полного рендеринга интерфейса
+    // Задержка для завершения рендеринга интерфейса (sidebar, редактор, модальные окна)
     setTimeout(() => {
       startOnboarding();
     }, 500);

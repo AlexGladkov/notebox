@@ -2,12 +2,19 @@ import { ref, computed } from 'vue';
 
 const ONBOARDING_STORAGE_KEY = 'notebox_onboarding_completed';
 
-// Инициализируем состояние из localStorage
-const stored = localStorage.getItem(ONBOARDING_STORAGE_KEY);
-const isOnboardingCompleted = ref<boolean>(stored === 'true');
+// Инициализация происходит при первом вызове useOnboarding
+let isInitialized = false;
+const isOnboardingCompleted = ref<boolean>(false);
 const isOnboardingActive = ref<boolean>(false);
 
 export function useOnboarding() {
+  // Инициализируем состояние из localStorage при первом использовании
+  if (!isInitialized) {
+    const stored = localStorage.getItem(ONBOARDING_STORAGE_KEY);
+    isOnboardingCompleted.value = stored === 'true';
+    isInitialized = true;
+  }
+
   const checkOnboardingStatus = () => {
     const stored = localStorage.getItem(ONBOARDING_STORAGE_KEY);
     isOnboardingCompleted.value = stored === 'true';

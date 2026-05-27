@@ -63,11 +63,12 @@
 
 <script setup lang="ts">
 import { useOnboarding } from '../../composables/useOnboarding';
+import packageJson from '../../../package.json';
 
 const { resetOnboarding } = useOnboarding();
 
-// Версия приложения
-const APP_VERSION = '0.1.0';
+// Версия приложения из package.json
+const APP_VERSION = packageJson.version;
 
 const handleRestartTour = () => {
   resetOnboarding();
