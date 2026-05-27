@@ -23,8 +23,11 @@ const isLocalStorageAvailable = (): boolean => {
   }
 };
 
+// Singleton state - один экземпляр для всего приложения
+const recentNoteIds: Ref<string[]> = ref([]);
+let isInitialized = false;
+
 export function useRecentNotes() {
-  const recentNoteIds: Ref<string[]> = ref([]);
 
   // Загрузка из localStorage
   const loadRecentNotes = (): void => {
@@ -84,8 +87,11 @@ export function useRecentNotes() {
     saveRecentNotes();
   };
 
-  // Инициализация
-  loadRecentNotes();
+  // Инициализация (только один раз)
+  if (!isInitialized) {
+    loadRecentNotes();
+    isInitialized = true;
+  }
 
   return {
     recentNoteIds,

@@ -242,14 +242,22 @@ const selectItemByInstance = (item: CommandPaletteItem): void => {
   transition: background 0.15s ease;
 }
 
-.palette-item:hover,
-.palette-item-active {
+.palette-item:hover {
   background: #f3f4f6;
 }
 
-:global(.dark) .palette-item:hover,
-:global(.dark) .palette-item-active {
+.palette-item-active {
+  background: #e0e7ff;
+  border-left: 3px solid #6366f1;
+}
+
+:global(.dark) .palette-item:hover {
   background: #2a2a2a;
+}
+
+:global(.dark) .palette-item-active {
+  background: #312e81;
+  border-left: 3px solid #818cf8;
 }
 
 .item-icon {
