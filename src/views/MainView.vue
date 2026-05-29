@@ -5,9 +5,25 @@
     <div class="sync-status-bar">
       <SyncStatusIndicator />
     </div>
+
+    <!-- Мобильный header -->
+    <MobileHeader
+      :title="currentNote?.title || 'NoteBox'"
+      @toggle-drawer="toggleDrawer"
+    />
+
     <div class="flex flex-1 overflow-hidden">
+      <!-- Overlay для drawer -->
+      <DrawerOverlay :show="drawerOpen" @close="closeDrawer" />
+
       <!-- Единая левая панель с деревом страниц -->
-      <div class="flex flex-col bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 h-full" style="width: 288px;">
+      <div
+        ref="sidebarRef"
+        :class="[
+          'sidebar flex flex-col bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 h-full w-72',
+          { 'sidebar-open': drawerOpen }
+        ]"
+      >
         <!-- User Profile -->
         <div class="p-4 border-b border-gray-200 dark:border-gray-700">
           <UserProfile v-if="user" :user="user" @click="showProfileModal = true" />
@@ -251,8 +267,12 @@ import { useAuth } from '../composables/useAuth';
 import { useTags } from '../composables/useTags';
 import { useBacklinks } from '../composables/useBacklinks';
 import { useOnboarding } from '../composables/useOnboarding';
+import { useDrawer } from '../composables/useDrawer';
+import { useSwipe } from '../composables/useSwipe';
 import { notesApi } from '../api/notes';
 import SearchBar from '../components/SearchBar.vue';
+import MobileHeader from '../components/MobileHeader.vue';
+import DrawerOverlay from '../components/DrawerOverlay.vue';
 import NoteTree from '../components/NoteTree.vue';
 import NoteEditor from '../components/NoteEditor.vue';
 import TabBar from '../components/TabBar.vue';
@@ -270,6 +290,20 @@ import OnboardingTour from '../components/onboarding/OnboardingTour.vue';
 
 // Router
 const router = useRouter();
+
+// Drawer для мобильных устройств
+const { isOpen: drawerOpen, open: openDrawer, close: closeDrawer, toggle: toggleDrawer } = useDrawer();
+const sidebarRef = ref<HTMLElement | null>(null);
+
+// Swipe для закрытия drawer
+useSwipe(sidebarRef, {
+  threshold: 50,
+  onSwipeLeft: () => {
+    if (drawerOpen.value) {
+      closeDrawer();
+    }
+  },
+});
 
 // Auth
 const { user, logout, isDemoUser } = useAuth();
@@ -449,6 +483,8 @@ function handleSelectNote(noteId: string, forceNewTab = false) {
   if (note) {
     openTab(noteId, forceNewTab);
     expandAllAncestors(noteId);
+    // Закрываем drawer на мобильных устройствах после выбора заметки
+    closeDrawer();
   }
 }
 
@@ -649,7 +685,31 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* Стили уже определены в Tailwind классах */
+/* Drawer mode для мобильных устройств */
+@media (max-width: 767px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 50;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-out;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .sidebar-open {
+    transform: translateX(0);
+  }
+}
+
+/* Десктопный режим */
+@media (min-width: 768px) {
+  .sidebar {
+    position: relative;
+    transform: none;
+  }
+}
 
 .sync-status-bar {
   display: flex;
