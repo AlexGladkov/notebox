@@ -36,6 +36,7 @@ import { useAuthStore } from '../../stores/authStore';
 import SettingsSidebar from './SettingsSidebar.vue';
 import ProfileSection from './ProfileSection.vue';
 import AppearanceSection from './AppearanceSection.vue';
+import DailyNotesSection from './DailyNotesSection.vue';
 import NotificationsSection from './NotificationsSection.vue';
 import HelpSection from './HelpSection.vue';
 
@@ -58,6 +59,8 @@ const currentSectionComponent = computed(() => {
       return ProfileSection;
     case 'appearance':
       return AppearanceSection;
+    case 'dailyNotes':
+      return DailyNotesSection;
     case 'notifications':
       return NotificationsSection;
     case 'help':

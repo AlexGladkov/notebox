@@ -18,6 +18,12 @@
           <SearchBar v-model="searchQuery" />
         </div>
 
+        <!-- Daily Notes Section -->
+        <DailyNotesSection
+          @select-note="handleSelectNote"
+          @open-daily-note="handleOpenDailyNote"
+        />
+
         <!-- Список страниц -->
         <div class="flex-1 overflow-y-auto p-2">
           <!-- Результаты поиска -->
@@ -251,6 +257,7 @@ import { useAuth } from '../composables/useAuth';
 import { useTags } from '../composables/useTags';
 import { useBacklinks } from '../composables/useBacklinks';
 import { useOnboarding } from '../composables/useOnboarding';
+import { useDailyNotes } from '../composables/useDailyNotes';
 import { notesApi } from '../api/notes';
 import SearchBar from '../components/SearchBar.vue';
 import NoteTree from '../components/NoteTree.vue';
@@ -261,6 +268,7 @@ import UserProfile from '../components/auth/UserProfile.vue';
 import SettingsModal from '../components/settings/SettingsModal.vue';
 import DemoBanner from '../components/layout/DemoBanner.vue';
 import TagFilter from '../components/TagFilter.vue';
+import DailyNotesSection from '../components/DailyNotesSection.vue';
 import SyncStatusIndicator from '../components/SyncStatusIndicator.vue';
 import QuickCaptureButton from '../components/QuickCapture/QuickCaptureButton.vue';
 import EmptyState from '../components/EmptyState.vue';
@@ -468,6 +476,19 @@ async function handleCreateSubpage(parentId: string) {
     openTab(newNote.id);
   } catch (error) {
     console.error('Не удалось создать подстраницу:', error);
+  }
+}
+
+// Daily Notes
+const { getOrCreateDailyNote } = useDailyNotes();
+
+async function handleOpenDailyNote(date: Date) {
+  try {
+    const dailyNote = await getOrCreateDailyNote(date);
+    openTab(dailyNote.id);
+    expandAllAncestors(dailyNote.id);
+  } catch (error) {
+    console.error('Не удалось открыть дневную заметку:', error);
   }
 }
 
