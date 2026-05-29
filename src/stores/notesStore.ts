@@ -57,6 +57,11 @@ export const useNotesStore = defineStore('notes', {
 
     getChildrenCount: (state) => (noteId: string) =>
       state.notes.filter(n => n.parentId === noteId).length,
+
+    favoriteNotes: (state) =>
+      state.notes
+        .filter(n => n.isFavorite)
+        .sort((a, b) => a.title.localeCompare(b.title)),
   },
 
   actions: {
@@ -193,6 +198,7 @@ export const useNotesStore = defineStore('notes', {
           backdropType: updates.backdropType !== undefined ? updates.backdropType : note.backdropType,
           backdropValue: updates.backdropValue !== undefined ? updates.backdropValue : note.backdropValue,
           backdropPositionY: updates.backdropPositionY !== undefined ? updates.backdropPositionY : (note.backdropPositionY ?? 50),
+          isFavorite: updates.isFavorite !== undefined ? updates.isFavorite : note.isFavorite,
         });
 
         const index = this.notes.findIndex(n => n.id === id);
@@ -207,6 +213,17 @@ export const useNotesStore = defineStore('notes', {
       } finally {
         this.loading = false;
       }
+    },
+
+    async toggleFavorite(noteId: string): Promise<void> {
+      const note = this.notes.find(n => n.id === noteId);
+      if (!note) {
+        throw new Error('Note not found');
+      }
+
+      await this.updateNote(noteId, {
+        isFavorite: !note.isFavorite,
+      });
     },
 
     async deleteNote(id: string, cascadeDelete: boolean = true): Promise<void> {

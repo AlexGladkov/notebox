@@ -18,6 +18,7 @@ export interface Note {
   updatedAt: number;
   isBlockFormat?: boolean;
   tags?: Tag[];
+  isFavorite?: boolean;
 }
 
 export interface NoteWithChildren extends Note {

@@ -70,6 +70,15 @@
 
           <!-- Древовидный список всех страниц -->
           <div v-else>
+            <!-- Секция избранного -->
+            <FavoritesList
+              v-if="favoriteNotes.length > 0"
+              :notes="favoriteNotes"
+              :selected-note-id="activeNoteId"
+              @select-note="(id, forceNewTab) => handleSelectNote(id, forceNewTab)"
+              @remove-favorite="handleToggleFavorite"
+            />
+
             <div class="flex items-center justify-between px-3 py-2">
               <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Страницы</span>
               <button
@@ -92,6 +101,7 @@
               @select-note="(id, forceNewTab) => handleSelectNote(id, forceNewTab)"
               @create-subpage="handleCreateSubpage"
               @toggle-expand="toggleExpandNote"
+              @toggle-favorite="handleToggleFavorite"
             />
 
             <div v-else class="notes-empty-container">
@@ -274,6 +284,7 @@ import SearchBar from '../components/SearchBar.vue';
 import MobileHeader from '../components/MobileHeader.vue';
 import DrawerOverlay from '../components/DrawerOverlay.vue';
 import NoteTree from '../components/NoteTree.vue';
+import FavoritesList from '../components/FavoritesList.vue';
 import NoteEditor from '../components/NoteEditor.vue';
 import TabBar from '../components/TabBar.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
@@ -335,7 +346,7 @@ const themeTooltip = computed(() => {
 
 // Notes Store - убираем дублирование состояния с App.vue
 const notesStore = useNotesStore();
-const { notes, expandedNotes } = storeToRefs(notesStore);
+const { notes, expandedNotes, favoriteNotes } = storeToRefs(notesStore);
 const { loadNotes: _loadNotes } = useStorage();
 
 const {
@@ -555,6 +566,14 @@ async function handleCreateFromTemplate(data: { title: string; content: string; 
 
 function toggleExpandNote(noteId: string) {
   toggleNoteExpanded(noteId);
+}
+
+async function handleToggleFavorite(noteId: string) {
+  try {
+    await notesStore.toggleFavorite(noteId);
+  } catch (error) {
+    console.error('Не удалось изменить статус избранного:', error);
+  }
 }
 
 function handleConfirmAction() {
