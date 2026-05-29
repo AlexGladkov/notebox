@@ -22,14 +22,26 @@
 
     <EditorBubbleMenu v-if="editor" :editor="editor" />
 
+    <!-- Desktop slash menu -->
     <SlashCommandMenu
-      v-if="editor"
+      v-if="editor && !isMobile"
       ref="slashMenuRef"
       :editor="editor"
       :visible="slashMenuVisible"
       :query="slashQuery"
       :commands="slashCommands"
       @command-selected="handleSlashCommand"
+    />
+
+    <!-- Mobile slash menu (bottom sheet) -->
+    <MobileSlashMenu
+      v-if="editor && isMobile"
+      :editor="editor"
+      :visible="slashMenuVisible"
+      :query="slashQuery"
+      :commands="slashCommands"
+      @command-selected="handleSlashCommand"
+      @close="slashMenuVisible = false"
     />
 
     <WikiLinkSuggestion
@@ -86,6 +98,7 @@ import { WikiLink } from '../extensions/WikiLinkExtension';
 
 import EditorBubbleMenu from './BlockEditor/BubbleMenu.vue';
 import SlashCommandMenu from './BlockEditor/SlashCommandMenu.vue';
+import MobileSlashMenu from './BlockEditor/MobileSlashMenu.vue';
 import BlockMenu from './BlockEditor/BlockMenu.vue';
 import CreateNestedNoteModal from './BlockEditor/CreateNestedNoteModal.vue';
 import TemplateGalleryModal from './TemplateGallery/TemplateGalleryModal.vue';
@@ -95,9 +108,13 @@ import type { Note } from '../types';
 import { notesApi } from '../api/notes';
 import { useDatabases } from '../composables/useDatabases';
 import { useAI } from '../composables/useAI';
+import { useMobileDetect } from '../composables/useMobileDetect';
 import { useSlashCommands } from './BlockEditor/composables/useSlashCommands';
 import { useBlockOperations } from './BlockEditor/composables/useBlockOperations';
 import { useWikiLinks } from './BlockEditor/composables/useWikiLinks';
+
+// Mobile detection
+const { isMobile } = useMobileDetect();
 
 const props = defineProps<{
   modelValue: string;

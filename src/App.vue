@@ -5,7 +5,16 @@
       <SyncStatusIndicator />
     </div>
 
+    <!-- Мобильный header -->
+    <MobileHeader
+      :title="currentNote?.title || 'NoteBox'"
+      @toggle-drawer="toggleDrawer"
+    />
+
     <div class="flex flex-1 overflow-hidden">
+      <!-- Overlay для drawer -->
+      <DrawerOverlay :show="drawerOpen" @close="closeDrawer" />
+
       <!-- Единая левая панель с деревом страниц -->
       <UnifiedSidebar
         :all-notes="notes"
@@ -15,12 +24,14 @@
         :search-results="searchResults"
         :create-note-fn="handleCreateNoteForImport"
         :update-note-fn="handleUpdateNoteForImport"
+        :is-drawer-open="drawerOpen"
         @update:search-query="searchQuery = $event"
         @select-note="handleSelectNote"
         @create-root-page="handleCreateRootPage"
         @create-subpage="handleCreateSubpage"
         @toggle-expand="toggleExpandNote"
         @notes-imported="handleNotesImported"
+        @close-drawer="closeDrawer"
       />
 
       <!-- Правая панель с редактором -->
@@ -75,9 +86,6 @@
       :need-refresh="needRefresh"
       @update="handlePWAUpdate"
     />
-
-    <!-- Toast Notifications -->
-    <ToastContainer />
   </div>
 </template>
 
@@ -92,6 +100,7 @@ import { useSearch } from './composables/useSearch';
 import { useTheme } from './composables/useTheme';
 import { useTabs } from './composables/useTabs';
 import { usePWA } from './composables/usePWA';
+import { useDrawer } from './composables/useDrawer';
 import { initNetworkStatus, destroyNetworkStatus, useNetworkStatus } from './services/offline/networkStatus';
 import { offlineStore } from './services/offline/offlineStore';
 import { notesApi } from './api/notes';
@@ -102,11 +111,15 @@ import ConfirmDialog from './components/ConfirmDialog.vue';
 import SyncStatusIndicator from './components/SyncStatusIndicator.vue';
 import PWAInstallPrompt from './components/PWAInstallPrompt.vue';
 import PWAUpdatePrompt from './components/PWAUpdatePrompt.vue';
-import ToastContainer from './components/Toast/ToastContainer.vue';
+import MobileHeader from './components/MobileHeader.vue';
+import DrawerOverlay from './components/DrawerOverlay.vue';
 
 // Инициализация темы
 const { initialize: initializeTheme } = useTheme();
 initializeTheme();
+
+// Drawer для мобильных устройств
+const { isOpen: drawerOpen, open: openDrawer, close: closeDrawer, toggle: toggleDrawer } = useDrawer();
 
 // Notes Store
 const notesStore = useNotesStore();
@@ -218,6 +231,8 @@ const handleSelectNote = (noteId: string, forceNewTab: boolean = false) => {
   if (note) {
     openTab(noteId, forceNewTab);
     searchQuery.value = '';
+    // Закрываем drawer на мобильных устройствах после выбора заметки
+    closeDrawer();
   }
 };
 

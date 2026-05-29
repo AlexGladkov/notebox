@@ -188,4 +188,12 @@ onUnmounted(() => {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* Mobile optimizations */
+@media (max-width: 767px) {
+  .scrollbar-hide {
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+  }
+}
 </style>

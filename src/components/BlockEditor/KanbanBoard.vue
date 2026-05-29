@@ -345,6 +345,31 @@ watch(
   overflow-x: auto;
   overflow-y: hidden;
   height: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Mobile optimizations */
+@media (max-width: 767px) {
+  .kanban-columns {
+    gap: 12px;
+    padding: 12px;
+    scroll-snap-type: x mandatory;
+  }
+
+  .kanban-columns > * {
+    scroll-snap-align: start;
+    min-width: 280px;
+  }
+
+  .empty-state-btn {
+    min-height: 44px;
+    min-width: 120px;
+  }
+
+  .modal-option {
+    min-height: 56px;
+    padding: 16px;
+  }
 }
 
 .kanban-columns::-webkit-scrollbar {
