@@ -18,7 +18,7 @@
       </template>
     </NoteCover>
 
-    <div class="border-b border-gray-200 dark:border-gray-700 p-4">
+    <div class="note-header border-b border-gray-200 dark:border-gray-700 p-4">
       <!-- Если нет обложки, иконка отдельно над заголовком -->
       <NoteIcon
         v-if="!note.backdropType"
@@ -30,7 +30,7 @@
         v-model="localTitle"
         @input="handleTitleChange"
         placeholder="Название заметки..."
-        class="w-full text-2xl font-semibold outline-none border-none focus:ring-0 bg-transparent text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
+        class="note-title w-full text-2xl md:text-3xl font-semibold outline-none border-none focus:ring-0 bg-transparent text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
       />
       <div class="flex items-center justify-between mt-2">
         <div class="text-sm text-gray-500 dark:text-gray-400">
@@ -39,7 +39,7 @@
         <div class="flex items-center gap-2">
           <button
             @click="openReminderModal"
-            class="reminder-button"
+            class="reminder-button touch-target"
             title="Добавить напоминание"
           >
             <span>🔔</span>
@@ -276,6 +276,30 @@ onBeforeUnmount(() => {
   pointer-events: auto;
 }
 
+/* Sticky header на мобильных */
+@media (max-width: 767px) {
+  .note-header {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background-color: white;
+  }
+
+  .dark .note-header {
+    background-color: #111827;
+  }
+
+  .note-title {
+    font-size: 1.5rem;
+  }
+}
+
+/* Touch-friendly target */
+.touch-target {
+  min-width: 44px;
+  min-height: 44px;
+}
+
 .reminder-button {
   display: flex;
   align-items: center;
@@ -287,6 +311,13 @@ onBeforeUnmount(() => {
   cursor: pointer;
   transition: all 0.2s;
   font-size: 1rem;
+}
+
+@media (max-width: 767px) {
+  .reminder-button {
+    padding: 0.5rem 0.875rem;
+    font-size: 1.125rem;
+  }
 }
 
 .dark .reminder-button {

@@ -1,6 +1,7 @@
 <template>
   <div class="database-table-wrapper">
-    <table class="database-table">
+    <!-- Desktop table view -->
+    <table v-if="!isMobile" class="database-table">
       <thead>
         <tr>
           <th class="checkbox-cell">
@@ -63,8 +64,21 @@
       </tbody>
     </table>
 
-    <!-- Пустое состояние с иллюстрацией -->
-    <div v-if="records.length === 0" class="database-empty-state">
+    <!-- Mobile card view -->
+    <DatabaseCardView
+      v-if="isMobile"
+      :database="database"
+      :records="records"
+      :filter="filter"
+      :search-query="searchQuery"
+      @update-record="handleCellUpdateFromCard"
+      @create-record="handleAddRow"
+      @delete-record="deleteRow"
+      @reset-filters="$emit('reset-filters')"
+    />
+
+    <!-- Пустое состояние с иллюстрацией (только для desktop) -->
+    <div v-if="records.length === 0 && !isMobile" class="database-empty-state">
       <EmptyState
         v-if="filter || searchQuery"
         title="Нет записей, соответствующих фильтру"
@@ -85,7 +99,7 @@
       />
     </div>
 
-    <DatabaseAddRow v-if="records.length > 0" @add="handleAddRow" />
+    <DatabaseAddRow v-if="records.length > 0 && !isMobile" @add="handleAddRow" />
 
     <!-- Context Menu for Row -->
     <div
@@ -118,10 +132,15 @@ import DatabaseColumnHeader from './DatabaseColumnHeader.vue';
 import DatabaseAddColumn from './DatabaseAddColumn.vue';
 import DatabaseAddRow from './DatabaseAddRow.vue';
 import DatabaseCell from './DatabaseCell.vue';
+import DatabaseCardView from './DatabaseCardView.vue';
 import EmptyState from '../EmptyState.vue';
 import EmptyDatabaseIllustration from '../illustrations/EmptyDatabaseIllustration.vue';
+import { useMobileDetect } from '../../composables/useMobileDetect';
 import type { CustomDatabase, Record, Column, ColumnType, SelectOption } from '../../types';
 import type { DatabaseFilter, DatabaseSort } from '../../types/database';
+
+// Mobile detection
+const { isMobile } = useMobileDetect();
 
 const props = defineProps<{
   database: CustomDatabase;
@@ -155,6 +174,10 @@ const handleCellUpdate = (recordId: string, columnId: string, value: any) => {
 
   const updatedData = { ...record.data, [columnId]: value };
   emit('updateRecord', recordId, updatedData);
+};
+
+const handleCellUpdateFromCard = (recordId: string, data: { [columnId: string]: any }) => {
+  emit('updateRecord', recordId, data);
 };
 
 const handleCreateOption = (column: Column, newOption: SelectOption) => {

@@ -1,5 +1,13 @@
 <template>
-  <div class="w-72 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col h-full">
+  <div
+    ref="sidebarRef"
+    :class="[
+      'sidebar w-72 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col h-full',
+      {
+        'sidebar-open': isDrawerOpen
+      }
+    ]"
+  >
     <!-- Поиск -->
     <div class="p-4 border-b border-gray-200 dark:border-gray-700">
       <SearchBar v-model="searchQuery" />
@@ -149,11 +157,13 @@
 import { ref, computed } from 'vue';
 import type { Note } from '../types';
 import { useTheme } from '../composables/useTheme';
+import { useSwipe } from '../composables/useSwipe';
 import SearchBar from './SearchBar.vue';
 import NoteTree from './NoteTree.vue';
 import ImportDialog from './ImportDialog.vue';
 
 const showImportDialog = ref(false);
+const sidebarRef = ref<HTMLElement | null>(null);
 
 const props = defineProps<{
   allNotes: Note[];
@@ -161,6 +171,7 @@ const props = defineProps<{
   selectedNoteId: string | null;
   expandedNotes: Set<string>;
   searchResults: Note[];
+  isDrawerOpen?: boolean;
   createNoteFn?: (data: {
     title: string;
     content: string;
@@ -177,7 +188,18 @@ const emit = defineEmits<{
   createSubpage: [parentId: string];
   toggleExpand: [id: string];
   notesImported: [notes: Note[]];
+  closeDrawer: [];
 }>();
+
+// Swipe для закрытия drawer
+useSwipe(sidebarRef, {
+  threshold: 50,
+  onSwipeLeft: () => {
+    if (props.isDrawerOpen) {
+      emit('closeDrawer');
+    }
+  },
+});
 
 function handleImported(notes: Note[]) {
   showImportDialog.value = false;
@@ -210,3 +232,31 @@ const rootNotes = computed(() =>
     .sort((a, b) => a.title.localeCompare(b.title))
 );
 </script>
+
+<style scoped>
+/* Drawer mode для мобильных устройств */
+@media (max-width: 767px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 50;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-out;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .sidebar-open {
+    transform: translateX(0);
+  }
+}
+
+/* Десктопный режим */
+@media (min-width: 768px) {
+  .sidebar {
+    position: relative;
+    transform: none;
+  }
+}
+</style>

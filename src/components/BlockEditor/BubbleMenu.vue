@@ -191,6 +191,24 @@ const setLink = () => {
   transition: all 0.15s ease;
 }
 
+/* Mobile optimizations */
+@media (max-width: 767px) {
+  .menu-button {
+    width: 44px;
+    height: 44px;
+    font-size: 16px;
+  }
+
+  .bubble-menu {
+    gap: 4px;
+    padding: 6px;
+  }
+
+  .menu-divider {
+    margin: 0 6px;
+  }
+}
+
 .menu-button:hover {
   background-color: #f3f4f6;
 }
