@@ -1,11 +1,13 @@
 import { ref } from 'vue';
 import { aiApi } from '../api/ai';
+import { useToast } from './useToast';
 
 const MAX_TEXT_LENGTH = 10000;
 
 export function useAI() {
   const loading = ref(false);
   const error = ref<string | null>(null);
+  const { showError } = useToast();
 
   const summarize = async (text: string): Promise<string | null> => {
     if (!text || text.trim().length === 0) {
@@ -24,8 +26,9 @@ export function useAI() {
       const result = await aiApi.summarize(text);
       return result;
     } catch (err) {
-      error.value = 'Ошибка при суммаризации текста';
+      error.value = 'AI временно недоступен';
       console.error('Summarize error:', err);
+      showError('AI временно недоступен');
       return null;
     } finally {
       loading.value = false;
@@ -49,8 +52,9 @@ export function useAI() {
       const result = await aiApi.expand(text);
       return result;
     } catch (err) {
-      error.value = 'Ошибка при расширении текста';
+      error.value = 'AI временно недоступен';
       console.error('Expand error:', err);
+      showError('AI временно недоступен');
       return null;
     } finally {
       loading.value = false;

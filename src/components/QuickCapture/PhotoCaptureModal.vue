@@ -129,10 +129,13 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { aiApi } from '../../api/ai';
+import { useToast } from '../../composables/useToast';
 
 const props = defineProps<{
   isOpen: boolean;
 }>();
+
+const { showError } = useToast();
 
 const emit = defineEmits<{
   close: [];
@@ -214,7 +217,8 @@ async function recognizeText() {
     recognizedText.value = text;
   } catch (error) {
     console.error('OCR error:', error);
-    errorMessage.value = 'Не удалось распознать текст. Попробуйте другое изображение.';
+    errorMessage.value = 'AI временно недоступен';
+    showError('AI временно недоступен');
   } finally {
     isRecognizing.value = false;
   }
