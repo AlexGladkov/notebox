@@ -63,6 +63,7 @@ import VoiceCaptureModal from './VoiceCaptureModal.vue';
 import PhotoCaptureModal from './PhotoCaptureModal.vue';
 import NoteSuggestionModal from './NoteSuggestionModal.vue';
 import { useQuickCapture } from '../../composables/useQuickCapture';
+import { useToast } from '../../composables/useToast';
 import type { CaptureType, RelatedNote } from '../../types';
 
 const isMenuOpen = ref(false);
@@ -83,6 +84,8 @@ const {
   moveToNote,
   addTextToNote,
 } = useQuickCapture();
+
+const { showSuccess, showError } = useToast();
 
 function toggleMenu() {
   isMenuOpen.value = !isMenuOpen.value;
@@ -119,11 +122,11 @@ async function handleTextSave(text: string) {
       // Если похожих заметок нет, сохраняем в Inbox
       await captureText(text);
       closeModal();
-      showSuccessNotification('Заметка сохранена в Inbox');
+      showSuccess('Заметка сохранена в Inbox');
     }
   } catch (error) {
     console.error('Failed to capture text:', error);
-    showErrorNotification('Не удалось сохранить заметку');
+    showError('Не удалось сохранить заметку');
   } finally {
     textModalRef.value?.setLoading(false);
   }
@@ -142,11 +145,11 @@ async function handleVoiceSave(text: string) {
     } else {
       await captureVoice(text);
       closeModal();
-      showSuccessNotification('Голосовая заметка сохранена в Inbox');
+      showSuccess('Голосовая заметка сохранена в Inbox');
     }
   } catch (error) {
     console.error('Failed to capture voice:', error);
-    showErrorNotification('Не удалось сохранить голосовую заметку');
+    showError('Не удалось сохранить голосовую заметку');
   } finally {
     voiceModalRef.value?.setLoading(false);
   }
@@ -165,11 +168,11 @@ async function handlePhotoSave(text: string, imageBase64: string) {
     } else {
       await capturePhoto(imageBase64, text);
       closeModal();
-      showSuccessNotification('Текст с фото сохранен в Inbox');
+      showSuccess('Текст с фото сохранен в Inbox');
     }
   } catch (error) {
     console.error('Failed to capture photo:', error);
-    showErrorNotification('Не удалось сохранить текст с фото');
+    showError('Не удалось сохранить текст с фото');
   } finally {
     photoModalRef.value?.setLoading(false);
   }
@@ -180,10 +183,10 @@ async function handleMoveToNote(noteId: string) {
     suggestionModalRef.value?.setLoading(true);
     await moveToNote(capturedText.value, noteId);
     closeModal();
-    showSuccessNotification('Заметка перемещена');
+    showSuccess('Заметка перемещена');
   } catch (error) {
     console.error('Failed to move to note:', error);
-    showErrorNotification('Не удалось переместить заметку');
+    showError('Не удалось переместить заметку');
   } finally {
     suggestionModalRef.value?.setLoading(false);
   }
@@ -194,24 +197,15 @@ async function handleStayInInbox() {
     suggestionModalRef.value?.setLoading(true);
     await captureText(capturedText.value);
     closeModal();
-    showSuccessNotification('Заметка сохранена в Inbox');
+    showSuccess('Заметка сохранена в Inbox');
   } catch (error) {
     console.error('Failed to save to inbox:', error);
-    showErrorNotification('Не удалось сохранить в Inbox');
+    showError('Не удалось сохранить в Inbox');
   } finally {
     suggestionModalRef.value?.setLoading(false);
   }
 }
 
-function showSuccessNotification(message: string) {
-  // TODO: Заменить на полноценную систему уведомлений
-  alert(message);
-}
-
-function showErrorNotification(message: string) {
-  // TODO: Заменить на полноценную систему уведомлений
-  alert(message);
-}
 </script>
 
 <style scoped>
