@@ -1,7 +1,6 @@
 import { ref, computed } from 'vue';
 import type { Note } from '../types';
 import { useNotesStore } from '../stores/notesStore';
-import { notesApi } from '../api/notes';
 
 const DAILY_NOTE_PREFIX = '📅 ';
 const DEFAULT_TEMPLATE = `# {{date}}
@@ -52,20 +51,17 @@ export function useDailyNotes() {
       return existingNote;
     }
 
-    // Создаем новую заметку
+    // Создаем новую заметку через notesStore для правильной offline поддержки
     const title = getDailyNoteTitle(date);
     const template = localStorage.getItem('dailyNoteTemplate') || DEFAULT_TEMPLATE;
     const content = template.replace('{{date}}', formatDisplayDate(date));
 
-    const newNote = await notesApi.create({
+    const newNote = await notesStore.createNote({
       title,
       content,
       icon: '📅',
       parentId: null,
     });
-
-    // Добавляем заметку в store
-    notesStore.notes.unshift(newNote);
 
     return newNote;
   };

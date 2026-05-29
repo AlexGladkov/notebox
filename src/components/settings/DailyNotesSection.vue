@@ -81,7 +81,7 @@ const { getTemplate, saveTemplate: saveToDailyNotes, formatDisplayDate } = useDa
 
 const template = ref('');
 const saveStatus = ref('');
-let saveTimeout: number | null = null;
+let saveTimeout: ReturnType<typeof setTimeout> | null = null;
 
 const DEFAULT_TEMPLATE = `# {{date}}
 
@@ -106,7 +106,7 @@ const debouncedSave = () => {
 
   saveTimeout = setTimeout(() => {
     saveTemplate();
-  }, 1000) as unknown as number;
+  }, 1000);
 };
 
 // Сохранить шаблон
