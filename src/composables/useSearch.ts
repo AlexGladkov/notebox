@@ -2,6 +2,7 @@ import { ref, watch, type Ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useNotesStore } from '../stores/notesStore';
 import type { Note, SearchResult, SearchMatch } from '../types';
+import { extractTextFromTipTapJson } from '../utils/textExtraction';
 
 /**
  * Создает debounced версию функции
@@ -60,10 +61,10 @@ function extractSnippet(text: string, query: string, contextLength = 50): Search
  * 4. Бонус за количество совпадений - +5 за каждое дополнительное совпадение
  * 5. Бонус за позицию - +10 если совпадение в начале текста
  */
-function calculateRelevanceScore(note: Note, query: string): number {
+function calculateRelevanceScore(note: Note, query: string, contentText: string): number {
   const lowerQuery = query.toLowerCase();
   const lowerTitle = note.title.toLowerCase();
-  const lowerContent = (note.content || '').toLowerCase();
+  const lowerContent = contentText.toLowerCase();
 
   let score = 0;
 
@@ -114,12 +115,15 @@ export function useSearch(searchQuery: Ref<string>) {
 
     // Фильтрация и ранжирование
     for (const note of notes.value) {
+      // Извлекаем чистый текст из TipTap JSON
+      const contentText = extractTextFromTipTapJson(note.content || '');
+
       const titleMatch = note.title.toLowerCase().includes(lowerQuery);
-      const contentMatch = (note.content || '').toLowerCase().includes(lowerQuery);
+      const contentMatch = contentText.toLowerCase().includes(lowerQuery);
 
       if (!titleMatch && !contentMatch) continue;
 
-      const score = calculateRelevanceScore(note, query);
+      const score = calculateRelevanceScore(note, query, contentText);
 
       // Определяем тип совпадения
       let matchedIn: 'title' | 'content' | 'both';
@@ -133,8 +137,8 @@ export function useSearch(searchQuery: Ref<string>) {
 
       // Генерируем сниппет (только для совпадений в содержимом)
       let snippet: SearchMatch | null = null;
-      if (contentMatch && note.content) {
-        snippet = extractSnippet(note.content, query);
+      if (contentMatch && contentText) {
+        snippet = extractSnippet(contentText, query);
       }
 
       results.push({
