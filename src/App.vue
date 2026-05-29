@@ -75,6 +75,9 @@
       :need-refresh="needRefresh"
       @update="handlePWAUpdate"
     />
+
+    <!-- Toast Notifications -->
+    <ToastContainer />
   </div>
 </template>
 
@@ -99,6 +102,7 @@ import ConfirmDialog from './components/ConfirmDialog.vue';
 import SyncStatusIndicator from './components/SyncStatusIndicator.vue';
 import PWAInstallPrompt from './components/PWAInstallPrompt.vue';
 import PWAUpdatePrompt from './components/PWAUpdatePrompt.vue';
+import ToastContainer from './components/Toast/ToastContainer.vue';
 
 // Инициализация темы
 const { initialize: initializeTheme } = useTheme();

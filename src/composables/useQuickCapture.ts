@@ -3,6 +3,7 @@ import { useStorage } from './useStorage';
 import { useNotes } from './useNotes';
 import type { RelatedNote, Note } from '../types';
 import { aiApi } from '../api/ai';
+import { useToast } from './useToast';
 
 const INBOX_TITLE = '📥 Inbox';
 // Контент в формате TipTap JSON
@@ -24,6 +25,7 @@ const INBOX_CONTENT = JSON.stringify({
 export function useQuickCapture() {
   const { notes } = useStorage();
   const { createNote, updateNote, getNoteById } = useNotes();
+  const { showError } = useToast();
 
   const isProcessing = ref(false);
   const lastError = ref<string | null>(null);
@@ -166,6 +168,7 @@ export function useQuickCapture() {
       return await aiApi.findRelatedNotes(text, noteIds);
     } catch (error) {
       console.error('Failed to find related notes:', error);
+      showError('AI временно недоступен');
       return [];
     }
   }
