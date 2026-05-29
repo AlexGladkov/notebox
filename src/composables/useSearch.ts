@@ -1,14 +1,23 @@
 import { ref, watch, type Ref } from 'vue';
-import { useDebounceFn } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
 import { useNotesStore } from '../stores/notesStore';
 import type { Note, SearchResult, SearchMatch } from '../types';
 
 /**
- * Экранирует специальные символы для использования в RegExp
+ * Создает debounced версию функции
  */
-function escapeRegex(str: string): string {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+function debounce<T extends (...args: any[]) => any>(fn: T, delay: number): T {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  return ((...args: any[]) => {
+    if (timeoutId !== null) {
+      clearTimeout(timeoutId);
+    }
+    timeoutId = setTimeout(() => {
+      fn(...args);
+      timeoutId = null;
+    }, delay);
+  }) as T;
 }
 
 /**
@@ -70,7 +79,8 @@ function calculateRelevanceScore(note: Note, query: string): number {
   if (lowerContent.includes(lowerQuery)) {
     score += 10;
     // Бонус за количество совпадений (до 5)
-    const matches = (lowerContent.match(new RegExp(escapeRegex(lowerQuery), 'gi')) || []).length;
+    // Используем split для подсчета - быстрее чем RegExp
+    const matches = lowerContent.split(lowerQuery).length - 1;
     score += Math.min(matches, 5) * 5;
   }
 
@@ -90,7 +100,7 @@ export function useSearch(searchQuery: Ref<string>) {
   /**
    * Выполняет поиск с ранжированием и генерацией сниппетов
    */
-  const performSearch = useDebounceFn(() => {
+  const performSearchImpl = () => {
     const query = searchQuery.value.trim();
 
     if (!query) {
@@ -141,7 +151,10 @@ export function useSearch(searchQuery: Ref<string>) {
     // Ограничиваем топ-50 результатов для оптимизации
     searchResults.value = results.slice(0, 50);
     isSearching.value = false;
-  }, 300); // Debounce 300ms
+  };
+
+  // Создаем debounced версию функции поиска (300ms)
+  const performSearch = debounce(performSearchImpl, 300);
 
   // Отслеживаем изменения поискового запроса
   watch(searchQuery, () => {
