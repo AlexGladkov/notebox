@@ -61,19 +61,19 @@ export function useToast() {
     }
   };
 
-  const showSuccess = (message: string, duration?: number) => {
+  const showSuccess = (message: string, duration: number = 3000) => {
     show(message, 'success', duration);
   };
 
-  const showError = (message: string, duration?: number) => {
+  const showError = (message: string, duration: number = 5000) => {
     show(message, 'error', duration);
   };
 
-  const showWarning = (message: string, duration?: number) => {
+  const showWarning = (message: string, duration: number = 4000) => {
     show(message, 'warning', duration);
   };
 
-  const showInfo = (message: string, duration?: number) => {
+  const showInfo = (message: string, duration: number = 3000) => {
     show(message, 'info', duration);
   };
 
