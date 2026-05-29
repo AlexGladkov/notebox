@@ -44,7 +44,7 @@
         <!-- Теги -->
         <div v-if="note.tags && note.tags.length > 0" class="note-tags">
           <span
-            v-for="tag in note.tags.slice(0, 2)"
+            v-for="tag in note.tags.filter(t => t).slice(0, 2)"
             :key="tag.id"
             class="note-tag"
             :style="getTagStyle(tag.color)"
@@ -52,41 +52,43 @@
           >
             {{ tag.name }}
           </span>
-          <span v-if="note.tags.length > 2" class="more-tags">+{{ note.tags.length - 2 }}</span>
+          <span v-if="note.tags.filter(t => t).length > 2" class="more-tags">+{{ note.tags.filter(t => t).length - 2 }}</span>
         </div>
 
-        <button
-          v-if="hoveredNoteId === note.id || note.isFavorite"
-          @click.stop="$emit('toggleFavorite', note.id)"
-          class="favorite-button"
-          :class="{ 'is-favorite': note.isFavorite }"
-          :title="note.isFavorite ? 'Убрать из избранного' : 'Добавить в избранное'"
-        >
-          <svg
-            class="w-3.5 h-3.5"
-            :fill="note.isFavorite ? 'currentColor' : 'none'"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+        <div class="action-buttons">
+          <button
+            v-if="hoveredNoteId === note.id || note.isFavorite"
+            @click.stop="$emit('toggleFavorite', note.id)"
+            class="favorite-button"
+            :class="{ 'is-favorite': note.isFavorite }"
+            :title="note.isFavorite ? 'Убрать из избранного' : 'Добавить в избранное'"
           >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
-            />
-          </svg>
-        </button>
+            <svg
+              class="w-3.5 h-3.5"
+              :fill="note.isFavorite ? 'currentColor' : 'none'"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+              />
+            </svg>
+          </button>
 
-        <button
-          v-if="hoveredNoteId === note.id"
-          @click.stop="$emit('createSubpage', note.id)"
-          class="add-subpage-button"
-          title="Создать подстраницу"
-        >
-          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-          </svg>
-        </button>
+          <button
+            v-if="hoveredNoteId === note.id"
+            @click.stop="$emit('createSubpage', note.id)"
+            class="add-subpage-button"
+            title="Создать подстраницу"
+          >
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       <NoteTree
@@ -291,6 +293,13 @@ const handleNoteClick = (noteId: string, event: MouseEvent) => {
   color: #9ca3af;
 }
 
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
 .favorite-button {
   display: flex;
   align-items: center;
@@ -304,7 +313,6 @@ const handleNoteClick = (noteId: string, event: MouseEvent) => {
   color: #9ca3af;
   flex-shrink: 0;
   transition: all 0.15s;
-  margin-left: auto;
 }
 
 .favorite-button.is-favorite {
