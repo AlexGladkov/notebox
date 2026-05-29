@@ -129,6 +129,7 @@ class OfflineStore {
       backdropType: request.backdropType !== undefined ? request.backdropType : currentNote.backdropType,
       backdropValue: request.backdropValue !== undefined ? request.backdropValue : currentNote.backdropValue,
       backdropPositionY: request.backdropPositionY !== undefined ? request.backdropPositionY : currentNote.backdropPositionY,
+      isFavorite: request.isFavorite !== undefined ? request.isFavorite : currentNote.isFavorite,
       updatedAt: Date.now(),
     };
 

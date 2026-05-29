@@ -19,6 +19,7 @@ export interface UpdateNoteRequest {
   backdropType?: string | null;
   backdropValue?: string | null;
   backdropPositionY?: number;
+  isFavorite?: boolean;
 }
 
 export interface MoveNoteRequest {

@@ -97,6 +97,23 @@ export function useCommandPalette() {
     }
   };
 
+  // Избранные заметки
+  const favoriteNotes = computed<CommandPaletteItem[]>(() => {
+    return notesStore.favoriteNotes
+      .slice(0, 10)
+      .map(note => ({
+        id: `favorite-${note.id}`,
+        type: 'note' as const,
+        title: note.title || 'Без названия',
+        description: 'Избранное',
+        icon: '⭐',
+        action: () => {
+          openTab(note.id);
+          close();
+        },
+      }));
+  });
+
   // Недавние заметки
   const recentNotes = computed<CommandPaletteItem[]>(() => {
     return recentNoteIds.value
@@ -191,6 +208,15 @@ export function useCommandPalette() {
   // Секции
   const sections = computed<CommandPaletteSection[]>(() => {
     const result: CommandPaletteSection[] = [];
+
+    // Избранные заметки (только если нет поискового запроса)
+    if (!query.value.trim() && favoriteNotes.value.length > 0) {
+      result.push({
+        id: 'favorites',
+        title: 'Избранное',
+        items: favoriteNotes.value,
+      });
+    }
 
     // Недавние заметки (только если нет поискового запроса)
     if (!query.value.trim() && recentNotes.value.length > 0) {
