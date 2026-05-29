@@ -38,23 +38,44 @@
         <div class="flex-1 overflow-y-auto p-2">
           <!-- Результаты поиска -->
           <div v-if="searchQuery" class="space-y-1">
+            <!-- Индикатор загрузки -->
+            <div v-if="isSearching" class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
+              Поиск...
+            </div>
+
             <div
-              v-for="note in searchResults"
-              :key="note.id"
-              @click="handleSelectNote(note.id)"
+              v-for="result in searchResults"
+              :key="result.note.id"
+              @click="handleSelectNote(result.note.id)"
               :class="[
                 'px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-md',
-                { 'bg-blue-50 dark:bg-blue-900': activeNoteId === note.id }
+                { 'bg-blue-50 dark:bg-blue-900': activeNoteId === result.note.id }
               ]"
             >
+              <!-- Заголовок -->
               <div class="flex items-center gap-2">
-                <span v-if="note.icon" class="text-sm">{{ note.icon }}</span>
+                <span v-if="result.note.icon" class="text-sm">{{ result.note.icon }}</span>
                 <div class="text-sm font-medium truncate text-gray-800 dark:text-gray-100">
-                  {{ note.title || 'Без названия' }}
+                  {{ result.note.title || 'Без названия' }}
                 </div>
               </div>
+
+              <!-- Сниппет с подсветкой -->
+              <div
+                v-if="result.snippet"
+                class="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2"
+                v-html="highlightSnippet(result.snippet)"
+              ></div>
+
+              <!-- Индикатор типа совпадения -->
+              <div class="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                <span v-if="result.matchedIn === 'title'">В заголовке</span>
+                <span v-else-if="result.matchedIn === 'content'">В тексте</span>
+                <span v-else>В заголовке и тексте</span>
+              </div>
             </div>
-            <div v-if="searchResults.length === 0" class="search-empty-container">
+
+            <div v-if="!isSearching && searchResults.length === 0" class="search-empty-container">
               <EmptyState
                 title="Ничего не найдено"
                 description="Попробуйте изменить запрос"
@@ -270,6 +291,7 @@ import { useOnboarding } from '../composables/useOnboarding';
 import { useDrawer } from '../composables/useDrawer';
 import { useSwipe } from '../composables/useSwipe';
 import { notesApi } from '../api/notes';
+import { highlightSnippet } from '../utils/highlight';
 import SearchBar from '../components/SearchBar.vue';
 import MobileHeader from '../components/MobileHeader.vue';
 import DrawerOverlay from '../components/DrawerOverlay.vue';
@@ -374,7 +396,7 @@ const {
 } = useTabs();
 
 const searchQuery = ref('');
-const { searchResults } = useSearch(searchQuery);
+const { searchResults, isSearching } = useSearch(searchQuery);
 
 // Фильтр по тегам
 const selectedTagIds = ref<string[]>([]);

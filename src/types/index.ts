@@ -169,3 +169,18 @@ export interface RelatedNote {
   similarity: number; // 0-1, мера семантического сходства
   reason?: string; // Объяснение, почему заметка релевантна
 }
+
+// Search types
+export interface SearchMatch {
+  text: string;           // Текст сниппета (~100 символов)
+  highlightStart: number; // Начало подсветки
+  highlightEnd: number;   // Конец подсветки
+  matchType: 'title' | 'content';
+}
+
+export interface SearchResult {
+  note: Note;
+  score: number;
+  snippet: SearchMatch | null;
+  matchedIn: 'title' | 'content' | 'both';
+}
