@@ -10,6 +10,12 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: false }
   },
   {
+    path: '/share/:token',
+    name: 'shared-note',
+    component: () => import('../views/SharedNoteView.vue'),
+    meta: { requiresAuth: false }
+  },
+  {
     path: '/',
     name: 'home',
     component: () => import('../views/MainView.vue'),

@@ -44,6 +44,7 @@
           >
             <span>🔔</span>
           </button>
+          <ShareButton :note="note" @updated="handleShareUpdated" />
           <ExportButton :note="note" />
         </div>
       </div>
@@ -111,6 +112,7 @@ import BlockEditor from './BlockEditor.vue';
 import NoteCover from './NoteCover.vue';
 import NoteIcon from './NoteIcon.vue';
 import NoteTags from './NoteTags.vue';
+import ShareButton from './ShareButton.vue';
 import ExportButton from './ExportButton.vue';
 import Backlinks from './Backlinks.vue';
 import ReminderBadge from './reminder/ReminderBadge.vue';
@@ -132,6 +134,7 @@ const emit = defineEmits<{
     backdropType?: string | null;
     backdropValue?: string | null;
     backdropPositionY?: number;
+    shareToken?: string | null;
   }];
   noteCreated: [noteId: string];
   navigateToNote: [noteId: string];
@@ -257,6 +260,10 @@ const handleCreateTag = (name: string) => {
 
 const handleCreateFromTemplate = (data: { title: string; content: string; icon: string }) => {
   emit('createFromTemplate', data);
+};
+
+const handleShareUpdated = (updatedNote: Note) => {
+  emit('updateNote', { shareToken: updatedNote.shareToken });
 };
 
 // Cleanup debounce таймера при размонтировании

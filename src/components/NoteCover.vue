@@ -2,17 +2,17 @@
   <div
     class="note-cover"
     :class="{ 'has-content': backdropType || showActions }"
-    @mouseenter="showActions = true"
-    @mouseleave="showActions = false"
+    @mouseenter="!readonly && (showActions = true)"
+    @mouseleave="!readonly && (showActions = false)"
   >
     <div
       v-if="backdropType"
       class="cover-image"
       :class="{ repositioning }"
       :style="coverStyle"
-      @mousedown="startReposition"
+      @mousedown="!readonly && startReposition"
     >
-      <div v-if="showActions && !repositioning" class="cover-actions">
+      <div v-if="!readonly && showActions && !repositioning" class="cover-actions">
         <button class="action-btn" @click="openPicker" title="Изменить обложку">
           Изменить обложку
         </button>
@@ -32,7 +32,7 @@
         </button>
       </div>
 
-      <div v-if="repositioning" class="reposition-hint">
+      <div v-if="!readonly && repositioning" class="reposition-hint">
         Перетащите изображение для изменения позиции
         <button class="done-btn" @click="finishReposition">Готово</button>
       </div>
@@ -41,12 +41,13 @@
       <slot name="icon"></slot>
     </div>
 
-    <button v-else-if="showActions" class="add-cover-btn" @click="openPicker">
+    <button v-else-if="!readonly && showActions" class="add-cover-btn" @click="openPicker">
       <span class="icon">🖼️</span>
       <span>Добавить обложку</span>
     </button>
 
     <CoverPicker
+      v-if="!readonly"
       :is-open="pickerOpen"
       @select="selectCover"
       @close="pickerOpen = false"
@@ -62,10 +63,12 @@ interface Props {
   backdropType?: string | null
   backdropValue?: string | null
   backdropPositionY?: number
+  readonly?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   backdropPositionY: 50,
+  readonly: false,
 })
 
 const emit = defineEmits<{

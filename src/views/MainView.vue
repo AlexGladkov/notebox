@@ -547,6 +547,7 @@ async function handleUpdateNote(updates: {
   backdropType?: string | null;
   backdropValue?: string | null;
   backdropPositionY?: number;
+  shareToken?: string | null;
 }) {
   if (!currentNote.value) return;
 

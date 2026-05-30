@@ -19,6 +19,7 @@ export interface Note {
   isBlockFormat?: boolean;
   tags?: Tag[];
   isFavorite?: boolean;
+  shareToken?: string | null;
 }
 
 export interface NoteWithChildren extends Note {

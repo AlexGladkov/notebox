@@ -199,6 +199,7 @@ export const useNotesStore = defineStore('notes', {
           backdropValue: updates.backdropValue !== undefined ? updates.backdropValue : note.backdropValue,
           backdropPositionY: updates.backdropPositionY !== undefined ? updates.backdropPositionY : (note.backdropPositionY ?? 50),
           isFavorite: updates.isFavorite !== undefined ? updates.isFavorite : note.isFavorite,
+          shareToken: updates.shareToken !== undefined ? updates.shareToken : note.shareToken,
         });
 
         const index = this.notes.findIndex(n => n.id === id);
