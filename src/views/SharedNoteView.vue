@@ -100,9 +100,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, shallowRef, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute } from 'vue-router';
-import { useEditor, EditorContent } from '@tiptap/vue-3';
+import { Editor, EditorContent } from '@tiptap/vue-3';
 import StarterKit from '@tiptap/starter-kit';
 import Highlight from '@tiptap/extension-highlight';
 import Underline from '@tiptap/extension-underline';
@@ -137,7 +137,7 @@ const parseContent = (content: string) => {
   }
 };
 
-const editor = ref<ReturnType<typeof useEditor>>(null);
+const editor = shallowRef<Editor | null>(null);
 
 const loadNote = async () => {
   const token = route.params.token as string;
@@ -154,7 +154,7 @@ const loadNote = async () => {
     const data = await shareApi.getPublicNote(token);
     note.value = data;
 
-    editor.value = useEditor({
+    editor.value = new Editor({
       content: parseContent(data.content),
       editable: false,
       extensions: [

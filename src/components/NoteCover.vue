@@ -2,15 +2,15 @@
   <div
     class="note-cover"
     :class="{ 'has-content': backdropType || showActions }"
-    @mouseenter="!readonly && (showActions = true)"
-    @mouseleave="!readonly && (showActions = false)"
+    @mouseenter="handleMouseEnter"
+    @mouseleave="handleMouseLeave"
   >
     <div
       v-if="backdropType"
       class="cover-image"
       :class="{ repositioning }"
       :style="coverStyle"
-      @mousedown="!readonly && startReposition"
+      @mousedown="handleMouseDown"
     >
       <div v-if="!readonly && showActions && !repositioning" class="cover-actions">
         <button class="action-btn" @click="openPicker" title="Изменить обложку">
@@ -122,6 +122,24 @@ const coverStyle = computed(() => {
 
 const openPicker = () => {
   pickerOpen.value = true
+}
+
+const handleMouseEnter = () => {
+  if (!props.readonly) {
+    showActions.value = true
+  }
+}
+
+const handleMouseLeave = () => {
+  if (!props.readonly) {
+    showActions.value = false
+  }
+}
+
+const handleMouseDown = (event: MouseEvent) => {
+  if (!props.readonly) {
+    startReposition(event)
+  }
 }
 
 const selectCover = (type: string, value: string) => {
