@@ -44,6 +44,7 @@ class SecurityConfig {
                 auth
                     .requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers("/api/config").permitAll()
+                    .requestMatchers("/api/public/**").permitAll()
                     .anyRequest().authenticated()
             }
             .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter::class.java)
@@ -89,7 +90,7 @@ class SessionAuthenticationFilter(
         private const val SESSION_COOKIE_NAME = "SESSION_ID"
         // Список публичных путей, которые не требуют проверки сессии
         // ВАЖНО: этот список должен быть синхронизирован с permitAll() в securityFilterChain
-        private val PUBLIC_PATHS = listOf("/api/auth/", "/api/config")
+        private val PUBLIC_PATHS = listOf("/api/auth/", "/api/config", "/api/public/")
     }
 
     override fun doFilterInternal(

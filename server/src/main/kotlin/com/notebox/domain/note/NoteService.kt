@@ -6,6 +6,7 @@ import com.notebox.exception.ValidationException
 import com.notebox.exception.CircularReferenceException
 import com.notebox.exception.AccessDeniedException
 import org.springframework.stereotype.Service
+import java.util.*
 
 @Service
 class NoteService(
@@ -181,4 +182,22 @@ class NoteService(
 
     fun getAncestorPathWithTags(noteId: String, userId: String): List<NoteDto> =
         noteDtoMapper.toDtoList(noteRepository.getAncestorPath(noteId, userId))
+
+    fun enableShare(noteId: String, userId: String): String {
+        verifyNoteOwnership(noteId, userId)
+        val shareToken = UUID.randomUUID().toString()
+        noteRepository.setShareToken(noteId, userId, shareToken)
+        return shareToken
+    }
+
+    fun disableShare(noteId: String, userId: String) {
+        verifyNoteOwnership(noteId, userId)
+        noteRepository.setShareToken(noteId, userId, null)
+    }
+
+    fun getPublicNote(shareToken: String): NoteDto {
+        val note = noteRepository.findByShareToken(shareToken)
+            ?: throw NotFoundException("Shared note not found")
+        return noteDtoMapper.toDto(note)
+    }
 }

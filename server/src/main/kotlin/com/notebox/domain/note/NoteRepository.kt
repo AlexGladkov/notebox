@@ -62,11 +62,12 @@ class NoteRepository {
             it[NotesTable.backdropValue] = backdropValue
             it[NotesTable.backdropPositionY] = backdropPositionY ?: 50
             it[NotesTable.color] = color
+            it[NotesTable.shareToken] = null
             it[createdAt] = now
             it[updatedAt] = now
         }
 
-        Note(id, userId, title, content, parentId, icon, backdropType, backdropValue, backdropPositionY, color, now, now)
+        Note(id, userId, title, content, parentId, icon, backdropType, backdropValue, backdropPositionY, color, null, now, now)
     }
 
     fun update(
@@ -135,14 +136,14 @@ class NoteRepository {
         val sql = """
             WITH RECURSIVE descendants AS (
                 SELECT id, user_id, title, content, parent_id, icon, backdrop_type, backdrop_value,
-                       backdrop_position_y, color, created_at, updated_at
+                       backdrop_position_y, color, share_token, created_at, updated_at
                 FROM notes
                 WHERE parent_id = '$noteId' AND user_id = '$userId'
 
                 UNION ALL
 
                 SELECT n.id, n.user_id, n.title, n.content, n.parent_id, n.icon, n.backdrop_type,
-                       n.backdrop_value, n.backdrop_position_y, n.color, n.created_at, n.updated_at
+                       n.backdrop_value, n.backdrop_position_y, n.color, n.share_token, n.created_at, n.updated_at
                 FROM notes n
                 INNER JOIN descendants d ON n.parent_id = d.id
                 WHERE n.user_id = '$userId'
@@ -199,21 +200,21 @@ class NoteRepository {
         val sql = """
             WITH RECURSIVE ancestors AS (
                 SELECT id, user_id, title, content, parent_id, icon, backdrop_type, backdrop_value,
-                       backdrop_position_y, color, created_at, updated_at, 0 as depth
+                       backdrop_position_y, color, share_token, created_at, updated_at, 0 as depth
                 FROM notes
                 WHERE id = '$noteId' AND user_id = '$userId'
 
                 UNION ALL
 
                 SELECT n.id, n.user_id, n.title, n.content, n.parent_id, n.icon, n.backdrop_type,
-                       n.backdrop_value, n.backdrop_position_y, n.color, n.created_at, n.updated_at,
+                       n.backdrop_value, n.backdrop_position_y, n.color, n.share_token, n.created_at, n.updated_at,
                        a.depth + 1
                 FROM notes n
                 INNER JOIN ancestors a ON n.id = a.parent_id
                 WHERE n.user_id = '$userId'
             )
             SELECT id, user_id, title, content, parent_id, icon, backdrop_type, backdrop_value,
-                   backdrop_position_y, color, created_at, updated_at
+                   backdrop_position_y, color, share_token, created_at, updated_at
             FROM ancestors ORDER BY depth DESC
         """.trimIndent()
 
@@ -263,6 +264,25 @@ class NoteRepository {
         }
     }
 
+    fun setShareToken(noteId: String, userId: String, shareToken: String?): Boolean = transaction {
+        val exists = NotesTable.select { (NotesTable.id eq noteId) and (NotesTable.userId eq userId) }.any()
+        if (!exists) return@transaction false
+
+        val now = Instant.now()
+        NotesTable.update({ (NotesTable.id eq noteId) and (NotesTable.userId eq userId) }) {
+            it[NotesTable.shareToken] = shareToken
+            it[updatedAt] = now
+        }
+
+        true
+    }
+
+    fun findByShareToken(shareToken: String): Note? = transaction {
+        NotesTable.select { NotesTable.shareToken eq shareToken }
+            .mapNotNull { toNote(it) }
+            .singleOrNull()
+    }
+
     /**
      * Удаляет ВСЕ заметки в системе.
      *
@@ -286,6 +306,7 @@ class NoteRepository {
         backdropValue = row[NotesTable.backdropValue],
         backdropPositionY = row[NotesTable.backdropPositionY],
         color = row[NotesTable.color],
+        shareToken = row[NotesTable.shareToken],
         createdAt = row[NotesTable.createdAt],
         updatedAt = row[NotesTable.updatedAt]
     )
@@ -301,6 +322,7 @@ class NoteRepository {
         backdropValue = rs.getString("backdrop_value"),
         backdropPositionY = rs.getObject("backdrop_position_y") as? Int,
         color = rs.getString("color"),
+        shareToken = rs.getString("share_token"),
         createdAt = rs.getTimestamp("created_at", UTC_CALENDAR)?.toInstant() ?: Instant.now(),
         updatedAt = rs.getTimestamp("updated_at", UTC_CALENDAR)?.toInstant() ?: Instant.now()
     )

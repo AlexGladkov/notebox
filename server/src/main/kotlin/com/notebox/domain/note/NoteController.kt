@@ -127,4 +127,26 @@ class NoteController(
             ?: throw NotFoundException("Note with id '$id' not found")
         return ResponseEntity.ok(successResponse(noteDto))
     }
+
+    @PostMapping("/{id}/share")
+    fun enableShare(
+        @PathVariable @ValidUuid(fieldName = "id") id: String
+    ): ResponseEntity<ApiResponse<ShareTokenResponse>> {
+        val userId = getCurrentUserId()
+        val shareToken = noteService.enableShare(id, userId)
+        return ResponseEntity.ok(successResponse(ShareTokenResponse(shareToken)))
+    }
+
+    @DeleteMapping("/{id}/share")
+    fun disableShare(
+        @PathVariable @ValidUuid(fieldName = "id") id: String
+    ): ResponseEntity<Void> {
+        val userId = getCurrentUserId()
+        noteService.disableShare(id, userId)
+        return ResponseEntity.noContent().build()
+    }
 }
+
+data class ShareTokenResponse(
+    val shareToken: String
+)

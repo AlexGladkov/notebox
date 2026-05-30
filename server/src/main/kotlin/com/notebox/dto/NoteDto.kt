@@ -16,6 +16,7 @@ data class NoteDto(
     val backdropValue: String?,
     val backdropPositionY: Int?,
     val color: String?,
+    val shareToken: String?,
     val createdAt: Long,
     val updatedAt: Long,
     val tags: List<TagDto>? = null

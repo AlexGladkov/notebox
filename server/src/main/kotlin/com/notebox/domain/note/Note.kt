@@ -15,6 +15,7 @@ data class Note(
     val backdropValue: String?,
     val backdropPositionY: Int?,
     val color: String?,
+    val shareToken: String?,
     val createdAt: Instant,
     val updatedAt: Instant
 ) {
@@ -28,6 +29,7 @@ data class Note(
         backdropValue = backdropValue,
         backdropPositionY = backdropPositionY ?: 50,
         color = color,
+        shareToken = shareToken,
         createdAt = createdAt.toEpochMilli(),
         updatedAt = updatedAt.toEpochMilli(),
         tags = tags
